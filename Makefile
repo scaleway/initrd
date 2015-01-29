@@ -12,11 +12,13 @@ all:	uInitrd
 qemu:    vmlinuz initrd.gz
 	qemu-system-arm \
 		-M versatilepb \
-		-cpu cortex-a8 \
+		-cpu cortex-a9 \
 		-kernel ./vmlinuz \
 		-initrd ./initrd.gz \
 		-m 256 \
-		-append "$(CMDLINE)"
+		-append "$(CMDLINE)" \
+		-no-reboot \
+		-monitor stdio
 
 publish_on_s3:	uInitrd initrd.gz
 	for file in $<; do \
@@ -47,7 +49,7 @@ vmlinuz:
 uInitrd:	initrd.gz
 	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d $< $@
 
-initrd.gz:	tree tree/init tree/functions tree/bin/busybox tree/bin/sh
+initrd.gz:	tree tree/bin/busybox tree/bin/sh $(wildcard tree/*)
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
 
 tree/bin/sh:
