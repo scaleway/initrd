@@ -26,7 +26,11 @@ tree/bin/busybox:
 		'
 	chmod +x $@
 
-.PHONY: publish_on_s3
+.PHONY: publish_on_s3 qemu dist dist_do dist_teardown
+
+
+qemu:    vmlinuz initrd.gz
+	qemu-system-arm -M versatilepb -cpu cortex-a8 -kernel ./vmlinuz -initrd ./initrd.gz -m 256 -append 'root=/dev/ram'
 
 publish_on_s3:	uInitrd initrd.gz
 	for file in $<; do \
@@ -49,3 +53,6 @@ dist_do:
 dist_teardown:
 	git checkout master
 
+vmlinuz:
+	#wget -O $@ http://ports.ubuntu.com/ubuntu-ports/dists/utopic/main/installer-armhf/current/images/generic/netboot/vmlinuz
+	wget -O $@ http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
