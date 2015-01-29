@@ -1,7 +1,7 @@
 S3_TARGET ?=	s3://$(shell whoami)/
 BUSYBOX_URL ?=	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ubuntu1_armhf.deb
 KERNEL_URL ?=	http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
-CMDLINE ?=	'root=/dev/ram'
+CMDLINE ?=	ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
 
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all
@@ -16,7 +16,7 @@ qemu:    vmlinuz initrd.gz
 		-kernel ./vmlinuz \
 		-initrd ./initrd.gz \
 		-m 256 \
-		-append $(CMDLINE)
+		-append "$(CMDLINE)"
 
 publish_on_s3:	uInitrd initrd.gz
 	for file in $<; do \

@@ -1,11 +1,7 @@
 #!/bin/sh
 
-set -x
-
-
 # Create all the symlinks to /bin/busybox
 /bin/busybox --install -s
-
 
 # Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
@@ -26,27 +22,57 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 signal_state kernel-started
 
 
-# NBD boot
-# . /scripts/functions
-# /scripts/local-top/ocs-nbd
-# mkdir -p /mnt/root
-# mount /dev/mapper/nbd0
-# echo 0x0100 > /proc/sys/kernel/real-root-dev
-# mount -o move /dev /mnt/dev
-# mount -o move /dev/pts /mnt/dev/pts
-# mount -o move /sys /mnt/sys
-# mount -o move /proc /mnt/proc
-# mount -o move /run /mnt/run
-# sync
-# echo "Let's play"
-# export PS1="# "
-# /bin/sh
-# exec switch_root /mnt/root /init
+# Defaults
+init="/sbin/init"
+root="/dev/nbd0"
+boot="local"
+
+# Process command line options
+for i in $(cat /proc/cmdline); do
+    case "${i}" in
+        root\=*)
+            root=$(get_opt "${i}")
+            ;;
+        init\=*)
+            init=$(get_opt "${i}")
+            ;;
+        boot\=*)
+            init=$(get_opt "${i}")
+            ;;
+    esac
+done
+
+
+# Import boot-type functions
+case "${boot}" in
+    local)
+        . ./boot-nbd
+        ;;
+    rescue)
+        . ./boot-rescue
+        ;;
+esac
+
+
+# Mountroot
+mountroot
 
 
 # Signal to the console that the server is booted
 signal_state booted
 
 
-# Debug fallback
+# Check if $init exists and is executable
+if [[ -x "/newroot/${init}" ]] ; then
+    # Unmount all other mounts so that the ram used by
+    # the initramfs can be cleared after switch_root
+    umount /sys /proc
+
+    # Switch to the new root and execute init
+    exec switch_root /newroot "${init}"
+fi
+
+
+# This will only be run if the exec above failed
+echo "Failed to switch_root, dropping to a shell"
 exec /bin/sh
