@@ -5,21 +5,26 @@ uInitrd:	initrd.gz
 	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d $< $@
 
 initrd.gz:	tree/init tree/bin/busybox
+	cd tree && mkdir -p bin sbin etc proc sys newroot
+	touch tree/etc/mdev.conf
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
 
 tree/bin/busybox:
 	mkdir -p $(shell dirname $@)
-	docker run -it --rm busybox \
+	docker run -it --rm \
+		-v $(PWD)/tree/bin:/host/bin \
+		busybox \
 		/bin/sh -xec ' \
 		  cd /tmp && \
 		  wget $(BUSYBOX_URL) -O busybox.deb && \
 		  ar x busybox.deb && \
 		  xz -d data.tar.xz && \
 		  tar xf data.tar && \
-		  cat bin/busybox \
-		' > $@
+		  cp bin/busybox /host/bin/busybox \
+		'
 	chmod +x $@
-	ln -s busybox $(shell dirname $@)/sh || true
+	mkdir -p tree/bin && ln -s busybox tree/bin/sh || true
+	mkdir -p tree/sbin && ln -s busybox tree/sbin/init || true
 
 .PHONY: publish_on_s3
 

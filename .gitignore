@@ -1,6 +1,12 @@
 busybox
 initrd.gz
+uInitrd
+
 *~
 *#
 .#*
-uInitrd
+
+tree/etc/mdev.conf
+tree/bin/busybox
+tree/sbin/init
+tree/bin/sh
