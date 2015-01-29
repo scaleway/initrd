@@ -22,28 +22,30 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 . /functions
 
 
+# Signal to the console that the kernel is started
+signal_state kernel-started
+
 
 # NBD boot
 # . /scripts/functions
 # /scripts/local-top/ocs-nbd
 # mkdir -p /mnt/root
 # mount /dev/mapper/nbd0
-
 # echo 0x0100 > /proc/sys/kernel/real-root-dev
-
 # mount -o move /dev /mnt/dev
 # mount -o move /dev/pts /mnt/dev/pts
 # mount -o move /sys /mnt/sys
 # mount -o move /proc /mnt/proc
 # mount -o move /run /mnt/run
-
 # sync
-
 # echo "Let's play"
 # export PS1="# "
 # /bin/sh
-
 # exec switch_root /mnt/root /init
+
+
+# Signal to the console that the server is booted
+signal_state booted
 
 
 # Debug fallback
