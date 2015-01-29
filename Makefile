@@ -41,7 +41,7 @@ dist_do:
 	-git branch -D dist || true
 	git checkout -b dist
 	$(MAKE)
-	git add -f uInitrd tree/bin/busybox initrd.gz
+	git add -f uInitrd initrd.gz tree
 	git commit -am "dist"
 	git push -u origin dist -f
 	$(MAKE) dist_teardown
