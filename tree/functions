@@ -35,19 +35,20 @@ signal_state() {
 
     retries=0
     while [ "${retries}" -lt "${RETRIES}" ]; do
-	log_begin_msg "Signaling the server is ${state} to the control plane"
-	http_patch "${METADATA_IP}" "${METADATA_PORT}" "{\"state_detail\": \"${state}\"}"
-	if [ ${?} -eq 0 ]; then
+        log_begin_msg "Signaling the server is ${state} to the control plane"
+        has_opt nometadata || \
+            http_patch "${METADATA_IP}" "${METADATA_PORT}" "{\"state_detail\": \"${state}\"}"
+        if [ ${?} -eq 0 ]; then
             log_success_msg "control plane is aware that server is ${state}"
             log_end_msg
             return
-	else
+        else
             log_failure_msg "unable to signal server is ${state}"
             log_end_msg
-	fi
-	
+        fi
+
         retries=$((${retries}+1))
-	test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
+        test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
     done
 
     log_failure_msg "Unsable to signal state=$state after ${RETRIES} attempts, continuing boot..."
@@ -70,7 +71,16 @@ content-type: application/json
 Content-Length: ${content_length}
 
 ${content}"
-    
+
     ( echo -n "${patch_body}" && sleep 3 ) \
-	| nc "${metadata_ip}" "${metadata_port}" | grep '200 OK'
+        | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK'
+}
+
+# Function for parsing command line options with "=" in them
+get_opt() {
+    cat /proc/cmdline | tr " " "\n" | cut -d "=" -f 2
+}
+
+has_opt() {
+    cat /proc/cmdline | tr " " "\n" | grep "^$1\$" >/dev/null
 }
