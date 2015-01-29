@@ -1,27 +1,31 @@
+# -*- shell-script -*-
+
+
+## Logging functions
+
 _log_msg() {
     printf "${@}"
 }
-
 log_success_msg() {
     _log_msg "Success: ${@}\n"
 }
-
 log_failure_msg() {
     _log_msg "Failure: ${@}\n"
 }
-
 log_warning_msg() {
     _log_msg "Warning: ${@}\n"
 }
-
 log_begin_msg() {
     _log_msg "Begin: ${@} ... "
 }
-
 log_end_msg() {
     _log_msg "done.\n"
 }
 
+
+## OCS specifics
+
+# Signal to OCS the current server state
 signal_state() {
     state="${1}"
     RETRIES=30
@@ -49,8 +53,11 @@ signal_state() {
     log_failure_msg "Unsable to signal state=$state after ${RETRIES} attempts, continuing boot..."
 }
 
+
+## Helpers
+
+# There is no option to send a patch with wget in busybox
 http_patch() {
-    ## There is no option to send a patch with wget in busybox
     metadata_ip="${1}"
     metadata_port="${2}"
     content="${3}"
