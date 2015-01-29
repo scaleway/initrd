@@ -19,7 +19,7 @@ tree/bin/busybox:
 		  cat bin/busybox \
 		' > $@
 	chmod +x $@
-	ln -s busybox $(shell dirname $@)/sh
+	ln -s busybox $(shell dirname $@)/sh || true
 
 .PHONY: publish_on_s3
 
@@ -27,3 +27,19 @@ publish_on_s3:	uInitrd initrd.gz
 	for file in $<; do \
 	  s3cmd put --acl-public $$file $(S3_TARGET); \
 	done
+
+
+dist:
+	$(MAKE) dist_do || $(MAKE) dist_teardown
+
+dist_do:
+	-git branch -D dist || true
+	git checkout -b dist
+	$(MAKE)
+	git add -f uInitrd tree/bin/busybox initrd.gz
+	git commit -am "dist"
+	git push -u origin dist -f
+	$(MAKE) dist_teardown
+
+dist_teardown:
+	git checkout master
