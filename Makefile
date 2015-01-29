@@ -1,4 +1,5 @@
-BUSYBOX_URL =	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ubuntu1_armhf.deb
+S3_TARGET ?=	s3://$(shell whoami)/
+BUSYBOX_URL ?=	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ubuntu1_armhf.deb
 
 uInitrd:	initrd.gz
 	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d $< $@
@@ -19,3 +20,10 @@ tree/bin/busybox:
 		' > $@
 	chmod +x $@
 	ln -s busybox $(shell dirname $@)/sh
+
+.PHONY: publish_on_s3
+
+publish_on_s3:	uInitrd initrd.gz
+	for file in $<; do \
+	  s3cmd put --acl-public $$file $(S3_TARGET); \
+	done
