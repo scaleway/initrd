@@ -4,10 +4,14 @@ KERNEL_URL ?=	http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-ar
 CMDLINE ?=	ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
 
 
-.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all
+.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis
 
 # Phonies
 all:	uInitrd
+
+travis:
+	bash -n tree/init tree/functions tree/boot-*
+	make -n Makefile
 
 qemu:    vmlinuz initrd.gz
 	qemu-system-arm \
