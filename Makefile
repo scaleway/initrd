@@ -4,10 +4,12 @@ BUSYBOX_URL ?=	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ub
 uInitrd:	initrd.gz
 	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d $< $@
 
-initrd.gz:	tree/init tree/bin/busybox
-	cd tree && mkdir -p bin sbin etc proc sys newroot
-	touch tree/etc/mdev.conf
+initrd.gz:	tree tree/init tree/bin/busybox tree/bin/sh
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
+
+tree/bin/sh:
+	cd tree && mkdir -p bin sbin etc proc sys newroot usr/bin usr/sbin
+	ln -s busybox tree/bin/sh || true
 
 tree/bin/busybox:
 	mkdir -p $(shell dirname $@)
@@ -23,8 +25,6 @@ tree/bin/busybox:
 		  cp bin/busybox /host/bin/busybox \
 		'
 	chmod +x $@
-	mkdir -p tree/bin && ln -s busybox tree/bin/sh || true
-	mkdir -p tree/sbin && ln -s busybox tree/sbin/init || true
 
 .PHONY: publish_on_s3
 
@@ -48,3 +48,4 @@ dist_do:
 
 dist_teardown:
 	git checkout master
+

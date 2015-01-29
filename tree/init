@@ -2,34 +2,49 @@
 
 set -x
 
+
+# Create all the symlinks to /bin/busybox
+/bin/busybox --install -s
+
+
+# Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
 [ -d /sys ] || mkdir /sys
 [ -d /proc ] || mkdir /proc
-
 mount -t sysfs -o nodev,noexec,nosuid none /sys
 mount -t proc -o nodev,noexec,nosuid none /proc
 mount -t devtmpfs -o mode=0755 none /dev
 mkdir /dev/pts
 mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 
-. /scripts/functions
-/scripts/local-top/ocs-nbd
 
-mkdir -p /mnt/root
-mount /dev/mapper/nbd0
+# Loading functions
+. /functions
 
-echo 0x0100 > /proc/sys/kernel/real-root-dev
 
-mount -o move /dev /mnt/dev
-mount -o move /dev/pts /mnt/dev/pts
-mount -o move /sys /mnt/sys
-mount -o move /proc /mnt/proc
-mount -o move /run /mnt/run
 
-sync
+# NBD boot
+# . /scripts/functions
+# /scripts/local-top/ocs-nbd
+# mkdir -p /mnt/root
+# mount /dev/mapper/nbd0
 
-echo "Let's play"
-export PS1="# "
-/bin/sh
+# echo 0x0100 > /proc/sys/kernel/real-root-dev
 
-exec switch_root /mnt/root /init
+# mount -o move /dev /mnt/dev
+# mount -o move /dev/pts /mnt/dev/pts
+# mount -o move /sys /mnt/sys
+# mount -o move /proc /mnt/proc
+# mount -o move /run /mnt/run
+
+# sync
+
+# echo "Let's play"
+# export PS1="# "
+# /bin/sh
+
+# exec switch_root /mnt/root /init
+
+
+# Debug fallback
+exec /bin/sh
