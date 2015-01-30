@@ -1,4 +1,4 @@
-Initrd on Online Labs [![Build Status](https://travis-ci.org/online-labs/initrd.svg?branch=develop)](https://travis-ci.org/online-labs/initrd)
+Initrd on Online Labs [![Build Status](https://travis-ci.org/online-labs/initrd.svg?branch=master)](https://travis-ci.org/online-labs/initrd)
 =====================
 
 This is a work in progress.
