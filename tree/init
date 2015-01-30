@@ -26,6 +26,7 @@ signal_state kernel-started
 init="/sbin/init"
 root="/dev/nbd0"
 boot="local"
+rootmnt="/newroot"
 
 # Process command line options
 for i in $(cat /proc/cmdline); do
@@ -37,7 +38,7 @@ for i in $(cat /proc/cmdline); do
             init=$(get_opt "${i}")
             ;;
         boot\=*)
-            init=$(get_opt "${i}")
+            boot=$(get_opt "${i}")
             ;;
     esac
 done
@@ -63,13 +64,13 @@ signal_state booted
 
 
 # Check if $init exists and is executable
-if [[ -x "/newroot/${init}" ]] ; then
+if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
     # the initramfs can be cleared after switch_root
     umount /sys /proc
 
     # Switch to the new root and execute init
-    exec switch_root /newroot "${init}"
+    exec switch_root "${rootmnt}" "${init}"
 fi
 
 

@@ -78,7 +78,7 @@ ${content}"
 
 # Function for parsing command line options with "=" in them
 get_opt() {
-    cat /proc/cmdline | tr " " "\n" | cut -d "=" -f 2
+    cat /proc/cmdline | tr " " "\n" | grep "^$1" | cut -d "=" -f 2
 }
 
 has_opt() {
