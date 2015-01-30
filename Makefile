@@ -2,6 +2,7 @@ S3_TARGET ?=	s3://$(shell whoami)/
 BUSYBOX_URL ?=	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ubuntu1_armhf.deb
 KERNEL_URL ?=	http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
 CMDLINE ?=	ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
+MKIMAGE_OPTS ?=	-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis
@@ -51,7 +52,18 @@ vmlinuz:
 
 
 uInitrd:	initrd.gz
-	mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d $< $@
+	# mkimage $(MKIMAGE_OPTS) -d $< $@
+	docker run \
+		-it --rm \
+		-v /Users/moul/Git/github/initrd:/host \
+		-w /tmp \
+		moul/u-boot-tools \
+		/bin/bash -xec \
+		' \
+		  cp /host/initrd.gz . && \
+		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd.gz ./uInitrd && \
+		  cp uInitrd /host/ \
+		'
 
 initrd.gz:	tree tree/bin/busybox tree/bin/sh $(wildcard tree/*)
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
