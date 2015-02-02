@@ -23,6 +23,13 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 signal_state kernel-started
 
 
+# Adjust time
+log_begin_msg "Adjusting time (ntp)"
+ntpdate -d -b -p 2 ntp.int.cloud.online.net >/dev/null
+ntpdate -d -b -p 6 ntp.int.cloud.online.net >/dev/null 2>/dev/null &
+log_end_msg
+
+
 # Defaults
 init="/sbin/init"
 root="/dev/nbd0"
