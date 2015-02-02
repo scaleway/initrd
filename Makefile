@@ -1,8 +1,9 @@
-S3_TARGET ?=	s3://$(shell whoami)/
-BUSYBOX_URL ?=	http://launchpadlibrarian.net/181784411/busybox-static_1.22.0-8ubuntu1_armhf.deb
-KERNEL_URL ?=	http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
-CMDLINE ?=	ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
-MKIMAGE_OPTS ?=	-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
+S3_TARGET ?=		s3://$(shell whoami)/
+KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
+CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
+MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
+DEPENDENCIES ?=		/bin/busybox /usr/sbin/xnbd-client
+DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis
@@ -65,24 +66,18 @@ uInitrd:	initrd.gz
 		  cp uInitrd /host/ \
 		'
 
-initrd.gz:	tree tree/bin/busybox tree/bin/sh $(wildcard tree/*)
+tree/bin/sh:	tree/bin/busybox
+	ln -s busybox $@
+
+
+initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) /bin/sh
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
 
-tree/bin/sh:
-	cd tree && mkdir -p bin sbin etc proc sys newroot usr/bin usr/sbin
-	ln -s busybox tree/bin/sh || true
 
-tree/bin/busybox:
-	mkdir -p $(shell dirname $@)
-	docker run -it --rm \
-		-v $(PWD)/tree/bin:/host/bin \
-		busybox \
-		/bin/sh -xec ' \
-		  cd /tmp && \
-		  wget $(BUSYBOX_URL) -O busybox.deb && \
-		  ar x busybox.deb && \
-		  xz -d data.tar.xz && \
-		  tar xf data.tar && \
-		  cp bin/busybox /host/bin/busybox \
-		'
-	chmod +x $@
+$(addprefix tree/, $(DEPENDENCIES)):	dependencies/Dockerfile
+	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies/
+	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(@:tree/%=%)
+	docker cp `docker ps -lq`:/tmp/export.tar $(PWD)/
+	docker rm `docker ps -lq`
+	tar -m -C tree/ -xf export.tar
+	-rm -f export.tar

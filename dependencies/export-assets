@@ -1,0 +1,15 @@
+#!/bin/bash
+
+EXPORT=/tmp/export.tar
+
+cd /
+tar -cf ${EXPORT} dev/null
+echo "#####################################################"
+for bin in $@; do
+    for file in $bin $(ldd-rec.pl $@); do
+	tar -uf ${EXPORT} $(echo $file | sed -e 's/^\///')
+	tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
+    done
+done
+tar --delete -f ${EXPORT} dev/null
+tar -tvf ${EXPORT}
