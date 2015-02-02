@@ -48,13 +48,7 @@ mountroot() {
     # Prepare switch_root
     mount /dev/nbd0 ${rootmnt}
     echo 0x0100 > /proc/sys/kernel/real-root-dev
-    mount -o move /dev ${rootmnt}/dev
-    mount -o move /dev/pts ${rootmnt}/dev/pts
-    mount -o move /sys ${rootmnt}/sys
-    mount -o move /proc ${rootmnt}/proc
-    mount -o move /run ${rootmnt}/run
     sync
-    #exec switch_root ${rootmnt}/root /init
 
     log_end_msg
 }
