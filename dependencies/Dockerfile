@@ -19,6 +19,7 @@ RUN apt-get install -y -q xnbd-client \
  && apt-get clean
 
 
-# Install ldd-rec.pl
+# Install export scripts
 RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl -O /usr/local/bin/ldd-rec.pl \
  && chmod +x /usr/local/bin/ldd-rec.pl
+COPY ./export-assets /usr/local/bin/

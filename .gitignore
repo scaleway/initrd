@@ -11,3 +11,5 @@ tree/etc/mdev.conf
 tree/bin/busybox
 tree/sbin/init
 tree/bin/sh
+tree/lib/
+tree/usr/
