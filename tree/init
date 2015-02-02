@@ -5,6 +5,7 @@
 
 # Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
+[ -d /var/run ] || mkdir -pm 0755 /var/run
 [ -d /sys ] || mkdir /sys
 [ -d /proc ] || mkdir /proc
 mount -t sysfs -o nodev,noexec,nosuid none /sys
