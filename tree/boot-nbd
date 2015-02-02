@@ -1,19 +1,60 @@
 # -*- shell-script -*-
 
+
+NBD_CLIENT=/usr/sbin/@xnbd-client
+
+
+setup_nbd_device() {
+    local device="$1"  # ie: 0
+    local retries=900
+
+
+    # Fetching metadatas
+    local export_uri=$(oc-metadata VOLUMES_${device}_EXPORT_URI)
+    [ "$export_uri" = "" ] && log_fatal_msg "Unable to load metadatas..."
+
+    local nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
+    local nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
+    [ "$nbd_host" = "" -o "$nbd_port" = "" ] && log_fatal_msg "Parse error of $export_uri"
+
+
+    # Checking if device is already attached
+    $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then
+	return
+    fi
+
+    # Connecting the device
+    $NBD_CLIENT --blocksize 4096 --retry=$retries $nbd_host $nbd_port /dev/nbd${device} 2>/dev/null
+
+    # Checking if device is already attached
+    $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
+	log_fatal_msg "Device connection failed."
+
+    # Fixing IO scheduler
+    if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
+    then
+	echo deadline > /sys/block/nbd${device}/queue/scheduler
+    fi
+}
+
+
 mountroot() {
-    echo "boot-nbd.mountroot(): TODO"
-    # /scripts/local-top/ocs-nbd
-    # mkdir -p /mnt/root
-    # mount /dev/mapper/nbd0
-    # echo 0x0100 > /proc/sys/kernel/real-root-dev
-    # mount -o move /dev /mnt/dev
-    # mount -o move /dev/pts /mnt/dev/pts
-    # mount -o move /sys /mnt/sys
-    # mount -o move /proc /mnt/proc
-    # mount -o move /run /mnt/run
-    # sync
-    # echo "Let's play"
-    # export PS1="# "
-    # /bin/sh
-    # exec switch_root /mnt/root /init
+    log_begin_msg "Mounting NBD root"
+
+    # Attaching NBD
+    setup_nbd_device 0  # nbd0
+    
+    # Prepare switch_root
+    mount /dev/nbd0 ${rootmnt}
+    echo 0x0100 > /proc/sys/kernel/real-root-dev
+    mount -o move /dev ${rootmnt}/dev
+    mount -o move /dev/pts ${rootmnt}/dev/pts
+    mount -o move /sys ${rootmnt}/sys
+    mount -o move /proc ${rootmnt}/proc
+    mount -o move /run ${rootmnt}/run
+    sync
+    #exec switch_root ${rootmnt}/root /init
+
+    log_end_msg
 }
