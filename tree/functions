@@ -21,6 +21,11 @@ log_begin_msg() {
 log_end_msg() {
     _log_msg "done.\n"
 }
+log_fatal_msg() {
+    _log_msg "Fatal: ${@}\n"
+    sleep 5
+    reboot
+}
 
 
 ## OCS specifics
