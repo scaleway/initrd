@@ -7,19 +7,19 @@ _log_msg() {
     printf "${@}"
 }
 log_success_msg() {
-    _log_msg "Success: ${@}\n"
+    _log_msg "Success: ${@}."
 }
 log_failure_msg() {
-    _log_msg "Failure: ${@}\n"
+    _log_msg "Failure: ${@}."
 }
 log_warning_msg() {
-    _log_msg "Warning: ${@}\n"
+    _log_msg "Warning: ${@}."
 }
 log_begin_msg() {
     _log_msg "Begin: ${@} ... "
 }
 log_end_msg() {
-    _log_msg "done.\n"
+    _log_msg " done.\n"
 }
 log_fatal_msg() {
     _log_msg "Fatal: ${@}\n"
@@ -45,18 +45,19 @@ signal_state() {
             http_patch "${METADATA_IP}" "${METADATA_PORT}" "{\"state_detail\": \"${state}\"}"
         if [ ${?} -eq 0 ]; then
             log_success_msg "control plane is aware that server is ${state}"
-            log_end_msg
+	    log_end_msg
             return
         else
             log_failure_msg "unable to signal server is ${state}"
-            log_end_msg
+	    log_end_msg
         fi
 
         retries=$((${retries}+1))
         test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
     done
 
-    log_failure_msg "Unsable to signal state=$state after ${RETRIES} attempts, continuing boot..."
+    log_failure_msg "Unsable to signal state=$state after ${RETRIES} attempts, continuing boot.."
+    log_end_msg
 }
 
 
@@ -78,7 +79,7 @@ Content-Length: ${content_length}
 ${content}"
 
     ( echo -n "${patch_body}" && sleep 3 ) \
-        | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK'
+        | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK' >/dev/null
 }
 
 # Function for parsing command line options with "=" in them
