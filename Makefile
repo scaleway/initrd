@@ -71,11 +71,19 @@ uInitrd-docker:	initrd.gz
 		  cp uInitrd /host/ \
 		'
 
+
+tree/usr/bin/oc-metadata:
+	wget https://raw.githubusercontent.com/online-labs/ocs-scripts/master/skeleton/usr/local/bin/oc-metadata -O $@
+	chmod +x $@
+
+
 tree/bin/sh:	tree/bin/busybox
+	cd tree && mkdir -p bin sbin etc proc sys newroot usr/bin usr/sbin
 	ln -s busybox $@
 
 
-initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) /bin/sh
+initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata Makefile
+	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
 	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
 
 
