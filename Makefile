@@ -76,7 +76,7 @@ initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) /bin/sh
 
 $(addprefix tree/, $(DEPENDENCIES)):	dependencies/Dockerfile
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies/
-	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(@:tree/%=%)
+	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(@:tree/%=%) $(DEPENDENCIES)
 	docker cp `docker ps -lq`:/tmp/export.tar $(PWD)/
 	docker rm `docker ps -lq`
 	tar -m -C tree/ -xf export.tar
