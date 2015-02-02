@@ -54,6 +54,7 @@ vmlinuz:
 
 uInitrd:	initrd.gz
 	$(MAKE) uInitrd-local || $(MAKE) uInitrd-docker
+	touch $@
 
 uInitrd-local:	initrd.gz
 	mkimage $(MKIMAGE_OPTS) -d initrd.gz uInitrd
@@ -73,8 +74,14 @@ uInitrd-docker:	initrd.gz
 
 
 tree/usr/bin/oc-metadata:
+	mkdir -p $(shell dirname $@)
 	wget https://raw.githubusercontent.com/online-labs/ocs-scripts/master/skeleton/usr/local/bin/oc-metadata -O $@
 	chmod +x $@
+
+
+tree/usr/sbin/@xnbd-client.link:	tree/usr/sbin/xnbd-client
+	ln -sf $(<:tree%=%) $(@:%.link=%)
+	touch $@
 
 
 tree/bin/sh:	tree/bin/busybox
@@ -82,9 +89,9 @@ tree/bin/sh:	tree/bin/busybox
 	ln -s busybox $@
 
 
-initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata Makefile
+initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile
 	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
-	cd tree && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(PWD)/$@
+	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
 $(addprefix tree/, $(DEPENDENCIES)):	dependencies/Dockerfile
