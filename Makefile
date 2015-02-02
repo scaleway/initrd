@@ -53,7 +53,12 @@ vmlinuz:
 
 
 uInitrd:	initrd.gz
-	# mkimage $(MKIMAGE_OPTS) -d $< $@
+	$(MAKE) uInitrd-local || $(MAKE) uInitrd-docker
+
+uInitrd-local:	initrd.gz
+	mkimage $(MKIMAGE_OPTS) -d initrd.gz uInitrd
+
+uInitrd-docker:	initrd.gz
 	docker run \
 		-it --rm \
 		-v /Users/moul/Git/github/initrd:/host \
