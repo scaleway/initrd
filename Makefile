@@ -85,7 +85,6 @@ tree/usr/sbin/@xnbd-client.link:	tree/usr/sbin/xnbd-client
 
 
 tree/bin/sh:	tree/bin/busybox
-	cd tree && mkdir -p bin sbin etc proc sys newroot usr/bin usr/sbin
 	ln -s busybox $@
 
 
