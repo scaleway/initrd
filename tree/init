@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # Create all the symlinks to /bin/busybox
+/bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
+
 
 # Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
