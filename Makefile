@@ -99,7 +99,7 @@ $(addprefix tree/, $(DEPENDENCIES)):	dependencies.tar.gz
 
 
 dependencies.tar.gz:	dependencies/Dockerfile
-	$(MAKE) dependencies.tar-armhf || $(MAKE) dependencies.tar-dist
+	$(MAKE) dependencies.tar.gz-armhf || $(MAKE) dependencies.tar.gz-dist
 
 
 dependencies.tar.gz-armhf:
