@@ -32,6 +32,17 @@ else
 fi
 
 
+# Drop debug shell
+log_begin_msg "Checking metadata for debug shell"
+if [ "$(get_metadata INITRD_PRE_SHELL)" = "1" ]; then
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
+    echo "To continue the initrd process, just type C^d"
+    /bin/sh
+fi
+
+
 # Signal to the console that the kernel is started
 signal_state kernel-started
 
@@ -82,6 +93,17 @@ mountroot
 
 # Signal to the console that the server is booted
 signal_state booted
+
+
+# Drop debug shell
+log_begin_msg "Checking metadata for debug shell"
+if [ "$(get_metadata INITRD_POST_SHELL)" = "1" ]; then
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
+    echo "To continue the initrd process, just type C^d"
+    /bin/sh
+fi
 
 
 # Check if $init exists and is executable
