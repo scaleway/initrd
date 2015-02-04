@@ -40,6 +40,8 @@ if [ "$(get_metadata INITRD_PRE_SHELL)" = "1" ]; then
     echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
     echo "To continue the initrd process, just type C^d"
     /bin/sh
+else
+    log_end_msg
 fi
 
 
@@ -103,6 +105,8 @@ if [ "$(get_metadata INITRD_POST_SHELL)" = "1" ]; then
     echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
     echo "To continue the initrd process, just type C^d"
     /bin/sh
+else
+    log_end_msg
 fi
 
 
