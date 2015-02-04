@@ -90,3 +90,21 @@ get_opt() {
 has_opt() {
     cat /proc/cmdline | tr " " "\n" | grep "^$1\$" >/dev/null
 }
+
+get_metadata() {
+    for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
+	tag=$(oc-metadata --cached TAGS_$idx)
+	if [ $(echo "$tag" | grep "^$1=") ]; then
+	    echo $tag | sed 's/^[^=]*=//'
+	    return
+	fi
+    done
+}
+
+has_metadata() {
+    (
+	for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
+	    oc-metadata --cached TAGS_$idx
+	done
+    ) | grep "^$1\$" >/dev/null
+}
