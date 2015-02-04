@@ -5,6 +5,7 @@ MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=		/bin/busybox /usr/sbin/xnbd-client /usr/sbin/ntpdate /lib/arm-linux-gnueabihf/libnss_files.so.2 /lib/arm-linux-gnueabihf/libnss_dns.so.2
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 
+HOST_ARCH ?=		$(shell uname -m)
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis
 
@@ -38,7 +39,7 @@ dist_do:
 	-git branch -D dist || true
 	git checkout -b dist
 	$(MAKE)
-	git add -f uInitrd initrd.gz tree
+	git add -f uInitrd initrd.gz tree dependencies.tar.gz
 	git commit -am "dist"
 	git push -u origin dist -f
 	$(MAKE) dist_teardown
@@ -93,10 +94,23 @@ initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tr
 	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
-$(addprefix tree/, $(DEPENDENCIES)):	dependencies/Dockerfile
+$(addprefix tree/, $(DEPENDENCIES)):	dependencies.tar.gz
+	tar -m -C tree/ -xzf $<
+
+
+dependencies.tar.gz:	dependencies/Dockerfile
+	$(MAKE) dependencies.tar-armhf || $(MAKE) dependencies.tar-dist
+
+
+dependencies.tar.gz-armhf:
+	test $(HOST_ARCH) = armv7l
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies/
-	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(@:tree/%=%) $(DEPENDENCIES)
-	docker cp `docker ps -lq`:/tmp/export.tar $(PWD)/
+	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
+	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
 	docker rm `docker ps -lq`
-	tar -m -C tree/ -xf export.tar
-	-rm -f export.tar
+	rm -f dependencies.tar.gz
+	gzip dependencies.tar	
+
+
+dependencies.tar.gz-dist:
+	wget https://github.com/online-labs/initrd/raw/dist/dependencies.tar.gz
