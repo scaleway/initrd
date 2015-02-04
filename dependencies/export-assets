@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXPORT=/tmp/export.tar
+EXPORT=/tmp/dependencies.tar
 
 cd /
 tar -cf ${EXPORT} dev/null
