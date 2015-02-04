@@ -57,8 +57,10 @@ uInitrd:	initrd.gz
 	$(MAKE) uInitrd-local || $(MAKE) uInitrd-docker
 	touch $@
 
+
 uInitrd-local:	initrd.gz
 	mkimage $(MKIMAGE_OPTS) -d initrd.gz uInitrd
+
 
 uInitrd-docker:	initrd.gz
 	docker run \
@@ -100,6 +102,9 @@ $(addprefix tree/, $(DEPENDENCIES)):	dependencies.tar.gz
 
 dependencies.tar.gz:	dependencies/Dockerfile
 	$(MAKE) dependencies.tar.gz-armhf || $(MAKE) dependencies.tar.gz-dist
+	tar tvzf $@ | grep bin/busybox || rm -f $@
+	@test -f $@ || echo $@ is broken
+	@test -f $@ || exit 1
 
 
 dependencies.tar.gz-armhf:
