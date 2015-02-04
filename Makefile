@@ -38,7 +38,7 @@ dist:
 dist_do:
 	-git branch -D dist || true
 	git checkout -b dist
-	$(MAKE)
+	$(MAKE) dependencies.tar.gz uInitrd
 	git add -f uInitrd initrd.gz tree dependencies.tar.gz
 	git commit -am "dist"
 	git push -u origin dist -f
