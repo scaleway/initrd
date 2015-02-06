@@ -21,6 +21,10 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 . /functions
 
 
+# Initial /proc/cmdline parsing
+export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
+
+
 # Verbose mode
 log_begin_msg "Checking metadata for debug mode"
 if [ "$(get_metadata INITRD_DEBUG)" = "1" ]; then
