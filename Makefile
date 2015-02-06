@@ -50,7 +50,9 @@ dist_teardown:
 
 # Files
 vmlinuz:
-	wget -O $@ $(KERNEL_URL)
+	-rm -f $@ $@.tmp
+	wget -O $@.tmp $(KERNEL_URL)
+	mv $@.tmp $@
 
 
 uInitrd:	initrd.gz
@@ -114,7 +116,7 @@ dependencies.tar.gz-armhf:
 	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
 	docker rm `docker ps -lq`
 	rm -f dependencies.tar.gz
-	gzip dependencies.tar	
+	gzip dependencies.tar
 
 
 dependencies.tar.gz-dist:
