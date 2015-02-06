@@ -4,6 +4,7 @@ CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nometadata
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=		/bin/busybox /usr/sbin/xnbd-client /usr/sbin/ntpdate /lib/arm-linux-gnueabihf/libnss_files.so.2 /lib/arm-linux-gnueabihf/libnss_dns.so.2
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
+QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -append "$(CMDLINE)" -no-reboot
 
 HOST_ARCH ?=		$(shell uname -m)
 
@@ -18,14 +19,17 @@ travis:
 
 qemu:    vmlinuz initrd.gz
 	qemu-system-arm \
-		-M versatilepb \
-		-cpu cortex-a9 \
+		$(QEMU_OPTIONS) \
 		-kernel ./vmlinuz \
 		-initrd ./initrd.gz \
-		-m 256 \
-		-append "$(CMDLINE)" \
-		-no-reboot \
 		-monitor stdio
+
+docker-qemu:	vmlinuz initrd.gz
+	docker run -v $(PWD):/boot -it --rm moul/qemu-user qemu-system-arm \
+		$(QEMU_OPTIONS) \
+		-kernel /boot/vmlinuz \
+		-initrd /boot/initrd.gz \
+		-nographic
 
 publish_on_s3:	uInitrd initrd.gz
 	for file in $<; do \
