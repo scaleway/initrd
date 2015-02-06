@@ -37,10 +37,11 @@ qemu-local-vga:	vmlinuz initrd.gz
 		-initrd ./initrd.gz \
 		-monitor stdio
 
-qemu-docker-text:	vmlinuz initrd.gz
+
+qemu-docker qemu-docker-text:	vmlinuz initrd.gz
 	docker run -v $(PWD):/boot -it --rm moul/qemu-user qemu-system-arm \
 		$(QEMU_OPTIONS) \
-		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE)" \
+		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) METADATA_IP=1.2.3.4" \
 		-kernel /boot/vmlinuz \
 		-initrd /boot/initrd.gz \
 		-nographic -monitor null
