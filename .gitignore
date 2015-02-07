@@ -15,3 +15,4 @@ tree/sbin/init
 tree/bin/sh
 tree/lib/
 tree/usr/
+tree/etc/udhcpc/

@@ -24,6 +24,11 @@ RUN apt-get install -y -q ntpdate \
  && apt-get clean
 
 
+# Install udhcpc
+RUN apt-get install -y -q udhcpc \
+ && apt-get clean
+ 
+
 # Install export scripts
 RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl -O /usr/local/bin/ldd-rec.pl \
  && chmod +x /usr/local/bin/ldd-rec.pl
