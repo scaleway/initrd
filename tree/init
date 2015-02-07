@@ -31,6 +31,7 @@ if [ "$(get_metadata INITRD_DEBUG)" = "1" ]; then
     log_success_msg "Enabling initrd debug"
     log_end_msg
     set -x
+    env
 else
     log_end_msg
 fi
