@@ -30,4 +30,9 @@ def conf():
     return '\n'.join(['{}={}'.format(key, value) for key, value in entries.items()])
 
 
+@app.route('/state', methods=['PATCH'])
+def state():
+    return 'OK'
+
+
 app.run(host='0.0.0.0', port=80)
