@@ -25,6 +25,15 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
 
+# Configure network (if needed)
+if [ "$(cat /sys/class/net/eth0/operstate)" = "down" ]; then
+    log_begin_msg "Configuring network"
+    ifconfig eth0 up
+    udhcpc -i eth0
+    log_end_msg
+fi
+
+
 # Verbose mode
 log_begin_msg "Checking metadata for debug mode"
 if [ "$(get_metadata INITRD_DEBUG)" = "1" ]; then

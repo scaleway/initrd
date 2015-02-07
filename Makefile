@@ -39,12 +39,16 @@ qemu-local-vga:	vmlinuz initrd.gz
 
 
 qemu-docker qemu-docker-text:	vmlinuz initrd.gz
-	docker run -v $(PWD):/boot -it --rm moul/qemu-user qemu-system-arm \
-		$(QEMU_OPTIONS) \
-		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) METADATA_IP=1.2.3.4" \
-		-kernel /boot/vmlinuz \
-		-initrd /boot/initrd.gz \
-		-nographic -monitor null
+	-fig kill metadata
+	fig run initrd /bin/bash -xc ' \
+		qemu-system-arm \
+		  -net nic -net user \
+		  $(QEMU_OPTIONS) \
+		  -append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) METADATA_IP=$$METADATA_PORT_80_TCP_ADDR" \
+		  -kernel /boot/vmlinuz \
+		  -initrd /boot/initrd.gz \
+		  -nographic -monitor null \
+		'
 
 
 publish_on_s3:	uInitrd initrd.gz
