@@ -113,3 +113,15 @@ has_metadata() {
 	done
     ) | grep "^$1\$" >/dev/null
 }
+
+get_any() {
+    key=$1
+    default=${2:-""}
+
+    ret=$(get_metadata $key)
+    if [ -n "$ret" ]; then
+	echo "$ret"
+    else
+	get_opt "$key" "$default"
+    fi
+}

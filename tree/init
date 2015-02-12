@@ -26,6 +26,7 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
 
 # Configure network (if needed)
+# FIXME: replace the following check with something stronger
 if [ "$(cat /sys/class/net/eth0/operstate)" = "down" ]; then
     log_begin_msg "Configuring network"
     ifconfig eth0 up
@@ -35,8 +36,8 @@ fi
 
 
 # Verbose mode
-log_begin_msg "Checking metadata for debug mode"
-if [ "$(get_metadata INITRD_DEBUG)" = "1" ]; then
+log_begin_msg "Checking user input for debug mode"
+if [ "$(get_any INITRD_DEBUG)" = "1" ]; then
     log_success_msg "Enabling initrd debug"
     log_end_msg
     set -x
@@ -47,11 +48,11 @@ fi
 
 
 # Drop debug shell
-log_begin_msg "Checking metadata for debug shell"
-if [ "$(get_metadata INITRD_PRE_SHELL)" = "1" ]; then
+log_begin_msg "Checking user input for debug shell"
+if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
     log_success_msg "Dropping a debug shell"
     log_end_msg
-    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
+    echo "**DEBUG SHELL** (requested from the user)"
     echo "To continue the initrd process, just type C^d"
     /bin/sh
 else
@@ -64,7 +65,7 @@ signal_state kernel-started
 
 
 # Adjust time
-if [ "$(get_metadata NO_NTPDATE)" != "1" ]; then
+if [ "$(get_any NO_NTPDATE)" != "1" ]; then
     log_begin_msg "Adjusting time (ntp)"
     ntpdate -d -b -p 2 ntp.int.cloud.online.net >/dev/null
     ntpdate -d -b -p 6 ntp.int.cloud.online.net >/dev/null 2>/dev/null &
@@ -73,25 +74,10 @@ fi
 
 
 # Defaults
-init="/sbin/init"
-root="/dev/nbd0"
-boot="local"
-rootmnt="/newroot"
-
-# Process command line options
-for i in $(cat /proc/cmdline); do
-    case "${i}" in
-        root\=*)
-            root=$(get_opt "${i}")
-            ;;
-        init\=*)
-            init=$(get_opt "${i}")
-            ;;
-        boot\=*)
-            boot=$(get_opt "${i}")
-            ;;
-    esac
-done
+init=$(get_any init "/sbin/init")
+root=$(get_any root "/dev/nbd0")
+boot=$(get_any boot "local")
+rootmnt=$(get_any rootmnt "/newroot")
 
 
 # Import boot-type functions
@@ -115,7 +101,7 @@ signal_state booted
 
 # Drop debug shell
 log_begin_msg "Checking metadata for debug shell"
-if [ "$(get_metadata INITRD_POST_SHELL)" = "1" ]; then
+if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
     log_success_msg "Dropping a debug shell"
     log_end_msg
     echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
