@@ -76,7 +76,7 @@ Content-Length: ${content_length}
 
 ${content}"
 
-    ( echo -n "${patch_body}" && sleep 3 ) \
+    ( echo -n "${patch_body}" && sleep 1 ) \
         | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK' >/dev/null
 }
 
