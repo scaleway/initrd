@@ -130,9 +130,20 @@ if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
     # the initramfs can be cleared after switch_root
     umount /sys /proc
+    set -x
+    log_begin_msg "Moving mounts"
+    [ -d ${rootmnt}/dev ] || mkdir -m 0755 ${rootmnt}/dev
+    [ -d ${rootmnt}/var/run ] || mkdir -pm 0755 ${rootmnt}/var/run
+    [ -d ${rootmnt}/sys ] || mkdir ${rootmnt}/sys
+    [ -d ${rootmnt}/proc ] || mkdir ${rootmnt}/proc
+    mount -o move /proc ${rootmnt}/proc
+    mount -o move /sys ${rootmnt}/sys
+    mount -o move /var/run ${rootmnt}/var/run
+    mount -o move /dev ${rootmnt}/dev
+    log_end_msg
 
     # Switch to the new root and execute init
-    exec switch_root "${rootmnt}" "${init}"
+    exec switch_root "${rootmnt}" "${init}" -v -d
 fi
 
 

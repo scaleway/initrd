@@ -167,31 +167,14 @@ dependencies.tar.gz-dist:
 	wget https://github.com/online-labs/initrd/raw/dist/dependencies.tar.gz
 
 
-minirootfs:
-	rm -rf $@ $@.tmp export.tar
+minirootfs.tar:
+	rm -f $@ $@.tmp
 	docker rm initrd-minirootfs 2>/dev/null || true
-	docker run --name initrd-minirootfs --entrypoint /donotexists armbuild/busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
-	docker export initrd-minirootfs > export.tar
-	docker rm initrd-minirootfs
-	mkdir -p $@.tmp
-	tar -C $@.tmp -xf export.tar
-	rm -f $@.tmp/.dockerenv $@.tmp/.dockerinit
-	-chmod 1777 $@.tmp/tmp
-	-chmod 755 $@.tmp/etc $@.tmp/usr $@.tmp/usr/local $@.tmp/usr/sbin
-	-chmod 555 $@.tmp/sys
-	#echo 127.0.1.1       server >> $@.tmp/etc/hosts
-	#echo 127.0.0.1       localhost server >> $@.tmp/etc/hosts
-	#echo ::1             localhost ip6-localhost ip6-loopback >> $@.tmp/etc/hosts
-	#echo ff02::1         ip6-allnodes >> $@.tmp/etc/hosts
-	#echo ff02::2         ip6-allrouters >> $@.tmp/etc/hosts
+	docker run --name initrd-minirootfs --entrypoint /donotexists armbuild/ocs-distrib-ubuntu:latest 2>&1 | grep -v "stat /donotexists: no such file" || true
+	docker export initrd-minirootfs > $@.tmp
 	mv $@.tmp $@
 
 
 metadata_mock/static/minirootfs.tar:	minirootfs.tar
 	mkdir -p $(shell dirname $@)
 	cp $< $@
-
-
-minirootfs.tar:	minirootfs
-	tar --format=gnu -C $< -cf $@.tmp . 2>/dev/null || tar --format=pax -C $< -cf $@.tmp . 2>/dev/null
-	mv $@.tmp $@
