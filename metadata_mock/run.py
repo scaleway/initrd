@@ -1,9 +1,9 @@
 import json
 
-from flask import Flask
+from flask import Flask, Blueprint
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 
 @app.route('/')
@@ -14,8 +14,8 @@ def root():
 @app.route('/conf')
 def conf():
     tags = {
-        'INITRD_DEBUG': 0,
-        'INITRD_PRE_SHELL': 0,
+        # 'INITRD_DEBUG': 0,
+        # 'INITRD_PRE_SHELL': 0,
         'NO_NTPDATE': 1,
     }
     entries = {
@@ -27,7 +27,9 @@ def conf():
         entries['TAGS_{}'.format(idx)] = '{}={}'.format(key, value)
         idx += 1
 
-    return '\n'.join(['{}={}'.format(key, value) for key, value in entries.items()])
+    return '\n'.join([
+        '{}={}'.format(key, value) for key, value in entries.items()
+    ])
 
 
 @app.route('/state', methods=['PATCH'])
