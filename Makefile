@@ -155,7 +155,7 @@ dependencies.tar.gz-dist:
 minirootfs:
 	rm -rf $@ $@.tmp export.tar
 	docker rm initrd-minirootfs 2>/dev/null || true
-	docker run --name initrd-minirootfs --entrypoint /donotexists armhf-busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
+	docker run --name initrd-minirootfs --entrypoint /donotexists armbuild/busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
 	docker export initrd-minirootfs > export.tar
 	docker rm initrd-minirootfs
 	mkdir -p $@.tmp
