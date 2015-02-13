@@ -20,3 +20,5 @@ tree/etc/udhcpc/
 /export.tar
 /minirootfs
 /minirootfs.tar
+
+metadata_mock/static/

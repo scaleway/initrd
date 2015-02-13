@@ -45,11 +45,15 @@ qemu-docker qemu-docker-text:	vmlinuz initrd.gz
 		qemu-system-arm \
 		  -net nic -net user \
 		  $(QEMU_OPTIONS) \
-		  -append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) METADATA_IP=$$METADATA_PORT_80_TCP_ADDR" \
+		  -append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG) METADATA_IP=$$METADATA_PORT_80_TCP_ADDR" \
 		  -kernel /boot/vmlinuz \
 		  -initrd /boot/initrd.gz \
 		  -nographic -monitor null \
 		'
+
+
+qemu-docker-rescue:	metadata_mock/static/minirootfs.tar
+	$(MAKE) qemu-docker-text CMDLINE='boot=rescue rescue_image=http://metadata.local/static/$(shell basename $<)'
 
 
 publish_on_s3:	uInitrd initrd.gz
@@ -151,14 +155,28 @@ dependencies.tar.gz-dist:
 minirootfs:
 	rm -rf $@ $@.tmp export.tar
 	docker rm initrd-minirootfs 2>/dev/null || true
-	docker run --name initrd-minirootfs --entrypoint /donotexists busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
+	docker run --name initrd-minirootfs --entrypoint /donotexists armhf-busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
 	docker export initrd-minirootfs > export.tar
 	docker rm initrd-minirootfs
 	mkdir -p $@.tmp
 	tar -C $@.tmp -xf export.tar
+	rm -f $@.tmp/.dockerenv $@.tmp/.dockerinit
+	-chmod 1777 $@.tmp/tmp
+	-chmod 755 $@.tmp/etc $@.tmp/usr $@.tmp/usr/local $@.tmp/usr/sbin
+	-chmod 555 $@.tmp/sys
+	#echo 127.0.1.1       server >> $@.tmp/etc/hosts
+	#echo 127.0.0.1       localhost server >> $@.tmp/etc/hosts
+	#echo ::1             localhost ip6-localhost ip6-loopback >> $@.tmp/etc/hosts
+	#echo ff02::1         ip6-allnodes >> $@.tmp/etc/hosts
+	#echo ff02::2         ip6-allrouters >> $@.tmp/etc/hosts
 	mv $@.tmp $@
 
 
+metadata_mock/static/minirootfs.tar:	minirootfs.tar
+	mkdir -p $(shell dirname $@)
+	cp $< $@
+
+
 minirootfs.tar:	minirootfs
-	tar --format=gnu -C $< -cf $@.tmp . 2>/dev/null || tar --format=cpio -C $< -cf $@.tmp . 2>/dev/null
+	tar --format=gnu -C $< -cf $@.tmp . 2>/dev/null || tar --format=pax -C $< -cf $@.tmp . 2>/dev/null
 	mv $@.tmp $@
