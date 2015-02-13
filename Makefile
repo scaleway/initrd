@@ -145,3 +145,19 @@ dependencies.tar.gz-armhf:
 
 dependencies.tar.gz-dist:
 	wget https://github.com/online-labs/initrd/raw/dist/dependencies.tar.gz
+
+
+minirootfs:
+	rm -rf $@ $@.tmp export.tar
+	docker rm initrd-minirootfs 2>/dev/null || true
+	docker run --name initrd-minirootfs --entrypoint /donotexists busybox 2>&1 | grep -v "stat /donotexists: no such file" || true
+	docker export initrd-minirootfs > export.tar
+	docker rm initrd-minirootfs
+	mkdir -p $@.tmp
+	tar -C $@.tmp -xf export.tar
+	mv $@.tmp $@
+
+
+minirootfs.tar:	minirootfs
+	tar --format=gnu -C $< -cf $@.tmp . 2>/dev/null || tar --format=cpio -C $< -cf $@.tmp . 2>/dev/null
+	mv $@.tmp $@

@@ -16,3 +16,7 @@ tree/bin/sh
 tree/lib/
 tree/usr/
 tree/etc/udhcpc/
+
+/export.tar
+/minirootfs
+/minirootfs.tar
