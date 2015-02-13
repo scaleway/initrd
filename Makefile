@@ -5,6 +5,7 @@ DEPENDENCIES ?=		/bin/busybox /usr/sbin/xnbd-client /usr/sbin/ntpdate /lib/arm-l
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
+INITRD_DEBUG ?=		0
 
 HOST_ARCH ?=		$(shell uname -m)
 
@@ -18,12 +19,12 @@ travis:
 	make -n Makefile
 
 qemu:
-	$(MAKE) qemu-local-text || $(MAKE) qemu-docker-text
+	$(MAKE) qemu-docker-text || $(MAKE) qemu-local-text
 
 qemu-local-text:	vmlinuz initrd.gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
-		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE)" \
+		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
 		-initrd ./initrd.gz \
 		-nographic -monitor null
@@ -32,7 +33,7 @@ qemu-local-text:	vmlinuz initrd.gz
 qemu-local-vga:	vmlinuz initrd.gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
-		-append "$(CMDLINE)" \
+		-append "$(CMDLINE)  INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
 		-initrd ./initrd.gz \
 		-monitor stdio
