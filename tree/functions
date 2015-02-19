@@ -54,7 +54,7 @@ signal_state() {
         test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
     done
 
-    log_failure_msg "Unsable to signal state=$state after ${RETRIES} attempts, continuing boot.."
+    log_failure_msg "unable to signal state=$state after ${RETRIES} attempts, continuing boot.."
     log_end_msg
 }
 
