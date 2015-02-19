@@ -1,7 +1,13 @@
 S3_TARGET ?=		s3://$(shell whoami)/
 KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
-DEPENDENCIES ?=		/bin/busybox /usr/sbin/xnbd-client /usr/sbin/ntpdate /lib/arm-linux-gnueabihf/libnss_files.so.2 /lib/arm-linux-gnueabihf/libnss_dns.so.2 /etc/udhcpc/default.script
+DEPENDENCIES ?=	\
+	/bin/busybox \
+	/usr/sbin/xnbd-client \
+	/usr/sbin/ntpdate \
+	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
+	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
+	/etc/udhcpc/default.script
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
@@ -9,7 +15,7 @@ INITRD_DEBUG ?=		0
 
 HOST_ARCH ?=		$(shell uname -m)
 
-.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis
+.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell
 
 # Phonies
 all:	uInitrd
@@ -138,6 +144,12 @@ dependencies.tar.gz:	dependencies/Dockerfile
 	@test -f $@ || exit 1
 
 
+dependencies-shell:
+	test $(HOST_ARCH) = armv7l
+	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies/
+	docker run -it $(DOCKER_DEPENDENCIES) /bin/bash
+
+
 dependencies.tar.gz-armhf:
 	test $(HOST_ARCH) = armv7l
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies/
@@ -145,7 +157,9 @@ dependencies.tar.gz-armhf:
 	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
 	docker rm `docker ps -lq`
 	rm -f dependencies.tar.gz
+	@ls -lah dependencies.tar
 	gzip dependencies.tar
+	@ls -lah dependencies.tar.gz
 
 
 dependencies.tar.gz-dist:
