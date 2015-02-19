@@ -35,6 +35,19 @@ if [ "$(cat /sys/class/net/eth0/operstate)" = "down" ]; then
 fi
 
 
+# Load nolp.ko
+log_begin_msg "Loading nolp kernel module"
+wget -q http://169.254.42.24/kernel/$(uname -r)/custom/nolp.ko
+insmod $(pwd)/nolp.ko
+if [ $? -eq 0 ]; then
+    log_success_msg "nolp.ko successfully loaded"
+    log_end_msg
+else
+    log_warning_msg "cannot load nolp.ko"
+    log_end_msg
+fi
+
+
 # Verbose mode
 log_begin_msg "Checking user input for debug mode"
 if [ "$(get_any INITRD_DEBUG)" = "1" ]; then
