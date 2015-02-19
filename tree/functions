@@ -63,6 +63,7 @@ signal_state() {
 
 # There is no option to send a patch with wget in busybox
 http_patch() {
+    # FIXME: find a better tool to handle this
     metadata_ip="${1}"
     metadata_port="${2}"
     content="${3}"
@@ -76,7 +77,7 @@ Content-Length: ${content_length}
 
 ${content}"
 
-    ( echo -n "${patch_body}" && sleep 1 ) \
+    ( echo -n "${patch_body}" && sleep 3 ) \
         | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK' >/dev/null
 }
 
