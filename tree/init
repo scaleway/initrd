@@ -112,6 +112,21 @@ mountroot
 signal_state booted
 
 
+# Prepare mount pseudo filesystem moving
+mount -o move /proc ${rootmnt}/proc
+mount -o move /sys ${rootmnt}/sys
+mount -o move /run ${rootmnt}/run
+mount -o move /dev ${rootmnt}/dev
+[ -c ${rootmnt}/dev/console ] || mknod -m 622 ${rootmnt}/dev/console c 5 1
+[ -c ${rootmnt}/dev/null ] || mknod -m 666 ${rootmnt}/dev/null c 1 3
+[ -c ${rootmnt}/dev/zero ] || mknod -m 666 ${rootmnt}/dev/zero c 1 5
+[ -c ${rootmnt}/dev/ptmx ] || mknod -m 666 ${rootmnt}/dev/ptmx c 5 2
+[ -c ${rootmnt}/dev/tty ] || mknod -m 666 ${rootmnt}/dev/tty c 5 0
+[ -c ${rootmnt}/dev/random ] || mknod -m 444 ${rootmnt}/dev/random c 1 8
+[ -c ${rootmnt}/dev/urandom ] || mknod -m 444 ${rootmnt}/dev/urandom c 1 9
+# chown -v root:tty /dev/{console,ptmx,tty}
+
+
 # Drop debug shell
 log_begin_msg "Checking metadata for debug shell"
 if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
@@ -129,7 +144,7 @@ fi
 if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
     # the initramfs can be cleared after switch_root
-    umount /sys /proc
+    # umount /sys /proc
 
     # Switch to the new root and execute init
     exec switch_root "${rootmnt}" "${init}"
