@@ -132,3 +132,24 @@ get_any() {
 	get_opt "$key" "$default"
     fi
 }
+
+
+load_nolp_ko() {
+    log_begin_msg "Loading nolp kernel module"
+    wget -q http://169.254.42.24/kernel/$(uname -r)/custom/nolp.ko
+    insmod $(pwd)/nolp.ko
+    if [ $? -eq 0 ]; then
+        log_success_msg "nolp.ko successfully loaded"
+        log_end_msg
+    else
+        log_warning_msg "cannot load nolp.ko"
+        log_end_msg
+    fi
+}
+
+
+setup_gpios() {
+    # Switch booted GPIO to enable serial for user
+    echo 42 > /sys/class/gpio/export
+    echo out > /sys/class/gpio/gpio42/direction
+}
