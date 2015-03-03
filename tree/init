@@ -17,6 +17,11 @@ mkdir /dev/pts
 mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 
 
+# Switch booted GPIO to enable serial for user
+echo 42 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio42/direction
+
+
 # Loading functions
 . /functions
 
