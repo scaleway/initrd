@@ -21,6 +21,10 @@ mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 . /functions
 
 
+# Configure GPIOs
+setup_gpios
+
+
 # Initial /proc/cmdline parsing
 export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
