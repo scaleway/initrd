@@ -103,6 +103,11 @@ mountroot
 signal_state booted
 
 
+# Forward network configuration files
+[ -s ${rootmnt}/etc/hostname ] || oc-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname
+grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf || cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf
+
+
 # Prepare mount pseudo filesystem moving
 mount -o move /proc ${rootmnt}/proc
 mount -o move /sys ${rootmnt}/sys
