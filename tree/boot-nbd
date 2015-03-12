@@ -21,7 +21,7 @@ setup_nbd_device() {
     # Checking if device is already attached
     $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then
-	return
+        return
     fi
 
     # Connecting the device
@@ -31,12 +31,12 @@ setup_nbd_device() {
 
     # Checking if device is already attached
     $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
-	log_fatal_msg "Device connection failed."
+        log_fatal_msg "Device connection failed."
 
     # Fixing IO scheduler
     if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
     then
-	echo deadline > /sys/block/nbd${device}/queue/scheduler
+        echo deadline > /sys/block/nbd${device}/queue/scheduler
     fi
 }
 
@@ -46,7 +46,7 @@ mountroot() {
 
     # Attaching NBD
     setup_nbd_device 0  # nbd0
-    
+
     # Prepare switch_root
     mount /dev/nbd0 ${rootmnt}
     echo 0x0100 > /proc/sys/kernel/real-root-dev
