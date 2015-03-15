@@ -67,18 +67,11 @@ http_patch() {
     metadata_ip="${1}"
     metadata_port="${2}"
     content="${3}"
-    content_length=$(echo -n "${content}" | wc -c)
-    patch_body="PATCH /state HTTP/1.1
-User-Agent: ocs-http-patch/0.1.0
-Host: ${metadata_ip}:${metadata_port}
-Accept: */*
-content-type: application/json
-Content-Length: ${content_length}
-
-${content}"
-
-    ( echo -n "${patch_body}" && sleep 3 ) \
-        | nc "${metadata_ip}" "${metadata_port}" | grep '200 OK' >/dev/null
+    curl \
+	-X PATCH \
+	-H "Content-Type: application/json" \
+	-d "$content" \
+	http://${metadata_ip}:${metadata_port}/state
 }
 
 
