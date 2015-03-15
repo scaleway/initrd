@@ -165,7 +165,7 @@ dependencies.tar.gz-armhf:
 
 
 dependencies.tar.gz-dist:
-	wget https://github.com/online-labs/initrd/raw/dist/dependencies.tar.gz
+	wget https://github.com/online-labs/initrd/raw/dist/dependencies.tar.gz -O dependencies.tar.gz
 
 
 minirootfs:
