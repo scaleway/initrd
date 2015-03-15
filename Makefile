@@ -8,7 +8,8 @@ DEPENDENCIES ?=	\
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
 	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
 	/etc/udhcpc/default.script \
-	/usr/lib/klibc/bin/ipconfig
+	/usr/lib/klibc/bin/ipconfig \
+	/usr/bin/curl
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
