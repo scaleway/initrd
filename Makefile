@@ -118,7 +118,7 @@ uInitrd-docker:	initrd.gz
 
 tree/usr/bin/oc-metadata:
 	mkdir -p $(shell dirname $@)
-	wget https://raw.githubusercontent.com/online-labs/ocs-scripts/master/skeleton/usr/local/bin/oc-metadata -O $@
+	wget https://raw.githubusercontent.com/online-labs/ocs-scripts/master/skeleton-common/usr/local/bin/oc-metadata -O $@
 	chmod +x $@
 
 
