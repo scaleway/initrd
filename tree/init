@@ -4,17 +4,22 @@
 /bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
 
-
 # Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
-[ -d /var/run ] || mkdir -pm 0755 /var/run
-[ -d /sys ] || mkdir /sys
-[ -d /proc ] || mkdir /proc
-mount -t sysfs -o nodev,noexec,nosuid none /sys
-mount -t proc -o nodev,noexec,nosuid none /proc
 mount -t devtmpfs -o mode=0755 none /dev
 mkdir /dev/pts
 mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
+
+[ -d /run ] || mkdir -pm 0755 /run
+mount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
+[ -d /var ] || mkdir -pm 0755 /var
+ln -s /run /var/run
+
+[ -d /sys ] || mkdir /sys
+mount -t sysfs -o nodev,noexec,nosuid none /sys
+
+[ -d /proc ] || mkdir /proc
+mount -t proc -o nodev,noexec,nosuid none /proc
 
 
 # Loading functions
@@ -71,7 +76,7 @@ signal_state kernel-started
 # Adjust time
 if [ "$(get_any NO_NTPDATE)" != "1" ]; then
     log_begin_msg "Adjusting time (ntp)"
-    ntpdate -d -b -p 2 ntp.int.cloud.online.net >/dev/null
+    ntpdate -d -b -p 2 ntp.int.cloud.online.net >/dev/null 2>&1 | tr '\r\n' '  '
     ntpdate -d -b -p 6 ntp.int.cloud.online.net >/dev/null 2>/dev/null &
     log_end_msg
 fi
@@ -108,7 +113,21 @@ signal_state booted
 grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf || cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf
 
 
+# Drop debug shell
+log_begin_msg "Checking metadata for debug shell"
+if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
+    echo "To continue the initrd process, just type C^d"
+    /bin/sh
+else
+    log_end_msg
+fi
+
+
 # Prepare mount pseudo filesystem moving
+mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
 mount -o move /proc ${rootmnt}/proc
 mount -o move /sys ${rootmnt}/sys
 mount -o move /run ${rootmnt}/run
@@ -121,19 +140,6 @@ mount -o move /dev ${rootmnt}/dev
 [ -c ${rootmnt}/dev/random ] || mknod -m 444 ${rootmnt}/dev/random c 1 8
 [ -c ${rootmnt}/dev/urandom ] || mknod -m 444 ${rootmnt}/dev/urandom c 1 9
 # chown -v root:tty /dev/{console,ptmx,tty}
-
-
-# Drop debug shell
-log_begin_msg "Checking metadata for debug shell"
-if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
-    log_success_msg "Dropping a debug shell"
-    log_end_msg
-    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
-    echo "To continue the initrd process, just type C^d"
-    /bin/sh
-else
-    log_end_msg
-fi
 
 
 # Check if $init exists and is executable
