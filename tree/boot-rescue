@@ -4,6 +4,6 @@ mountroot() {
     rescue_image=$(get_any rescue_image)
     log_begin_msg "Mounting rescue root: ${rescue_image}"
     mount -t tmpfs none "${rootmnt}"
-    wget -q -O - "${rescue_image}" | tar -C "${rootmnt}" -x -f -
+    curl -s -L "${rescue_image}" | tar -C "${rootmnt}" -x -f -
     log_end_msg
 }
