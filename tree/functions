@@ -91,7 +91,7 @@ resolve_hostnames() {
 get_opt() {
     key=$1
     default=$2
-    ret=$(cat /proc/cmdline ${rootmnt}/proc/cmdline 2>/dev/null | tr " " "\n" | grep "^$1" | cut -d "=" -f 2)
+    ret=$(cat /proc/cmdline ${rootmnt}/proc/cmdline 2>/dev/null | tr " " "\n" | grep "^$1" | head -n 1 | cut -d "=" -f 2)
     if [ -z "$ret" ]; then
         echo "$default" | resolve_hostnames
     else
