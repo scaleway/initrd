@@ -85,7 +85,11 @@ fi
 # Defaults
 init=$(get_any init "/sbin/init")
 root=$(get_any root "/dev/nbd0")
-boot=$(get_any boot "local")
+default_boot="local"
+if [ "${root}" = "/dev/nfs" ]; then
+    default_boot="nfs"
+fi
+boot=$(get_any boot "${default_boot}")
 rootmnt=$(get_any rootmnt "/newroot")
 
 
@@ -96,6 +100,9 @@ case "${boot}" in
         ;;
     rescue)
         . ./boot-rescue
+        ;;
+    nfs)
+        . ./boot-nfs
         ;;
 esac
 
