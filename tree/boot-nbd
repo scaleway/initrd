@@ -25,7 +25,14 @@ setup_nbd_device() {
     fi
 
     # Connecting the device
-    $NBD_CLIENT --blocksize 4096 --retry=$retries $nbd_host $nbd_port /dev/nbd${device} 2>/dev/null
+    (
+	export PATH=$(dirname $NBD_CLIENT)
+	$(basename $NBD_CLIENT) \
+	    --blocksize 4096 \
+	    --retry=$retries \
+	    $nbd_host $nbd_port \
+	    /dev/nbd${device} 2>/dev/null
+    )
     local nbd_pid=$$
     echo -1000 > /proc/$nbd_pid/oom_score_adj
 
