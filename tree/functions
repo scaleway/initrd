@@ -67,11 +67,18 @@ http_patch() {
     metadata_ip="${1}"
     metadata_port="${2}"
     content="${3}"
-    curl \
-	-X PATCH \
-	-H "Content-Type: application/json" \
-	-d "$content" \
-	http://${metadata_ip}:${metadata_port}/state
+    STATUSCODE=$(
+	curl \
+	    -X PATCH \
+	    --silent \
+	    --output /dev/stderr \
+	    --write-out "%{http_code}" \
+	    --retry 10 \
+	    -H "Content-Type: application/json" \
+	    -d "$content" \
+	    http://${metadata_ip}:${metadata_port}/state
+    )
+    test $STATUSCODE -eq 200
 }
 
 
