@@ -1,0 +1,6 @@
+mountroot() {
+  echo "**********************************************************"
+  echo "Invalid boot type (${boot})."
+  echo "Choose a boot value in: 'local', 'rescue', 'nfs' or 'live'"
+  echo "**********************************************************"
+}

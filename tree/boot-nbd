@@ -1,53 +1,6 @@
 # -*- shell-script -*-
 
 
-NBD_CLIENT=/usr/sbin/@xnbd-client
-
-
-setup_nbd_device() {
-    local device="$1"  # ie: 0
-    local retries=900
-
-
-    # Fetching metadatas
-    local export_uri=$(oc-metadata --cached VOLUMES_${device}_EXPORT_URI)
-    [ "$export_uri" = "" ] && log_fatal_msg "Unable to load metadatas..."
-
-    local nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
-    local nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
-    [ "$nbd_host" = "" -o "$nbd_port" = "" ] && log_fatal_msg "Parse error of $export_uri"
-
-
-    # Checking if device is already attached
-    $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null
-    if [ $? -eq 0 ]; then
-        return
-    fi
-
-    # Connecting the device
-    (
-	export PATH=$(dirname $NBD_CLIENT)
-	$(basename $NBD_CLIENT) \
-	    --blocksize 4096 \
-	    --retry=$retries \
-	    $nbd_host $nbd_port \
-	    /dev/nbd${device} 2>/dev/null
-    )
-    local nbd_pid=$$
-    echo -1000 > /proc/$nbd_pid/oom_score_adj
-
-    # Checking if device is already attached
-    $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
-        log_fatal_msg "Device connection failed."
-
-    # Fixing IO scheduler
-    if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
-    then
-        echo deadline > /sys/block/nbd${device}/queue/scheduler
-    fi
-}
-
-
 mountroot() {
     log_begin_msg "Attaching nbd0"
     setup_nbd_device 0

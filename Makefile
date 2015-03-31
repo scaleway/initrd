@@ -184,6 +184,7 @@ dependencies.tar.gz-armhf:
 dependencies.tar.gz-dist:
 	-git fetch origin
 	git checkout origin/dist -- dependencies.tar.gz
+	git reset HEAD dependencies.tar.gz
 
 
 minirootfs:
