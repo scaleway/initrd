@@ -9,7 +9,6 @@ RUN apt-get update \
    ntpdate \
    udhcpc \
    wget \
-   xnbd-client \
  && apt-get clean
 
 

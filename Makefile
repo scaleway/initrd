@@ -3,7 +3,6 @@ KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-a
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=	\
 	/bin/busybox \
-	/usr/sbin/xnbd-client \
 	/usr/sbin/ntpdate \
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
 	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
@@ -131,9 +130,14 @@ tree/bin/sh:	tree/bin/busybox
 	ln -s busybox $@
 
 
-initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile
+initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile tree/usr/sbin/xnbd-client
 	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
 	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
+
+
+tree/usr/sbin/xnbd-client:
+	wget https://github.com/aimxhaisse/xnbd-client-static/raw/dist/bin/xnbd-client-static -O $@
+	chmod +x $@
 
 
 $(addprefix tree/, $(DEPENDENCIES)):	dependencies.tar.gz
