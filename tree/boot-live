@@ -1,16 +1,11 @@
 # -*- shell-script -*-
 
 
-mountroot() {
-    attach_nbd_device 0
-
-    live_mode=$(get_any live_mode "auto")
-    rescue_image=$(get_any rescue_image)
-
-    /bin/sh
+live_install() {
+    local rescue_image="${1}"
 
     log_begin_msg "Formating nbd0"
-    mkfs.ext4 /dev/nbd0
+    mkfs.ext4 -F /dev/nbd0 || log_fatal_msg "Cannot format nbd0"
     log_end_msg
 
     mount_nbd 0 "${rootmnt}"
@@ -19,6 +14,33 @@ mountroot() {
     curl -s -L "${rescue_image}" | tar -C "${rootmnt}" -x -f -
     sync
     log_end_msg
+}
+
+
+mountroot() {
+    attach_nbd_device 0
+
+    live_mode=$(get_any live_mode "auto")
+    rescue_image=$(get_any rescue_image)
+
+    case "${live_mode}" in
+	install)
+	    live_install "${rescue_image}"
+	    ;;
+	auto)
+	    (parted -lm | grep ext) &>/dev/null
+	    IS_NBD0_SETUP=$?
+
+	    # if nbd0 is a fresh new volume -> install
+	    test ${IS_NBD0_SETUP} -eq 0 || live_install "${rescue_image}"
+
+	    # else -> just mount it
+	    test ${IS_NBD0_SETUP} -eq 0 && mount_nbd 0 "${rootmnt}"
+	    ;;
+	*)
+	    log_fatal_msg "Invalid live_mode: ${live_mode}, choose 'install' or 'auto'"
+	    ;;
+    esac
 
     attach_secondary_nbd_devices
 }
