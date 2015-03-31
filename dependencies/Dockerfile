@@ -8,6 +8,7 @@ RUN apt-get update \
    curl \
    ntpdate \
    udhcpc \
+   parted \
    wget \
  && apt-get clean
 
@@ -29,4 +30,3 @@ RUN apt-get update \
  && apt-get upgrade -q -y \
  && apt-get install -q -y \
    nfs-common
-   
