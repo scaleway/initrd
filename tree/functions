@@ -157,10 +157,11 @@ setup_gpios() {
 
 # Attach NBD device
 NBD_CLIENT=/usr/sbin/@xnbd-client
-setup_nbd_device() {
+attach_nbd_device() {
     local device="$1"  # ie: 0
     local retries=900
 
+    log_begin_msg "Attaching nbd${device}"
 
     # Fetching metadatas
     local export_uri=$(oc-metadata --cached VOLUMES_${device}_EXPORT_URI)
@@ -197,5 +198,40 @@ setup_nbd_device() {
     if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
     then
         echo deadline > /sys/block/nbd${device}/queue/scheduler
+    fi
+
+    log_end_msg
+}
+
+
+# Mount NBD
+mount_nbd() {
+    local device="$1"  # ie: 0
+    local dest="$2"    # ie: ${rootmnt}/
+
+    log_begin_msg "Mounting nbd${device} root"
+    mount /dev/nbd${device} ${dest}
+    if [ "${device}" = "0" ]; then
+	echo 0x0100 > /proc/sys/kernel/real-root-dev
+    fi
+    sync
+    log_end_msg
+}
+
+
+# ask metadata and automatically attach nbd>=1 devices
+attach_secondary_nbd_devices() {
+    log_begin_msg "Checking metadata in case we need to wait for secondary volumes to be ready"
+    if [ "$(get_any INITRD_WAIT_SECONDARY_VOLUMES)" = "1" ]; then
+	log_end_msg
+	for volume in $(oc-metadata --cached VOLUMES); do
+	    log_begin_msg "Attaching nbd${volume}"
+	    if [ "${volume}" -ne "0" ]; then
+		setup_nbd_device "${volume}"
+	    fi
+	    log_end_msg
+	done
+    else
+	log_end_msg
     fi
 }

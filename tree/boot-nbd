@@ -2,27 +2,7 @@
 
 
 mountroot() {
-    log_begin_msg "Attaching nbd0"
-    setup_nbd_device 0
-    log_end_msg
-
-    log_begin_msg "Mounting nbd0 root"
-    mount /dev/nbd0 ${rootmnt}
-    echo 0x0100 > /proc/sys/kernel/real-root-dev
-    sync
-    log_end_msg
-
-    log_begin_msg "Checking metadata in case we need to wait for secondary volumes to be ready"
-    if [ "$(get_any INITRD_WAIT_SECONDARY_VOLUMES)" = "1" ]; then
-	log_end_msg
-	for volume in $(oc-metadata --cached VOLUMES); do
-	    log_begin_msg "Attaching nbd${volume}"
-	    if [ "${volume}" -ne "0" ]; then
-		setup_nbd_device "${volume}"
-	    fi
-	    log_end_msg
-	done
-    else
-	log_end_msg
-    fi
+    attach_nbd_device 0
+    mount_nbd 0 "${rootmnt}"
+    attach_secondary_nbd_devices
 }

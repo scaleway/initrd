@@ -104,6 +104,9 @@ case "${boot}" in
     nfs)
         . ./boot-nfs
         ;;
+    live)
+        . ./boot-live
+        ;;
     *)
 	. ./boot-fallback
 	;;
