@@ -3,13 +3,13 @@ KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-a
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=	\
 	/bin/busybox \
-	/usr/sbin/ntpdate \
-	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
-	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
 	/etc/udhcpc/default.script \
-	/usr/lib/klibc/bin/ipconfig \
+	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
+	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
+	/sbin/mkfs.ext4 \
 	/usr/bin/curl \
-	/usr/lib/klibc/bin/nfsmount
+	/usr/lib/klibc/bin/ipconfig \
+	/usr/sbin/ntpdate
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
