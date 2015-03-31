@@ -157,6 +157,11 @@ mount -o move /dev ${rootmnt}/dev
 # chown -v root:tty /dev/{console,ptmx,tty}
 
 
+# Copy static xnbd-client to /run
+mkdir -p ${rootmnt}/run/sbin/
+cp /usr/sbin/xnbd-client ${rootmnt}/run/sbin/
+
+
 # Check if $init exists and is executable
 if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
