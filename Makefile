@@ -104,7 +104,7 @@ uInitrd-local:	initrd.gz
 uInitrd-docker:	initrd.gz
 	docker run \
 		-it --rm \
-		-v /Users/moul/Git/github/initrd:/host \
+		-v $(PWD)/initrd:/host \
 		-w /tmp \
 		moul/u-boot-tools \
 		/bin/bash -xec \
@@ -113,6 +113,15 @@ uInitrd-docker:	initrd.gz
 		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd.gz ./uInitrd && \
 		  cp uInitrd /host/ \
 		'
+
+uInitrd-shell: tree
+	test $(HOST_ARCH) = armv7l
+	docker run \
+		-it --rm \
+		-v $(PWD)/tree:/chroot \
+		-w /tmp \
+		armbuild/busybox \
+		chroot /chroot /bin/sh
 
 
 tree/usr/bin/oc-metadata:
@@ -130,9 +139,11 @@ tree/bin/sh:	tree/bin/busybox
 	ln -s busybox $@
 
 
-initrd.gz:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile tree/usr/sbin/xnbd-client
-	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
+initrd.gz:	tree
 	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
+
+tree:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile tree/usr/sbin/xnbd-client
+	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
 
 
 tree/usr/sbin/xnbd-client:
