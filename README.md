@@ -53,10 +53,10 @@ Developement dependencies
 -------------------------
 
 - for **x86_64** ARCH:
-  - Docker
-  - Fig
+  - docker
+  - docker-compose (only for qemu testing)
 - for **armhf** ARCH:
-  - Docker
+  - docker
   - u-boot-tools
 
 
