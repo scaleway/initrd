@@ -24,7 +24,7 @@ HOST_ARCH ?=		$(shell uname -m)
 all:	uInitrd
 
 travis:
-	bash -n tree/init tree/functions tree/boot-*
+	bash -n tree/init tree/shutdown tree/functions tree/boot-*
 	make -n Makefile
 
 qemu:
