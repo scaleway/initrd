@@ -4,6 +4,13 @@
 /bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
 
+
+# prepare a tmpfs-based initramfs for shutdown
+mkdir /initramfs
+mount -t tmpfs tmpfs /initramfs
+cp -rf / /initramfs
+
+
 # Mount things needed by this script
 [ -d /dev ] || mkdir -m 0755 /dev
 mount -t devtmpfs -o mode=0755 none /dev
@@ -157,9 +164,9 @@ mount -o move /dev ${rootmnt}/dev
 # chown -v root:tty /dev/{console,ptmx,tty}
 
 
-# Copy static xnbd-client to /run
-mkdir -p ${rootmnt}/run/sbin/
-cp /usr/sbin/xnbd-client ${rootmnt}/run/sbin/
+# Move initramfs copy to /run/initramfs for shutdown
+mkdir -p ${rootmnt}/run/initramfs
+mount -o move /initramfs ${rootmnt}/run/initramfs
 
 
 # Check if $init exists and is executable
