@@ -1,10 +1,17 @@
 #!/bin/sh
 
+set -x
 
-ACTION="${1:-halt}"
+
+# usage: /run/initramfs/shutdown {reboot|poweroff|halt}
+ACTION="${1:-reboot}"
 
 
-# disable hotplug
+# FIXME: we may be called from systemd or another system, so each commands
+#        should be able to fail without stopping the shutdown process
+
+
+# disable hotplug kernel hook
 echo > /proc/sys/kernel/hotplug
 
 
@@ -23,28 +30,21 @@ cd /
 # here we are in the initramfs
 mount -t proc -o nodev,noexec,nosuid none /proc
 mount -t devtmpfs -o mode=0755 none /dev
-mount -o remount,ro /oldroot/
 ln -s /proc/mounts  /etc/fstab
 swapoff -a
 
 
-# unmount nbd devices
-for device in $(mount | grep nbd | awk '{print $1}'); do
-    umount $device &>/dev/null || umount -l $device
-done
-
-
-# detach nbd devices
-for device in {0..15}; do
-    xnbd-client -d /dev/nbd${device} &>/dev/null
-done
+# for each NBD devices, we, ro-remount, umount and detach
+for device in /dev/nbd[0-9]*; do mount -o remount,ro "${device}"; done
+for device in /dev/nbd[0-9]*; do umount "${device}" &>/dev/null || umount -l "${device}"; done
+for device in /dev/nbd[0-9]*; do /usr/sbin/xnbd-client -d "${device}"; done
 
 
 # send sysrq
 case "${ACTION}" in
-    reboot) reboot -f; break;;
-    poweroff) poweroff -f; break;;
-    halt) halt -f; break;;
+    reboot)    reboot -f;    break;;
+    poweroff)  poweroff -f;  break;;
+    halt)      halt -f;      break;;
 esac
 
 
