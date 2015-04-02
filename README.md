@@ -1,4 +1,4 @@
-Initrd on Online Labs [![Build Status](https://travis-ci.org/online-labs/initrd.svg?branch=master)](https://travis-ci.org/online-labs/initrd)
+Initrd on Scaleway [![Build Status](https://travis-ci.org/scaleway/initrd.svg?branch=master)](https://travis-ci.org/scaleway/initrd)
 =====================
 
 Initrd used to boot C1 servers.
