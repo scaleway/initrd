@@ -27,9 +27,8 @@ log_fatal_msg() {
     reboot
 }
 
-## OCS specifics
 
-# Signal to OCS the current server state
+# Signal to SCW the current server state
 signal_state() {
     state="${1}"
     RETRIES=30
