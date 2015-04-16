@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 ACTION="${1:-halt}"
 
 
@@ -39,9 +38,9 @@ done
 
 # send sysrq
 case "${ACTION}" in
-    reboot) reboot -f; break;;
-    poweroff) poweroff -f; break;;
-    halt) halt -f; break;;
+    reboot)    reboot -f;    break;;
+    poweroff)  poweroff -f;  break;;
+    halt)      halt -f;      break;;
 esac
 
 

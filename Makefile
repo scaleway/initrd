@@ -18,13 +18,13 @@ INITRD_DEBUG ?=		0
 
 HOST_ARCH ?=		$(shell uname -m)
 
-.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell
+.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell uInitrd-shell
 
 # Phonies
 all:	uInitrd
 
 travis:
-	bash -n tree/init tree/functions tree/boot-*
+	bash -n tree/init tree/shutdown tree/functions tree/boot-*
 	make -n Makefile
 
 qemu:
@@ -49,8 +49,8 @@ qemu-local-vga:	vmlinuz initrd.gz
 
 
 qemu-docker qemu-docker-text:	vmlinuz initrd.gz
-	-fig kill metadata
-	fig run initrd /bin/bash -xc ' \
+	-docker-compose kill metadata
+	docker-compose run initrd /bin/bash -xc ' \
 		qemu-system-arm \
 		  -net nic -net user \
 		  $(QEMU_OPTIONS) \
