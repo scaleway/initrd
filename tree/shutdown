@@ -9,9 +9,9 @@ echo > /proc/sys/kernel/hotplug
 
 
 # umount special fs to allow pivot_root
-umount /sys  &>/dev/null || umount -l /sys
-umount /proc &>/dev/null || umount -l /proc
-umount /dev  &>/dev/null || umount -l /dev
+mount -o move /dev /run/initramfs/dev
+mount -o move /sys /run/initramfs/sys
+mount -o move /proc /run/initramfs/proc
 
 
 # pivot_root to initramfs
@@ -21,9 +21,6 @@ cd /
 
 
 # here we are in the initramfs
-mount -t proc -o nodev,noexec,nosuid none /proc
-mount -t devtmpfs -o mode=0755 none /dev
-mount -o remount,ro /oldroot/
 ln -s /proc/mounts  /etc/fstab
 swapoff -a
 
@@ -35,7 +32,7 @@ done
 
 
 # detach nbd devices
-for device in {0..15}; do
+for device in $(seq 0 15); do
     xnbd-client -d /dev/nbd${device} &>/dev/null
 done
 
