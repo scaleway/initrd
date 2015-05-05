@@ -1,13 +1,12 @@
-Initrd on Scaleway [![Build Status](https://travis-ci.org/scaleway/initrd.svg?branch=master)](https://travis-ci.org/scaleway/initrd)
-=====================
+# Initrd on Scaleway
+[![Build Status](https://travis-ci.org/scaleway/initrd.svg?branch=master)](https://travis-ci.org/scaleway/initrd)
 
 Initrd used to boot C1 servers.
 
 Based on Busybox.
 
 
-Features
---------
+## Features
 
 - configure *network*
 - synchronize time (*NTP*)
@@ -21,8 +20,7 @@ Features
 - wait for secondary *NBD* volumes
 
 
-Boot options
-------------
+## Boot options
 
 Using the *bootscripts*, we can change the `/proc/cmdline`.
 Using the servers tags, we can change the behaviour of the initrd without changing the `/proc/cmdline`.
@@ -40,8 +38,7 @@ Here are the availble *initrd variables*:
 - **nfsroot=server:path**: *NFS* mountpoint (ignored for non-*NFS* boot modes)
 
 
-Boot-modes
-----------
+## Boot-modes
 
 - **NBD**: attach NBD devices, boot on /dev/nbd0
 - **RESCUE**: download and unarchive rootfs using http (non-persistent)
@@ -49,8 +46,7 @@ Boot-modes
 - **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
 
 
-Developement dependencies
--------------------------
+## Developement dependencies
 
 - for **x86_64** ARCH:
   - docker
@@ -60,8 +56,7 @@ Developement dependencies
   - u-boot-tools
 
 
-Commands
---------
+## Commands
 
     # build the initrd
     make build
@@ -70,8 +65,7 @@ Commands
     make publish_on_s3
 
 
-Advanced commands
------------------
+## Advanced commands
 
     # rebuild dependencies (from an armhf server with docker)
     rm -fdependencies.tar.gz; make dependencies
@@ -87,3 +81,8 @@ Advanced commands
 
     # perform the travis tests
     make travis
+
+# Licensing
+
+© 2014-2015 Scaleway - [MIT License](https://github.com/scaleway/image-tools/blob/master/LICENSE).
+A project by [![Scaleway](https://avatars1.githubusercontent.com/u/5185491?v=3&s=42)](https://www.scaleway.com/)
