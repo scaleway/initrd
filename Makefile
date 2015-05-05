@@ -20,15 +20,19 @@ HOST_ARCH ?=		$(shell uname -m)
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell uInitrd-shell
 
+
 # Phonies
 all:	uInitrd
+
 
 travis:
 	bash -n tree/init tree/functions tree/boot-*
 	make -n Makefile
 
+
 qemu:
 	$(MAKE) qemu-docker-text || $(MAKE) qemu-local-text
+
 
 qemu-local-text:	vmlinuz initrd.gz
 	qemu-system-arm \
@@ -70,8 +74,10 @@ publish_on_s3:	uInitrd initrd.gz
 	  s3cmd put --acl-public $$file $(S3_TARGET); \
 	done
 
+
 dist:
 	$(MAKE) dist_do || $(MAKE) dist_teardown
+
 
 dist_do:
 	-git branch -D dist || true
@@ -81,6 +87,7 @@ dist_do:
 	git commit -am "dist"
 	git push -u origin dist -f
 	$(MAKE) dist_teardown
+
 
 dist_teardown:
 	git checkout master
@@ -115,6 +122,7 @@ uInitrd-docker:	initrd.gz
 		  cp uInitrd /host/ \
 		'
 
+
 uInitrd-shell: tree
 	test $(HOST_ARCH) = armv7l
 	docker run \
@@ -142,6 +150,7 @@ tree/bin/sh:	tree/bin/busybox
 
 initrd.gz:	tree
 	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
+
 
 tree:	$(addprefix tree/, $(DEPENDENCIES)) $(wildcard tree/*) tree/bin/sh tree/usr/bin/oc-metadata tree/usr/sbin/@xnbd-client.link Makefile tree/usr/sbin/xnbd-client
 	find tree \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
