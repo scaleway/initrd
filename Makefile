@@ -105,7 +105,7 @@ uInitrd-local:	initrd.gz
 uInitrd-docker:	initrd.gz
 	docker run \
 		-it --rm \
-		-v $(PWD)/initrd:/host \
+		-v $(PWD):/host \
 		-w /tmp \
 		moul/u-boot-tools \
 		/bin/bash -xec \
