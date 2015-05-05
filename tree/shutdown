@@ -1,3 +1,48 @@
 #!/bin/sh
 
-echo "Shutdown script triggered !"
+ACTION="${1:-halt}"
+
+
+# disable hotplug
+echo > /proc/sys/kernel/hotplug
+
+
+# umount special fs to allow pivot_root
+mount -o move /dev /run/initramfs/dev
+mount -o move /sys /run/initramfs/sys
+mount -o move /proc /run/initramfs/proc
+
+
+# pivot_root to initramfs
+mkdir -p /run/initramfs/oldroot
+PATH=/run/initramfs/bin /run/initramfs/bin/busybox pivot_root /run/initramfs /run/initramfs/oldroot
+cd /
+
+
+# here we are in the initramfs
+ln -s /proc/mounts  /etc/fstab
+swapoff -a
+
+
+# unmount nbd devices
+for device in $(mount | grep nbd | awk '{print $1}'); do
+    umount $device &>/dev/null || umount -l $device
+done
+
+
+# detach nbd devices
+for device in $(seq 0 15); do
+    xnbd-client -d /dev/nbd${device} &>/dev/null
+done
+
+
+# send sysrq
+case "${ACTION}" in
+    reboot)    reboot -f;    break;;
+    poweroff)  poweroff -f;  break;;
+    halt)      halt -f;      break;;
+esac
+
+
+# this should never happen
+/bin/sh
