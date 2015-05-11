@@ -7,7 +7,6 @@
 
 # prepare a tmpfs-based initramfs for shutdown
 mkdir /initramfs
-mount -t tmpfs tmpfs /initramfs
 cp -rf / /initramfs
 
 
