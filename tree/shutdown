@@ -7,18 +7,6 @@ ACTION="${1:-halt}"
 echo > /proc/sys/kernel/hotplug
 
 
-# umount special fs to allow pivot_root
-mount -o move /dev /run/initramfs/dev
-mount -o move /sys /run/initramfs/sys
-mount -o move /proc /run/initramfs/proc
-
-
-# pivot_root to initramfs
-mkdir -p /run/initramfs/oldroot
-PATH=/run/initramfs/bin /run/initramfs/bin/busybox pivot_root /run/initramfs /run/initramfs/oldroot
-cd /
-
-
 # here we are in the initramfs
 ln -s /proc/mounts  /etc/fstab
 swapoff -a
