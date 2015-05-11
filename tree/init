@@ -165,8 +165,7 @@ mount -o move /dev ${rootmnt}/dev
 
 
 # Move initramfs copy to /run/initramfs for shutdown
-mkdir -p ${rootmnt}/run/initramfs
-mount -o move /initramfs ${rootmnt}/run/initramfs
+mv /initramfs ${rootmnt}/run/initramfs
 
 
 # Check if $init exists and is executable
