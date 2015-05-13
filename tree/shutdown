@@ -17,7 +17,7 @@ if ! [ -z "$DO_PIVOT" ]; then
 
     # pivot_root to initramfs
     mkdir -p /run/initramfs/oldroot
-    PATH=/run/initramfs/bin /run/initramfs/bin/busybox pivot_root /run/initramfs /run/initramfs/oldroot
+    PATH=/run/initramfs/bin /run/initramfs/bin/busybox pivot_root /run/initramfs /oldroot
     cd /
 fi
 
