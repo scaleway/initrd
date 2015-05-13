@@ -1,6 +1,38 @@
+TARGET =	Openbsd-armv7
+DEPENDENCIES =	/usr/local/bin/bash /bin/sh /bin/mkdir /sbin/mount /bin/ln /sbin/mknod /bin/cp /usr/local/sbin/xnbd-client /usr/local/bin/curl
+
+
+initrd-$(TARGET)/.clean: tree-$(TARGET) tree-$(TARGET)/.deps $(wildcard tree-%(TARGET)/*)
+	find tree-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -exec rm {} \;
+
+
+initrd-$(TARGET).pax: initrd-$(TARGET)/.clean
+	cd tree && pax -w -f ../$@ -x tmpfs *
+
+
+tree-$(TARGET): tree
+	rm -rf $@
+	cp -rf tree $@
+
+
+tree-$(TARGET)/.deps: dependencies-$(TARGET).tar.gz
+	tar -m -C tree-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
+	rm -f tree-$(TARGET)/dev/null
+
+
+dependencies-$(TARGET).tar.gz:
+	# need to be run on $(TARGET)
+	cd ./dependencies-$(TARGET)/ && ./export-assets $(DEPENDENCIES)
+	mv /tmp/dependencies.tar dependencies-$(TARGET).tar
+	gzip dependencies-$(TARGET).tar
+
+
 .PHONY: uInitrd
-uInitrd:
-	@echo "not implemented"
+uInitrd: uInitrd-$(TARGET)
+
+
+uInitrd-$(TARGET): initrd-$(TARGET).pax
+	mkuboot -a arm -o linux -t ramdisk initrd-$(TARGET).pax $@
 
 
 .PHONY: travis
