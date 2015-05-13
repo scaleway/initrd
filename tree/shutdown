@@ -10,20 +10,27 @@ echo > /proc/sys/kernel/hotplug
 # systemd automatically pivots here, we support this extra-option for
 # other init systems that do not pivot prior to calling this script
 if ! [ -z "$DO_PIVOT" ]; then
+    # we need a dedicated mountpoint for pivot_root
+    mkdir -p /run/pivot-ramfs/
+    mount -t tmpfs tmpfs /run/pivot-ramfs
+    mv /run/initramfs/* /run/pivot-ramfs/
+
+    fuser /dev/nbd0
+
     # umount special fs to allow pivot_root
-    mount -o move /dev /run/initramfs/dev
-    mount -o move /sys /run/initramfs/sys
-    mount -o move /proc /run/initramfs/proc
+    mount --move /dev /run/pivot-ramfs/dev
+    mount --move /sys /run/pivot-ramfs/sys
+    mount --move /proc /run/pivot-ramfs/proc
 
     # pivot_root to initramfs
-    mkdir -p /run/initramfs/oldroot
-    PATH=/run/initramfs/bin /run/initramfs/bin/busybox pivot_root /run/initramfs /oldroot
+    mkdir -p /run/pivot-ramfs/oldroot
+    PATH=/run/pivot-ramfs/bin /run/pivot-ramfs/bin/busybox pivot_root /run/pivot-ramfs /run/pivot-ramfs/oldroot
     cd /
 fi
 
 
 # here we are in the initramfs
-ln -s /proc/mounts  /etc/fstab
+cp /proc/mounts  /etc/fstab
 swapoff -a
 
 
@@ -35,7 +42,7 @@ done
 
 # detach nbd devices
 for device in $(seq 0 15); do
-    xnbd-client -d /dev/nbd${device} &>/dev/null
+    xnbd-client -c /dev/nbd${device} && xnbd-client -d /dev/nbd${device} &>/dev/null
 done
 
 
