@@ -8,5 +8,4 @@ for file in $bin $(/root/ldd-rec.py $@); do
     tar -uf ${EXPORT} $(echo $file | sed -e 's/^\///')
 #   tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
 done
-tar --delete -f ${EXPORT} dev/null
 tar -tvf ${EXPORT}
