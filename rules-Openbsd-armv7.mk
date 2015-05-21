@@ -18,10 +18,19 @@ tree-$(TARGET): tree
 	cp -rf tree $@
 
 
-tree-$(TARGET)/.deps: dependencies-$(TARGET).tar.gz
+tree-$(TARGET)/.deps: miniroot-$(TARGET).tar.gz dependencies-$(TARGET).tar.gz
 	tar -m -C tree-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
 	rm -f tree-$(TARGET)/dev/null
 
+
+miniroot-$(TARGET).tar.gz: miniroot-$(TARGET).fs
+	exit 2
+
+miniroot-$(TARGET).fs:
+	# need to be run on $(TARGET)
+	rm -f bsd.rd $@
+	ftp https://www.blueri.se/bitrig/armv7/20150505/bsd.rd
+	rdconfig -X bsd.rd $@
 
 dependencies-$(TARGET).tar.gz:
 	# need to be run on $(TARGET)
