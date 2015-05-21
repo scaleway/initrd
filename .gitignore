@@ -5,6 +5,8 @@ uInitrd*
 vmlinuz*
 dependencies*.tar
 dependencies*.tar.gz
+miniroot-Openbsd-armv7.fs
+bsd.rd
 
 *~
 *#
