@@ -7,6 +7,7 @@ MAKE = 		make -f rules-$(TARGET).mk
 
 tree-$(TARGET)/.clean: tree-$(TARGET) tree-$(TARGET)/.deps $(wildcard tree-%(TARGET)/*)
 	find tree-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -exec rm {} \;
+	touch tree-$(TARGET)/.clean
 
 
 initrd-$(TARGET).pax: tree-$(TARGET)/.clean
@@ -19,12 +20,18 @@ tree-$(TARGET): tree
 
 
 tree-$(TARGET)/.deps: miniroot-$(TARGET).tar.gz dependencies-$(TARGET).tar.gz
-	tar -m -C tree-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
+	tar -m -C tree-$(TARGET)/ -xzf miniroot-$(TARGET).tar.gz
+	#tar -m -C tree-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
 	rm -f tree-$(TARGET)/dev/null
+	touch tree-$(TARGET)/.deps
 
 
 miniroot-$(TARGET).tar.gz: miniroot-$(TARGET).fs
-	exit 2
+	rm -rf miniroot-$(TARGET)/
+	mkdir -p miniroot-$(TARGET)/
+	tar -C miniroot-$(TARGET)/ -xphf miniroot-$(TARGET).fs
+	tar -C miniroot-$(TARGET)/ -czf $@ .
+
 
 miniroot-$(TARGET).fs:
 	# need to be run on $(TARGET)
