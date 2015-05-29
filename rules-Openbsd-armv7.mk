@@ -4,54 +4,55 @@ DEPENDENCIES =	/usr/local/bin/bash /bin/sh /bin/mkdir /sbin/mount /bin/ln /sbin/
 MAKE = 		make -f rules-$(TARGET).mk
 
 
-
-tree-$(TARGET)/.clean: tree-$(TARGET) tree-$(TARGET)/.deps $(wildcard tree-%(TARGET)/*)
-	find tree-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -exec rm {} \;
-	touch tree-$(TARGET)/.clean
+all: uInitrd-Openbsd-armv7
 
 
-initrd-$(TARGET).pax: tree-$(TARGET)/.clean
-	cd tree-$(TARGET) && pax -w -f ../$@ -x tmpfs *
+output-Openbsd-armv7/.clean: output-Openbsd-armv7/.deps $(wildcard output-%(TARGET)/*)
+	find output-Openbsd-armv7 \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -exec rm {} \;
+	touch output-Openbsd-armv7/.clean
 
 
-tree-$(TARGET): tree
-	rm -rf $@
-	cp -rf tree $@
+initrd-Openbsd-armv7.pax: output-Openbsd-armv7/.clean
+	cd output-Openbsd-armv7 && pax -w -f ../$@ -x tmpfs *
 
 
-tree-$(TARGET)/.deps: miniroot-$(TARGET).tar.gz dependencies-$(TARGET).tar.gz
-	tar -m -C tree-$(TARGET)/ -xzf miniroot-$(TARGET).tar.gz
-	#tar -m -C tree-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
-	rm -f tree-$(TARGET)/dev/null
-	touch tree-$(TARGET)/.deps
+output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz
+	rm -rf output-Openbsd-armv7
+	mkdir -p output-Openbsd-armv7
+	tar -m -C output-Openbsd-armv7/ -xzf miniroot-Openbsd-armv7.tar.gz
+	#tar -m -C output-Openbsd-armv7/ -xzf dependencies-Openbsd-armv7.tar.gz
+	rsync -az tree-Openbsd-armv7/ output-Openbsd-armv7
+	rm -f output-Openbsd-armv7/dev/null
+	touch output-Openbsd-armv7/.deps
 
 
-miniroot-$(TARGET).tar.gz: miniroot-$(TARGET).fs
-	rm -rf miniroot-$(TARGET)/
-	mkdir -p miniroot-$(TARGET)/
-	tar -C miniroot-$(TARGET)/ -xphf miniroot-$(TARGET).fs
-	tar -C miniroot-$(TARGET)/ -czf $@ .
+miniroot-Openbsd-armv7.tar.gz: miniroot-Openbsd-armv7.fs
+	rm -rf miniroot-Openbsd-armv7/
+	mkdir -p miniroot-Openbsd-armv7/
+	tar -C miniroot-Openbsd-armv7/ -xphf miniroot-Openbsd-armv7.fs
+	tar -C miniroot-Openbsd-armv7/ -czf $@ .
 
 
-miniroot-$(TARGET).fs:
-	# need to be run on $(TARGET)
+miniroot-Openbsd-armv7.fs:
+	# need to be run on Openbsd-armv7
 	rm -f bsd.rd $@
 	ftp https://www.blueri.se/bitrig/armv7/20150505/bsd.rd
 	rdconfig -X bsd.rd $@
 
-dependencies-$(TARGET).tar.gz:
-	# need to be run on $(TARGET)
-	cd ./dependencies-$(TARGET)/ && ./export-assets $(DEPENDENCIES)
-	mv /tmp/dependencies.tar dependencies-$(TARGET).tar
-	gzip dependencies-$(TARGET).tar
+
+dependencies-Openbsd-armv7.tar.gz:
+	# need to be run on Openbsd-armv7
+	cd ./dependencies-Openbsd-armv7/ && ./export-assets $(DEPENDENCIES)
+	mv /tmp/dependencies.tar dependencies-Openbsd-armv7.tar
+	gzip dependencies-Openbsd-armv7.tar
 
 
 .PHONY: uInitrd
-uInitrd: uInitrd-$(TARGET)
+uInitrd: uInitrd-Openbsd-armv7
 
 
-uInitrd-$(TARGET): initrd-$(TARGET).pax
-	mkuboot -a arm -o linux -t ramdisk initrd-$(TARGET).pax $@
+uInitrd-Openbsd-armv7: initrd-Openbsd-armv7.pax
+	mkuboot -a arm -o linux -t ramdisk initrd-Openbsd-armv7.pax $@
 
 
 .PHONY: travis
@@ -61,7 +62,7 @@ travis:
 
 .PHONY: publish_on_s3
 publish_on_s3:  uInitrd
-	s3cmd put --acl-public uInitrd-$(TARGET) $(S3_TARGET)
+	s3cmd put --acl-public uInitrd-Openbsd-armv7 $(S3_TARGET)
 
 
 .PHONY: dist
@@ -71,12 +72,12 @@ dist:
 
 .PHONY: dist_do
 dist_do:
-	-git branch -D dist-$(TARGET) || true
-	git checkout -b dist-$(TARGET)
-	-$(MAKE) dependencies-$(TARGET).tar.gz && git add -f dependencies-$(TARGET).tar.gz
-	-$(MAKE) uInitrd-$(TARGET) && git add -f uInitrd-$(TARGET) tree-$(TARGET)
+	-git branch -D dist-Openbsd-armv7 || true
+	git checkout -b dist-Openbsd-armv7
+	-$(MAKE) dependencies-Openbsd-armv7.tar.gz && git add -f dependencies-Openbsd-armv7.tar.gz
+	-$(MAKE) uInitrd-Openbsd-armv7 && git add -f uInitrd-Openbsd-armv7 output-Openbsd-armv7
 	git commit -am ":ship: dist"
-	git push -u origin dist-$(TARGET) -f
+	git push -u origin dist-Openbsd-armv7 -f
 	$(MAKE) dist_teardown
 
 
