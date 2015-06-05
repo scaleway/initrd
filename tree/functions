@@ -222,7 +222,7 @@ mount_nbd() {
 # ask metadata and automatically attach nbd>=1 devices
 attach_secondary_nbd_devices() {
     log_begin_msg "Checking metadata in case we need to wait for secondary volumes to be ready"
-    if [ "$(get_any INITRD_WAIT_SECONDARY_VOLUMES)" = "1" ]; then
+    if [ "$(get_any INITRD_SKIP_SECONDARY_VOLUMES)" != "1" ]; then
 	log_end_msg
 	for volume in $(oc-metadata --cached VOLUMES); do
 	    log_begin_msg "Attaching nbd${volume}"
