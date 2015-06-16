@@ -82,8 +82,8 @@ dist:
 dist_do:
 	-git branch -D dist-$(TARGET) || true
 	git checkout -b dist-$(TARGET)
-	-$(MAKE) dependencies.tar.gz && git add -f dependencies-$(TARGET).tar.gz
-	-$(MAKE) uInitrd && git add -f uInitrd-$(TARGET) initrd-$(TARGET).gz tree
+	-$(MAKE) dependencies-$(TARGET).tar.gz && git add -f dependencies-$(TARGET).tar.gz
+	-$(MAKE) uInitrd-$(TARGET) && git add -f uInitrd-$(TARGET) initrd-$(TARGET).gz tree
 	git commit -am "dist"
 	git push -u origin dist-$(TARGET) -f
 	$(MAKE) dist_teardown
@@ -151,6 +151,8 @@ tree/bin/sh:	tree/bin/busybox
 	ln -s busybox $@
 
 
+initrd.gz:	initrd-$(TARGET).gz
+
 initrd-$(TARGET).gz:	tree
 	cd tree && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
@@ -166,6 +168,8 @@ tree/usr/sbin/xnbd-client:
 
 $(addprefix tree/, $(DEPENDENCIES)):	dependencies-$(TARGET).tar.gz
 	tar -m -C tree/ -xzf $<
+
+dependencies.tar.gz:	dependencies-$(TARGET).tar.gz
 
 
 dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
