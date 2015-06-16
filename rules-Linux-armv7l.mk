@@ -80,12 +80,12 @@ dist:
 
 
 dist_do:
-	-git branch -D dist || true
-	git checkout -b dist
+	-git branch -D dist-$(TARGET) || true
+	git checkout -b dist-$(TARGET)
 	-$(MAKE) dependencies.tar.gz && git add -f dependencies.tar.gz
 	-$(MAKE) uInitrd && git add -f uInitrd initrd-$(TARGET).gz tree
 	git commit -am "dist"
-	git push -u origin dist -f
+	git push -u origin dist-$(TARGET) -f
 	$(MAKE) dist_teardown
 
 
@@ -195,7 +195,7 @@ dependencies-$(TARGET).tar.gz-armhf:
 
 dependencies-$(TARGET).tar.gz-dist:
 	-git fetch origin
-	git checkout origin/dist -- dependencies-$(TARGET).tar.gz
+	git checkout origin/dist-$(TARGET) -- dependencies-$(TARGET).tar.gz
 	git reset HEAD dependencies-$(TARGET).tar.gz
 
 
