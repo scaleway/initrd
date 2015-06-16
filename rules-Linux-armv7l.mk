@@ -82,8 +82,8 @@ dist:
 dist_do:
 	-git branch -D dist-$(TARGET) || true
 	git checkout -b dist-$(TARGET)
-	-$(MAKE) dependencies.tar.gz && git add -f dependencies.tar.gz
-	-$(MAKE) uInitrd && git add -f uInitrd initrd-$(TARGET).gz tree
+	-$(MAKE) dependencies.tar.gz && git add -f dependencies-$(TARGET).tar.gz
+	-$(MAKE) uInitrd && git add -f uInitrd-$(TARGET) initrd-$(TARGET).gz tree
 	git commit -am "dist"
 	git push -u origin dist-$(TARGET) -f
 	$(MAKE) dist_teardown
