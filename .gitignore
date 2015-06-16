@@ -2,8 +2,8 @@ busybox
 initrd.gz
 uInitrd
 vmlinuz
-dependencies.tar
-dependencies.tar.gz
+dependencies*.tar
+dependencies*.tar.gz
 
 *~
 *#

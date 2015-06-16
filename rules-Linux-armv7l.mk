@@ -185,7 +185,8 @@ dependencies-$(TARGET).tar.gz-armhf:
 	test $(HOST_ARCH) = armv7l
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
 	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
-	docker cp `docker ps -lq`:/tmp/dependencies-$(TARGET).tar $(PWD)/
+	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
+	mv dependencies.tar dependencies-$(TARGET).tar
 	docker rm `docker ps -lq`
 	rm -f dependencies-$(TARGET).tar.gz
 	@ls -lah dependencies-$(TARGET).tar
