@@ -53,8 +53,8 @@ qemu-local-vga:	vmlinuz initrd.gz
 
 
 qemu-docker qemu-docker-text:	vmlinuz initrd.gz
-	-docker-compose kill metadata
-	docker-compose run initrd /bin/bash -xc ' \
+	cd qemu; -docker-compose kill metadata
+	cd qemu; docker-compose run initrd /bin/bash -xc ' \
 		qemu-system-arm \
 		  -net nic -net user \
 		  $(QEMU_OPTIONS) \
