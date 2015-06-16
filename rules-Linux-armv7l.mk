@@ -109,7 +109,7 @@ uInitrd-$(TARGET):	initrd-$(TARGET).gz
 
 
 uInitrd-local:	initrd-$(TARGET).gz
-	mkimage $(MKIMAGE_OPTS) -d initrd-$(TARGET).gz uInitrd
+	mkimage $(MKIMAGE_OPTS) -d initrd-$(TARGET).gz uInitrd-$(TARGET)
 
 
 uInitrd-docker:	initrd-$(TARGET).gz
