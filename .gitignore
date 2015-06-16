@@ -26,4 +26,4 @@ tree/var/
 /minirootfs
 /minirootfs.tar
 
-metadata_mock/static/
+qemu/metadata_mock/static/
