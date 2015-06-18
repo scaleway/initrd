@@ -1,4 +1,5 @@
 TARGET =	Openbsd-armv7
+S3_TARGET ?=	s3://$(shell whoami)
 DEPENDENCIES =	/usr/local/bin/bash /bin/sh /bin/mkdir /sbin/mount /bin/ln /sbin/mknod /bin/cp /usr/local/sbin/xnbd-client /usr/local/bin/curl
 MAKE = 		make -f rules-$(TARGET).mk
 
@@ -43,8 +44,8 @@ travis:
 
 
 .PHONY: publish_on_s3
-publish_on_s3:
-	@echo "not implemented"
+publish_on_s3:  uInitrd
+	s3cmd put --acl-public uInitrd-$(TARGET) $(S3_TARGET)
 
 
 .PHONY: dist
