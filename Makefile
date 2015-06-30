@@ -1,7 +1,8 @@
 # Editable variables
 S3_TARGET ?=		s3://$(shell whoami)/
 INITRD_DEBUG ?=		0
-TARGETS ?=	Linux-armv7l Openbsd-armv7
+#TARGETS ?=	Linux-armv7l Openbsd-armv7
+TARGETS ?=	Linux-armv7l
 
 
 # Internal
