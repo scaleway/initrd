@@ -9,6 +9,7 @@ miniroot-*.tar.gz
 miniroot-*
 miniroot-Openbsd-armv7.fs
 bsd.rd
+output-*
 
 *~
 *#
