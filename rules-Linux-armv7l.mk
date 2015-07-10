@@ -28,7 +28,7 @@ all:	uInitrd
 
 
 travis:
-	bash -n output-Linux-armv7l/init output-Linux-armv7l/shutdown output-Linux-armv7l/functions output-Linux-armv7l/boot-*
+	bash -n tree-Linux-armv7l/init output-Linux-armv7l/shutdown output-Linux-armv7l/functions output-Linux-armv7l/boot-*
 
 
 qemu:
