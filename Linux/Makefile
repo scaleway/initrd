@@ -80,12 +80,12 @@ dist:
 
 
 dist_do:
-	-git branch -D dist-armv7l || true
-	git checkout -b dist-armv7l
+	-git branch -D dist-Linux-armv7l || true
+	git checkout -b dist-Linux-armv7l
 	-$(MAKE) dependencies-armv7l.tar.gz && git add -f dependencies-armv7l.tar.gz
 	-$(MAKE) uInitrd-armv7l && git add -f uInitrd-armv7l initrd-armv7l.gz output-armv7l
 	git commit -am ":ship: dist"
-	git push -u origin dist-armv7l -f
+	git push -u origin dist-Linux-armv7l -f
 	$(MAKE) dist_teardown
 
 
@@ -204,10 +204,7 @@ dependencies-armv7l.tar.gz-armhf:
 
 
 dependencies-armv7l.tar.gz-dist:
-	#-git fetch origin
-	#git checkout origin/dist-armv7l -- dependencies-armv7l.tar.gz
-	#git reset HEAD dependencies-armv7l.tar.gz
-	wget -O dependencies-armv7l.tar.gz https://github.com/scaleway/initrd/blob/dist-Linux-armv7l/dependencies-Linux-armv7l.tar.gz?raw=true
+	wget -O dependencies-armv7l.tar.gz https://github.com/scaleway/initrd/blob/dist-Linux-armv7l/Linux/dependencies-armv7l.tar.gz?raw=true
 
 
 minirootfs:
