@@ -1,3 +1,8 @@
 language: bash
+
+sudo: no
+
 script:
-- make travis
+- for TARGET in Linux Openbsd; do
+     make -C $TARGET travis;
+  done
