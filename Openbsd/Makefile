@@ -1,7 +1,6 @@
 TARGET =	Openbsd-armv7
 S3_TARGET ?=	s3://$(shell whoami)
 DEPENDENCIES =	/usr/local/bin/bash /bin/sh /bin/mkdir /sbin/mount /bin/ln /sbin/mknod /bin/cp /usr/local/sbin/xnbd-client /usr/local/bin/curl
-MAKE = 		make -f rules-$(TARGET).mk
 
 
 all: uInitrd-Openbsd-armv7

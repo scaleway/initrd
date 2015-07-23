@@ -30,8 +30,8 @@ tree/var/
 
 tree-*
 
-/export.tar
-/minirootfs
-/minirootfs.tar
+export.tar
+minirootfs
+minirootfs.tar
 
 qemu/metadata_mock/static/
