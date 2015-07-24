@@ -8,8 +8,9 @@
 void error(const char *msg) { perror(msg); exit(0); }
 
 int main(int argc,char *argv[]) {
-  int portno =        80;
-  char *host =        "169.254.42.42";
+  int portno =        3000;
+  //char *host =        "169.254.42.42";
+  char *host =        "127.0.0.1";
   char *message_fmt = "PATCH /state HTTP/1.1\n\
 User-Agent: scw-boot-tools/0.1.0\n\
 Host: %s:%d\n\
@@ -18,7 +19,6 @@ Content-Type: application/json\n\
 Content-Length: %d\n\n\
 {\"state_detail\": \"%s\"}";
 
-  struct hostent *server;
   struct sockaddr_in serv_addr;
   int sockfd, bytes, sent, received, total;
   char message[1024], response[4096];
@@ -36,15 +36,10 @@ Content-Length: %d\n\n\
     error("ERROR opening socket");
   }
 
-  server = gethostbyname(host);
-  if (server == NULL) {
-    error("ERROR, no such host");
-  }
-
   memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(portno);
-  memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+  serv_addr.sin_addr.s_addr = inet_addr(host);
 
   if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
     error("ERROR connecting");
