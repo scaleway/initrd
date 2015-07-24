@@ -12,7 +12,7 @@ output-Openbsd-armv7/.clean: output-Openbsd-armv7/.deps $(wildcard output-%(TARG
 
 
 initrd-Openbsd-armv7.pax: output-Openbsd-armv7/.clean
-	cd output-Openbsd-armv7 && pax -w -f ../$@ -x tmpfs *
+	cd output-Openbsd-armv7 && pax -w -f ../$@ -x tmpfs * .??*
 
 
 output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz
