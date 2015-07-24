@@ -23,6 +23,11 @@ Content-Length: %d\n\n\
   int sockfd, bytes, sent, received, total;
   char message[1024], response[4096];
 
+  if (argc < 2) {
+    printf("usage: %s <STATE>\n  i.e: %s booted\n", argv[0], argv[0]);
+    return 1;
+  }
+
   sprintf(message, message_fmt, host, portno, strlen(argv[1]) + 20, argv[1]);
   printf("Request:\n%s\n",message);
 
