@@ -83,3 +83,8 @@ dist_do:
 .PHONY: dist_teardown
 dist_teardown:
 	git checkout master
+
+
+clean:
+	rm -f uInitrd-Openbsd-armv7 miniroot-*.{fs,tar{,.gz}} dependencies-Openbsd-armv7.tar.gz bsd.rd initrd-*.pax
+	rm -rf miniroot-Openbsd-armv7 output-*
