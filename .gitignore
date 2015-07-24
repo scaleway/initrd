@@ -15,21 +15,6 @@ output-*
 *#
 .#*
 
-tree/etc/mdev.conf
-tree/bin/busybox
-tree/sbin/init
-tree/bin/sh
-tree/lib/
-tree/usr/
-tree/etc/udhcpc/
-tree/bin/
-tree/dev/
-tree/run/
-tree/sbin/
-tree/var/
-
-tree-*
-
 export.tar
 minirootfs
 minirootfs.tar
