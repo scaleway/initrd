@@ -1,6 +1,6 @@
 TARGET =	Openbsd-armv7
 S3_TARGET ?=	s3://$(shell whoami)
-DEPENDENCIES =	/usr/local/bin/bash /bin/sh /bin/mkdir /sbin/mount /bin/ln /sbin/mknod /bin/cp /usr/local/sbin/xnbd-client /usr/local/bin/curl
+DEPENDENCIES =	/usr/local/sbin/xnbd-client /usr/local/bin/curl
 
 
 all: uInitrd-Openbsd-armv7
@@ -19,7 +19,7 @@ output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-a
 	rm -rf output-Openbsd-armv7
 	mkdir -p output-Openbsd-armv7
 	tar -m -C output-Openbsd-armv7/ -xzf miniroot-Openbsd-armv7.tar.gz
-	#tar -m -C output-Openbsd-armv7/ -xzf dependencies-Openbsd-armv7.tar.gz
+	tar -m -C output-Openbsd-armv7/ -xzf dependencies-Openbsd-armv7.tar.gz
 	rsync -az tree-Openbsd-armv7/ output-Openbsd-armv7
 	rm -f output-Openbsd-armv7/dev/null
 	touch output-Openbsd-armv7/.deps
