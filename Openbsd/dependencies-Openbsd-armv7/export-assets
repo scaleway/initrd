@@ -1,10 +1,13 @@
 #!/usr/local/bin/bash
 
 EXPORT=/tmp/dependencies.tar
+WORKDIR=$(pwd)
+
+set -x
 
 cd /
 tar -cf ${EXPORT} dev/null
-for file in $bin $(/root/ldd-rec.py $@); do
+for file in $bin $($WORKDIR/ldd-rec.py $@); do
     tar -uf ${EXPORT} $(echo $file | sed -e 's/^\///')
 #   tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
 done
