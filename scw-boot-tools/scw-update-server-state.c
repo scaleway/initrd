@@ -1,22 +1,23 @@
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <unistd.h>
 
 void error(const char *msg) { perror(msg); exit(0); }
 
 int main(int argc,char *argv[]) {
-  int portno =        3000;
-  //char *host =        "169.254.42.42";
-  char *host =        "127.0.0.1";
-  char *message_fmt = "PATCH /state HTTP/1.1\n\
-User-Agent: scw-boot-tools/0.1.0\n\
-Host: %s:%d\n\
-Accept: */*\n\
+  int portno =        80;
+  char *host =        "169.254.42.42";
+  char *message_fmt = "PATCH /state HTTP/1.1\r\n\
+User-Agent: scw-boot-tools/0.1.0\r\n\
+Host: %s:%d\r\n\
+Accept: */*\r\n\
 Content-Type: application/json\n\
-Content-Length: %d\n\n\
+Content-Length: %d\r\n\r\n\
 {\"state_detail\": \"%s\"}";
 
   struct sockaddr_in serv_addr;
