@@ -16,6 +16,7 @@ int main(int argc,char *argv[]) {
 User-Agent: scw-boot-tools/0.1.0\r\n\
 Host: %s:%d\r\n\
 Accept: */*\r\n\
+Connection: closed\r\n\
 Content-Type: application/json\n\
 Content-Length: %d\r\n\r\n\
 {\"state_detail\": \"%s\"}";
