@@ -75,7 +75,7 @@ Content-Length: %d\r\n\r\n\
   total = sizeof(response)-1;
   received = 0;
   do {
-    bytes = read(sockfd, response + received, total-received);
+    bytes = read(sockfd, response + received, total - received);
     if (bytes < 0) {
       error("ERROR reading response from socket");
     }
@@ -85,8 +85,9 @@ Content-Length: %d\r\n\r\n\
     received += bytes;
   } while (received < total);
 
-  if (received == total)
+  if (received == total) {
     error("ERROR storing complete response from socket");
+  }
 
   close(sockfd);
 
