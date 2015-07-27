@@ -21,7 +21,7 @@ Content-Length: %d\r\n\r\n\
 
   struct timeval timeout;
   struct sockaddr_in serv_addr;
-  int sockfd, bytes, sent, received, total, status_code, retries = 1;
+  int sockfd, bytes, sent, received, total, status_code, retries = 2;
   char message[1024], response[4096], status_code_str[4];
 
   if (argc < 2) {
@@ -36,7 +36,7 @@ Content-Length: %d\r\n\r\n\
   timeout.tv_usec = 0;
 
  retry:
-  while (--retries > 0) {
+  while (retries-- > 0) {
     //printf("Retries: %d\n", retries);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {

@@ -41,7 +41,7 @@ signal_state() {
     while [ "${retries}" -lt "${RETRIES}" ]; do
         has_opt nometadata || scw-update-server-state "$state"
         if [ ${?} -eq 0 ]; then
-            log_success_msg "control plane is aware that server is ${state}"
+            # log_success_msg "control plane is aware that server is ${state}"
 	    log_end_msg
             return
 	fi
