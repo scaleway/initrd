@@ -197,13 +197,13 @@ dependencies-shell:
 	chmod +x ../scw-boot-tools/usr/bin/scw-update-server-state
 
 
-dependencies-armv7l.tar.gz-armhf: dependencies-armv7l ../scw-boot-tools/scw-update-server-state
+dependencies-armv7l.tar.gz-armhf: dependencies-armv7l ../scw-boot-tools/usr/bin/scw-update-server-state
 	test $(HOST_ARCH) = armv7l
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-armv7l/
 	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
 	mv dependencies.tar dependencies-armv7l.tar
-	(cd ../scw-boot-tools; tar -uf dependencies-armv7l.tar usr/bin/scw-update-server-state)
+	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-armv7l.tar usr/bin/scw-update-server-state)
 	docker rm `docker ps -lq`
 	rm -f dependencies-armv7l.tar.gz
 	@ls -lah dependencies-armv7l.tar
