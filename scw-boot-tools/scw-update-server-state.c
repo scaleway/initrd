@@ -7,8 +7,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void error(const char *msg) { perror(msg); exit(0); }
-
 int main(int argc,char *argv[]) {
   int portno =        80;
   char *host =        "169.254.42.42";
@@ -40,17 +38,20 @@ Content-Length: %d\r\n\r\n\
   while (retries > 0) {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-      error("ERROR opening socket");
+      perror("ERROR opening socket");
+      continue;
     }
 
     if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
 		    sizeof(timeout)) < 0) {
-      error("setsockopt failed\n");
+      perror("setsockopt failed\n");
+      continue;
     }
   
     if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
 		    sizeof(timeout)) < 0) {
-      error("setsockopt failed\n");
+      perror("setsockopt failed\n");
+      continue;
     }
     
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -59,7 +60,8 @@ Content-Length: %d\r\n\r\n\
     serv_addr.sin_addr.s_addr = inet_addr(host);
 
     if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-      error("ERROR connecting");
+      perror("ERROR connecting");
+      continue;
     }
 
     total = strlen(message);
@@ -67,7 +69,8 @@ Content-Length: %d\r\n\r\n\
     while (sent < total) {
       bytes = write(sockfd, message + sent, total - sent);
       if (bytes < 0) {
-	error("ERROR writing message to socket");
+	perror("ERROR writing message to socket");
+	continue;
       }
       if (bytes == 0) {
 	break;
@@ -81,7 +84,8 @@ Content-Length: %d\r\n\r\n\
     while (received < total) {
       bytes = read(sockfd, response + received, total - received);
       if (bytes < 0) {
-	error("ERROR reading response from socket");
+	perror("ERROR reading response from socket");
+	continue;
       }
       if (bytes == 0) {
 	break;
@@ -90,7 +94,8 @@ Content-Length: %d\r\n\r\n\
     }
 
     if (received == total) {
-      error("ERROR storing complete response from socket");
+      perror("ERROR storing complete response from socket");
+      continue;
     }
 
     close(sockfd);
