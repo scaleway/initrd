@@ -35,19 +35,17 @@ signal_state() {
     METADATA_PORT=80
     SLEEP_BETWEEN_RETRIES=1
 
+    log_begin_msg "Signaling the server is ${state} to the control plane"
+
     retries=0
     while [ "${retries}" -lt "${RETRIES}" ]; do
-        log_begin_msg "Signaling the server is ${state} to the control plane"
         has_opt nometadata || scw-update-server-state "$state"
         if [ ${?} -eq 0 ]; then
             log_success_msg "control plane is aware that server is ${state}"
 	    log_end_msg
             return
-        else
-            log_failure_msg "unable to signal server is ${state}"
-	    log_end_msg
-        fi
-
+	fi
+	
         retries=$((${retries}+1))
         test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
     done
@@ -72,7 +70,7 @@ get_opt() {
     if [ -z "$ret" ]; then
         echo "$default" | resolve_hostnames
     else
-        echo "$ret"| resolve_hostnames
+        echo "$ret" | resolve_hostnames
     fi
 }
 

@@ -7,7 +7,7 @@
 
 # prepare a tmpfs-based initramfs for shutdown
 mkdir /initramfs
-cp -rf / /initramfs
+cp -rf / /initramfs 2>/dev/null
 
 
 # Mount things needed by this script
