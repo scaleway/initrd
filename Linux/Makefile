@@ -8,7 +8,6 @@ DEPENDENCIES ?=	\
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
 	/sbin/mkfs.ext4 \
 	/sbin/parted \
-	/usr/bin/curl \
 	/usr/lib/klibc/bin/ipconfig \
 	/usr/sbin/ntpdate
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
@@ -144,6 +143,7 @@ output-armv7l/usr/bin/oc-metadata:
 
 initrd.gz:	initrd-armv7l.gz
 
+
 initrd-armv7l.gz:	output-armv7l/.deps
 	cd output-armv7l && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
@@ -190,12 +190,20 @@ dependencies-shell:
 	docker run -it $(DOCKER_DEPENDENCIES) /bin/bash
 
 
-dependencies-armv7l.tar.gz-armhf:
+../scw-boot-tools/usr/bin/scw-update-server-state: ../scw-boot-tools/scw-update-server-state.c
+	make -C ../scw-boot-tools
+	mkdir -p ../scw-boot-tools/usr/bin
+	cp ../scw-boot-tools/scw-update-server-state ../scw-boot-tools/usr/bin/
+	chmod +x ../scw-boot-tools/usr/bin/scw-update-server-state
+
+
+dependencies-armv7l.tar.gz-armhf: dependencies-armv7l ../scw-boot-tools/scw-update-server-state
 	test $(HOST_ARCH) = armv7l
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-armv7l/
 	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
 	mv dependencies.tar dependencies-armv7l.tar
+	(cd ../scw-boot-tools; tar -uf dependencies-armv7l.tar usr/bin/scw-update-server-state)
 	docker rm `docker ps -lq`
 	rm -f dependencies-armv7l.tar.gz
 	@ls -lah dependencies-armv7l.tar

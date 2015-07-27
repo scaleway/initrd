@@ -38,8 +38,7 @@ signal_state() {
     retries=0
     while [ "${retries}" -lt "${RETRIES}" ]; do
         log_begin_msg "Signaling the server is ${state} to the control plane"
-        has_opt nometadata || \
-            http_patch "${METADATA_IP}" "${METADATA_PORT}" "{\"state_detail\": \"${state}\"}"
+        has_opt nometadata || scw-update-server-state "$state"
         if [ ${?} -eq 0 ]; then
             log_success_msg "control plane is aware that server is ${state}"
 	    log_end_msg
@@ -59,27 +58,6 @@ signal_state() {
 
 
 ## Helpers
-
-# There is no option to send a patch with wget in busybox
-http_patch() {
-    # FIXME: find a better tool to handle this
-    metadata_ip="${1}"
-    metadata_port="${2}"
-    content="${3}"
-    STATUSCODE=$(
-	curl \
-	    -X PATCH \
-	    --silent \
-	    --output /dev/stderr \
-	    --write-out "%{http_code}" \
-	    --retry 10 \
-	    -H "Content-Type: application/json" \
-	    -d "$content" \
-	    http://${metadata_ip}:${metadata_port}/state
-    )
-    test $STATUSCODE -eq 200
-}
-
 
 resolve_hostnames() {
     sed "s/metadata.local/${METADATA_IP}/g"

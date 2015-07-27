@@ -10,12 +10,8 @@
 void error(const char *msg) { perror(msg); exit(0); }
 
 int main(int argc,char *argv[]) {
-  /*
-    int portno =        80;
-    char *host =        "169.254.42.42";
-  */
-  int portno =        8000;
-  char *host =        "127.0.0.1";
+  int portno =        80;
+  char *host =        "169.254.42.42";
   char *message_fmt = "PATCH /state HTTP/1.1\r\n\
 User-Agent: scw-boot-tools/0.1.0\r\n\
 Host: %s:%d\r\n\
