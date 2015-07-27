@@ -27,7 +27,7 @@ Content-Length: %d\r\n\r\n\
 
   struct timeval timeout;
   struct sockaddr_in serv_addr;
-  int sockfd, bytes, sent, received, total, status_code;
+  int sockfd, bytes, sent, received, total, status_code, retries = 3;
   char message[1024], response[4096], status_code_str[4];
 
   if (argc < 2) {
@@ -36,72 +36,82 @@ Content-Length: %d\r\n\r\n\
   }
 
   sprintf(message, message_fmt, host, portno, strlen(argv[1]) + 20, argv[1]);
-  printf("Request:\n%s\n",message);
-
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) {
-    error("ERROR opening socket");
-  }
+  //printf("Request:\n%s\n",message);
 
   timeout.tv_sec = 10;
   timeout.tv_usec = 0;
-  if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-		  sizeof(timeout)) < 0) {
-    error("setsockopt failed\n");
-  }
+
+  while (retries > 0) {
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+      error("ERROR opening socket");
+    }
+
+    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+		    sizeof(timeout)) < 0) {
+      error("setsockopt failed\n");
+    }
   
-  if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
-		  sizeof(timeout)) < 0) {
-    error("setsockopt failed\n");
-  }
+    if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+		    sizeof(timeout)) < 0) {
+      error("setsockopt failed\n");
+    }
     
-  memset(&serv_addr, 0, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(portno);
-  serv_addr.sin_addr.s_addr = inet_addr(host);
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_addr.s_addr = inet_addr(host);
 
-  if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-    error("ERROR connecting");
-  }
-
-  total = strlen(message);
-  sent = 0;
-  while (sent < total) {
-    bytes = write(sockfd, message + sent, total - sent);
-    if (bytes < 0) {
-      error("ERROR writing message to socket");
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+      error("ERROR connecting");
     }
-    if (bytes == 0) {
-      break;
+
+    total = strlen(message);
+    sent = 0;
+    while (sent < total) {
+      bytes = write(sockfd, message + sent, total - sent);
+      if (bytes < 0) {
+	error("ERROR writing message to socket");
+      }
+      if (bytes == 0) {
+	break;
+      }
+      sent += bytes;
     }
-    sent += bytes;
-  }
 
-  memset(response, 0, sizeof(response));
-  total = sizeof(response)-1;
-  received = 0;
-  while (received < total) {
-    bytes = read(sockfd, response + received, total - received);
-    if (bytes < 0) {
-      error("ERROR reading response from socket");
+    memset(response, 0, sizeof(response));
+    total = sizeof(response)-1;
+    received = 0;
+    while (received < total) {
+      bytes = read(sockfd, response + received, total - received);
+      if (bytes < 0) {
+	error("ERROR reading response from socket");
+      }
+      if (bytes == 0) {
+	break;
+      }
+      received += bytes;
     }
-    if (bytes == 0) {
-      break;
+
+    if (received == total) {
+      error("ERROR storing complete response from socket");
     }
-    received += bytes;
+
+    close(sockfd);
+
+    //printf("Response:\n%s\n", response);
+    memcpy(status_code_str, response + 9, 3);
+    status_code_str[4] = 0;
+    status_code = atoi(status_code_str);
+    //printf("Status code: %d\n", status_code);
+    if (status_code == 200) {
+	break;
+    }
+
+    if (!--retries) {
+      return 1;
+    }
   }
-
-  if (received == total) {
-    error("ERROR storing complete response from socket");
-  }
-
-  close(sockfd);
-
-  printf("Response:\n%s\n", response);
-  memcpy(status_code_str, response + 9, 3);
-  status_code_str[4] = 0;
-  status_code = atoi(status_code_str);
-  printf("Status code: %d\n", status_code);
 
   return 0;
 }
