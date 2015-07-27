@@ -167,15 +167,12 @@ mount -o move /dev ${rootmnt}/dev
 mv /initramfs ${rootmnt}/run/initramfs
 
 
-# Check if $init exists and is executable
-if [[ -x "${rootmnt}/${init}" ]] ; then
-    # Unmount all other mounts so that the ram used by
-    # the initramfs can be cleared after switch_root
-    # umount /sys /proc
+# Unmount all other mounts so that the ram used by
+# the initramfs can be cleared after switch_root
+# umount /sys /proc
 
-    # Switch to the new root and execute init
-    exec switch_root "${rootmnt}" "${init}"
-fi
+# Switch to the new root and execute init
+exec switch_root "${rootmnt}" "${init}"
 
 
 # This will only be run if the exec above failed
