@@ -21,7 +21,7 @@ Content-Length: %d\r\n\r\n\
 
   struct timeval timeout;
   struct sockaddr_in serv_addr;
-  int sockfd, bytes, sent, received, total, status_code, retries = 3;
+  int sockfd, bytes, sent, received, total, status_code, retries = 1;
   char message[1024], response[4096], status_code_str[4];
 
   if (argc < 2) {
