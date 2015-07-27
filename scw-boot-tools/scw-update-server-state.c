@@ -10,8 +10,13 @@
 void error(const char *msg) { perror(msg); exit(0); }
 
 int main(int argc,char *argv[]) {
-  int portno =        80;
-  char *host =        "169.254.42.42";
+  /*
+    int portno =        80;
+    char *host =        "169.254.42.42";
+  */
+  int portno =        8000;
+  char *host =        "127.0.0.1";
+  struct timeval timeout;
   char *message_fmt = "PATCH /state HTTP/1.1\r\n\
 User-Agent: scw-boot-tools/0.1.0\r\n\
 Host: %s:%d\r\n\
@@ -38,17 +43,18 @@ Content-Length: %d\r\n\r\n\
     error("ERROR opening socket");
   }
 
-  struct timeval timeout;
   timeout.tv_sec = 10;
   timeout.tv_usec = 0;
-      if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-                sizeof(timeout)) < 0)
-        error("setsockopt failed\n");
-
-    if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
-                sizeof(timeout)) < 0)
-        error("setsockopt failed\n");
-
+  if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+		  sizeof(timeout)) < 0) {
+    error("setsockopt failed\n");
+  }
+  
+  if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
+		  sizeof(timeout)) < 0) {
+    error("setsockopt failed\n");
+  }
+    
   memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(portno);
@@ -60,7 +66,7 @@ Content-Length: %d\r\n\r\n\
 
   total = strlen(message);
   sent = 0;
-  do {
+  while (sent < total) {
     bytes = write(sockfd, message + sent, total - sent);
     if (bytes < 0) {
       error("ERROR writing message to socket");
@@ -69,12 +75,12 @@ Content-Length: %d\r\n\r\n\
       break;
     }
     sent += bytes;
-  } while (sent < total);
+  }
 
   memset(response, 0, sizeof(response));
   total = sizeof(response)-1;
   received = 0;
-  do {
+  while (received < total) {
     bytes = read(sockfd, response + received, total - received);
     if (bytes < 0) {
       error("ERROR reading response from socket");
@@ -83,7 +89,7 @@ Content-Length: %d\r\n\r\n\
       break;
     }
     received += bytes;
-  } while (received < total);
+  }
 
   if (received == total) {
     error("ERROR storing complete response from socket");
