@@ -16,7 +16,6 @@ int main(int argc,char *argv[]) {
   */
   int portno =        8000;
   char *host =        "127.0.0.1";
-  struct timeval timeout;
   char *message_fmt = "PATCH /state HTTP/1.1\r\n\
 User-Agent: scw-boot-tools/0.1.0\r\n\
 Host: %s:%d\r\n\
@@ -26,9 +25,10 @@ Content-Type: application/json\n\
 Content-Length: %d\r\n\r\n\
 {\"state_detail\": \"%s\"}";
 
+  struct timeval timeout;
   struct sockaddr_in serv_addr;
-  int sockfd, bytes, sent, received, total;
-  char message[1024], response[4096];
+  int sockfd, bytes, sent, received, total, status_code;
+  char message[1024], response[4096], status_code_str[4];
 
   if (argc < 2) {
     printf("usage: %s <STATE>\n  i.e: %s booted\n", argv[0], argv[0]);
@@ -98,6 +98,10 @@ Content-Length: %d\r\n\r\n\
   close(sockfd);
 
   printf("Response:\n%s\n", response);
+  memcpy(status_code_str, response + 9, 3);
+  status_code_str[4] = 0;
+  status_code = atoi(status_code_str);
+  printf("Status code: %d\n", status_code);
 
   return 0;
 }
