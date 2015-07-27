@@ -16,7 +16,7 @@ QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
 INITRD_DEBUG ?=		0
 TARGET = armv7l
 HOST_ARCH ?=		$(shell uname -m)
-PUBLISH_FILES ?=	uInitrd-armv7l initrd-armv7l.gz
+PUBLISH_FILES ?=	uInitrd-Linux-armv7l initrd-Linux-armv7l.gz
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell uInitrd-shell
 
@@ -33,25 +33,25 @@ qemu:
 	$(MAKE) qemu-docker-text || $(MAKE) qemu-local-text
 
 
-qemu-local-text:	vmlinuz initrd-armv7l.gz
+qemu-local-text:	vmlinuz initrd-Linux-armv7l.gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
 		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
-		-initrd ./initrd-armv7l.gz \
+		-initrd ./initrd-Linux-armv7l.gz \
 		-nographic -monitor null
 
 
-qemu-local-vga:	vmlinuz initrd-armv7l.gz
+qemu-local-vga:	vmlinuz initrd-Linux-armv7l.gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
 		-append "$(CMDLINE)  INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
-		-initrd ./initrd-armv7l.gz \
+		-initrd ./initrd-Linux-armv7l.gz \
 		-monitor stdio
 
 
-qemu-docker qemu-docker-text:	vmlinuz initrd-armv7l.gz
+qemu-docker qemu-docker-text:	vmlinuz initrd-Linux-armv7l.gz
 	cd qemu; -docker-compose kill metadata
 	cd qemu; docker-compose run initrd /bin/bash -xc ' \
 		qemu-system-arm \
@@ -59,7 +59,7 @@ qemu-docker qemu-docker-text:	vmlinuz initrd-armv7l.gz
 		  $(QEMU_OPTIONS) \
 		  -append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG) METADATA_IP=$$METADATA_PORT_80_TCP_ADDR" \
 		  -kernel /boot/vmlinuz \
-		  -initrd /boot/initrd-armv7l.gz \
+		  -initrd /boot/initrd-Linux-armv7l.gz \
 		  -nographic -monitor null \
 		'
 
@@ -82,7 +82,7 @@ dist_do:
 	-git branch -D dist-Linux-armv7l || true
 	git checkout -b dist-Linux-armv7l
 	-$(MAKE) dependencies-armv7l.tar.gz && git add -f dependencies-armv7l.tar.gz
-	-$(MAKE) uInitrd-armv7l && git add -f uInitrd-armv7l initrd-armv7l.gz output-armv7l
+	-$(MAKE) uInitrd-Linux-armv7l && git add -f uInitrd-Linux-armv7l initrd-Linux-armv7l.gz output-armv7l
 	git commit -am ":ship: dist"
 	git push -u origin dist-Linux-armv7l -f
 	$(MAKE) dist_teardown
@@ -99,19 +99,19 @@ vmlinuz:
 	mv $@.tmp $@
 
 
-uInitrd:	uInitrd-armv7l
+uInitrd:	uInitrd-Linux-armv7l
 
 
-uInitrd-armv7l:	initrd-armv7l.gz
+uInitrd-Linux-armv7l:	initrd-Linux-armv7l.gz
 	$(MAKE) uInitrd-local || $(MAKE) uInitrd-docker
 
 
-uInitrd-local:	initrd-armv7l.gz
-	mkimage $(MKIMAGE_OPTS) -d initrd-armv7l.gz uInitrd-armv7l
-	touch uInitrd-armv7l
+uInitrd-local:	initrd-Linux-armv7l.gz
+	mkimage $(MKIMAGE_OPTS) -d initrd-Linux-armv7l.gz uInitrd-Linux-armv7l
+	touch uInitrd-Linux-armv7l
 
 
-uInitrd-docker:	initrd-armv7l.gz
+uInitrd-docker:	initrd-Linux-armv7l.gz
 	docker run \
 		-it --rm \
 		-v $(PWD):/host \
@@ -119,12 +119,12 @@ uInitrd-docker:	initrd-armv7l.gz
 		moul/u-boot-tools \
 		/bin/bash -xec \
 		' \
-		  cp /host/initrd-armv7l.gz . && \
-		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd-armv7l.gz ./uInitrd && \
+		  cp /host/initrd-Linux-armv7l.gz . && \
+		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd-Linux-armv7l.gz ./uInitrd && \
 		  cp uInitrd /host/ \
 		'
-	mv uInitrd uInitrd-armv7l
-	touch uInitrd-armv7l
+	mv uInitrd uInitrd-Linux-armv7l
+	touch uInitrd-Linux-armv7l
 
 
 uInitrd-shell: output-armv7l/.deps
@@ -141,10 +141,10 @@ output-armv7l/usr/bin/oc-metadata:
 	mkdir -p $(shell dirname $@)
 
 
-initrd.gz:	initrd-armv7l.gz
+initrd.gz:	initrd-Linux-armv7l.gz
 
 
-initrd-armv7l.gz:	output-armv7l/.deps
+initrd-Linux-armv7l.gz:	output-armv7l/.deps
 	cd output-armv7l && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
