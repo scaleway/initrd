@@ -1,6 +1,6 @@
 TARGET =	Openbsd-armv7
 S3_TARGET ?=	s3://root/
-DEPENDENCIES =	/usr/local/sbin/xnbd-client /usr/local/bin/curl
+DEPENDENCIES =	/usr/local/sbin/xnbd-client
 
 
 all: uInitrd-Openbsd-armv7
