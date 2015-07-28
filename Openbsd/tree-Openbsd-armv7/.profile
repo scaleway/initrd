@@ -21,11 +21,17 @@ echo "[+] Performing DHCP request"
 dhclient mvneta0
 
 
+echo "[+] Signal API current server state: kernel-started"
+scw-update-server-state kernel-started
+
+
+
 echo "[+] Attaching nbd0"
 export_uri=$(oc-metadata VOLUMES_0_EXPORT_URI)
 nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
 nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
 xnbd-client $nbd_host $nbd_port /dev/nbd0c
+sleep 1
 
 
 echo "[+] Running fsck on nbd0"
@@ -34,6 +40,10 @@ fsck /dev/nbd0a
 
 echo "[+] Mounting nbd0"
 mount /dev/nbd0a /mnt
+
+
+echo "[+] Signal API current server state: booted"
+scw-update-server-state booted
 
 
 echo "[+] pivot_root in /mnt"
