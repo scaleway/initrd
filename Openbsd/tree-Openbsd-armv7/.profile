@@ -62,8 +62,14 @@ nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
 nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
 xnbd-client $nbd_host $nbd_port /dev/nbd0c
 
+
+echo "[+] Running fsck on nbd0"
+fsck /dev/nbd0a
+
+
 echo "[+] Mounting nbd0"
 mount /dev/nbd0a /mnt
+
 
 echo "[+] pivot_root in /mnt"
 mkdir -p /mnt/old
