@@ -19,7 +19,7 @@ initrd-Openbsd-armv7.pax: output-Openbsd-armv7/.clean
 	$(MAKE) -C ../scw-boot-tools
 
 
-output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz ../scw-boot-tools/scw-update-server-state
+output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz ../scw-boot-tools/scw-update-server-state tree-Openbsd-armv7/.profile
 	rm -rf output-Openbsd-armv7
 	mkdir -p output-Openbsd-armv7
 	tar -m -C output-Openbsd-armv7/ -xzf miniroot-Openbsd-armv7.tar.gz
@@ -27,7 +27,6 @@ output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-a
 	rsync -az tree-Openbsd-armv7/ output-Openbsd-armv7
 	cp ../scw-boot-tools/scw-update-server-state output-Openbsd-armv7/usr/bin/
 	chmod +x output-Openbsd-armv7/usr/bin/scw-*
-	rm -f output-Openbsd-armv7/dev/null
 	touch output-Openbsd-armv7/.deps
 
 
