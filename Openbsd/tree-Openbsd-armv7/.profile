@@ -19,10 +19,12 @@ mount -uw /
 
 echo "[+] Performing DHCP request"
 dhclient mvneta0
+sleep 1
 
 
 echo "[+] Signal API current server state: kernel-started"
 scw-update-server-state kernel-started
+sleep 1
 
 
 
@@ -35,7 +37,7 @@ sleep 1
 
 
 echo "[+] Running fsck on nbd0"
-fsck /dev/nbd0a
+fsck -y /dev/nbd0a
 
 
 echo "[+] Mounting nbd0"
