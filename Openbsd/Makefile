@@ -19,7 +19,7 @@ initrd-Openbsd-armv7.pax: output-Openbsd-armv7/.clean
 	$(MAKE) -C ../scw-boot-tools
 
 
-output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz ../scw-boot-tools/scw-update-server-state tree-Openbsd-armv7/.profile
+output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-armv7.tar.gz ../scw-boot-tools/scw-update-server-state tree-Openbsd-armv7/.profile tree-Openbsd-armv7/usr/bin/oc-metadata
 	rm -rf output-Openbsd-armv7
 	mkdir -p output-Openbsd-armv7
 	tar -m -C output-Openbsd-armv7/ -xzf miniroot-Openbsd-armv7.tar.gz
@@ -28,6 +28,13 @@ output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-a
 	cp ../scw-boot-tools/scw-update-server-state output-Openbsd-armv7/usr/bin/
 	chmod +x output-Openbsd-armv7/usr/bin/scw-*
 	touch output-Openbsd-armv7/.deps
+
+
+tree-Openbsd-armv7/usr/bin/oc-metadata:
+	mkdir -p tree-Openbsd-armv7/usr/bin
+	ftp https://raw.githubusercontent.com/scaleway/image-tools/master/skeleton-common/usr/local/bin/oc-metadata
+	mv oc-metadata $@
+	chmod +x $@
 
 
 miniroot-Openbsd-armv7.tar.gz: miniroot-Openbsd-armv7.fs
