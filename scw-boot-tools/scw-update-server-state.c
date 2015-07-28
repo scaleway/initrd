@@ -104,7 +104,7 @@ Content-Length: %d\r\n\r\n\
 
     // printf("Response:\n%s\n", response);
     memcpy(status_code_str, response + 9, 3);
-    status_code_str[4] = 0;
+    status_code_str[3] = 0;
     status_code = atoi(status_code_str);
     // printf("Status code: %d\n", status_code);
     if (status_code == 200) {
