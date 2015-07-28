@@ -1,11 +1,21 @@
 #!/bin/sh
 
+
 set -x
 
-export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin"
+
+echo "[+] Setting up environment"
+export VNAME=$(sysctl -n kern.osrelease)
+export VERSION="${VNAME%.*}${VNAME#*.}"
+export ARCH=$(sysctl -n hw.machine)
+export PATH=/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/
+umask 022
+set -o emacs
+
 
 echo "[+] Remounting ramdisk read-write"
 mount -uw /
+
 
 echo "[+] Populating /dev"
 mknod /dev/nbd0a b 21 0
@@ -40,6 +50,7 @@ mknod /dev/rnbd0m c 21 12
 mknod /dev/rnbd0n c 21 13
 mknod /dev/rnbd0o c 21 14
 mknod /dev/rnbd0p c 21 15
+
 
 echo "[+] Performing DHCP request"
 dhclient mvneta0
