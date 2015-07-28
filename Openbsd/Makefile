@@ -28,6 +28,38 @@ output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-a
 	cp ../scw-boot-tools/scw-update-server-state output-Openbsd-armv7/usr/bin/
 	mv output-Openbsd-armv7/usr/local/lib/* output-Openbsd-armv7/usr/lib/
 	chmod +x output-Openbsd-armv7/usr/bin/scw-*
+	mknod output-Openbsd-armv7/dev/nbd0a b 21 0
+	mknod output-Openbsd-armv7/dev/nbd0b b 21 1
+	mknod output-Openbsd-armv7/dev/nbd0c b 21 2
+	mknod output-Openbsd-armv7/dev/nbd0d b 21 3
+	mknod output-Openbsd-armv7/dev/nbd0e b 21 4
+	mknod output-Openbsd-armv7/dev/nbd0f b 21 5
+	mknod output-Openbsd-armv7/dev/nbd0g b 21 6
+	mknod output-Openbsd-armv7/dev/nbd0h b 21 7
+	mknod output-Openbsd-armv7/dev/nbd0i b 21 8
+	mknod output-Openbsd-armv7/dev/nbd0j b 21 9
+	mknod output-Openbsd-armv7/dev/nbd0k b 21 10
+	mknod output-Openbsd-armv7/dev/nbd0l b 21 11
+	mknod output-Openbsd-armv7/dev/nbd0m b 21 12
+	mknod output-Openbsd-armv7/dev/nbd0n b 21 13
+	mknod output-Openbsd-armv7/dev/nbd0o b 21 14
+	mknod output-Openbsd-armv7/dev/nbd0p b 21 15
+	mknod output-Openbsd-armv7/dev/rnbd0a c 21 0
+	mknod output-Openbsd-armv7/dev/rnbd0b c 21 1
+	mknod output-Openbsd-armv7/dev/rnbd0c c 21 2
+	mknod output-Openbsd-armv7/dev/rnbd0d c 21 3
+	mknod output-Openbsd-armv7/dev/rnbd0e c 21 4
+	mknod output-Openbsd-armv7/dev/rnbd0f c 21 5
+	mknod output-Openbsd-armv7/dev/rnbd0g c 21 6
+	mknod output-Openbsd-armv7/dev/rnbd0h c 21 7
+	mknod output-Openbsd-armv7/dev/rnbd0i c 21 8
+	mknod output-Openbsd-armv7/dev/rnbd0j c 21 9
+	mknod output-Openbsd-armv7/dev/rnbd0k c 21 10
+	mknod output-Openbsd-armv7/dev/rnbd0l c 21 11
+	mknod output-Openbsd-armv7/dev/rnbd0m c 21 12
+	mknod output-Openbsd-armv7/dev/rnbd0n c 21 13
+	mknod output-Openbsd-armv7/dev/rnbd0o c 21 14
+	mknod output-Openbsd-armv7/dev/rnbd0p c 21 15
 	touch output-Openbsd-armv7/.deps
 
 
