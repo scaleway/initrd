@@ -26,6 +26,7 @@ output-Openbsd-armv7/.deps: miniroot-Openbsd-armv7.tar.gz dependencies-Openbsd-a
 	tar -m -C output-Openbsd-armv7/ -xzf dependencies-Openbsd-armv7.tar.gz
 	rsync -az tree-Openbsd-armv7/ output-Openbsd-armv7
 	cp ../scw-boot-tools/scw-update-server-state output-Openbsd-armv7/usr/bin/
+	mv output-Openbsd-armv7/usr/local/lib/* output-Openbsd-armv7/usr/lib/
 	chmod +x output-Openbsd-armv7/usr/bin/scw-*
 	touch output-Openbsd-armv7/.deps
 
