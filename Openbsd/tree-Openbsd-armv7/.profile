@@ -53,5 +53,5 @@ mkdir -p /mnt/old
 pivot_root /mnt /mnt/old
 
 
-echo "[-] Droping a debug shell"
-exec /bin/sh
+echo "[+] Exitint initrd, entering multiuser mode"
+exit
