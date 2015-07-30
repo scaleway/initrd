@@ -7,3 +7,5 @@ clean:
 	rm -f $(NAME)
 
 re: clean all
+
+travis: all

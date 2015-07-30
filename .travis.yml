@@ -3,6 +3,6 @@ language: bash
 sudo: no
 
 script:
-- for TARGET in Linux Openbsd; do
+- for TARGET in Linux Openbsd scw-boot-tools; do
      make -C $TARGET travis;
   done
