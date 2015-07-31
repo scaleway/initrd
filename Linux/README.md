@@ -3,6 +3,21 @@
 
 Initrd used to boot Linux images on Scaleway servers
 
+## Example of output
+
+```
+Begin: Checking user input for debug mode ...  done.
+Begin: Checking user input for debug shell ...  done.
+Begin: Signaling the server is kernel-started to the control plane ... done.
+Begin: Adjusting time (ntp) ...  done.
+Begin: Attaching nbd0 ...  done.
+Begin: Mounting nbd0 root ... done.
+Begin: Checking metadata in case we skip to wait for secondary volumes to be ready ...  done.
+Begin: Attaching nbd0 ...  done.
+Begin: Signaling the server is booted to the control plane ... done.
+Begin: Checking metadata for debug shell ...  done.
+```
+
 ## Features
 
 - configure *network*
