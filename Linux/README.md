@@ -5,7 +5,7 @@ Initrd used to boot Linux images on Scaleway servers
 
 ## Example of output
 
-```
+```bash
 Begin: Checking user input for debug mode ...  done.
 Begin: Checking user input for debug shell ...  done.
 Begin: Signaling the server is kernel-started to the control plane ... done.
