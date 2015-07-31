@@ -1,10 +1,7 @@
-# Initrd on Scaleway
+# initrd/*Linux*
 [![Build Status](https://travis-ci.org/scaleway/initrd.svg?branch=master)](https://travis-ci.org/scaleway/initrd)
 
-Initrd used to boot C1 servers.
-
-Based on Busybox.
-
+Initrd used to boot Linux images on Scaleway servers
 
 ## Features
 
