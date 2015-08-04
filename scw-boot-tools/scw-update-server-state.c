@@ -6,6 +6,12 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <errno.h>
+
+# define RETRY(msg) close(sockfd);\
+                    fprintf(stderr, "ERROR %s %s\n", msg, strerror(errno));\
+                    goto retry
+
 
 int main(int argc,char *argv[]) {
   int portno =        80;
@@ -29,7 +35,7 @@ Content-Length: %d\r\n\r\n\
     return 1;
   }
 
-  sprintf(message, message_fmt, host, portno, strlen(argv[1]) + 20, argv[1]);
+  snprintf(message, sizeof(message), message_fmt, host, portno, strlen(argv[1]) + 20, argv[1]);
   //printf("Request:\n%s\n",message);
 
   timeout.tv_sec = 10;
@@ -38,44 +44,41 @@ Content-Length: %d\r\n\r\n\
  retry:
   while (retries-- > 0) {
     //printf("Retries: %d\n", retries);
+    errno = 0;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-      fprintf(stderr, "ERROR opening socket... ");
+      fprintf(stderr, "ERROR opening socket... %s\n", strerror(errno));
       goto retry;
     }
 
     if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
 		    sizeof(timeout)) < 0) {
-      fprintf(stderr, "ERROR setsockopt failed... ");
-      goto retry;
+      RETRY("setsockopt rcvtimeo failed...");
     }
-  
+
     if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
 		    sizeof(timeout)) < 0) {
-      fprintf(stderr, "ERROR setsockopt failed... ");
-      goto retry;
+      RETRY("setsockopt sndtimeo failed...");
     }
-    
+
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(portno);
     serv_addr.sin_addr.s_addr = inet_addr(host);
 
     if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-      fprintf(stderr, "ERROR connecting... ");
-      goto retry;
+        RETRY("connecting ...");
     }
 
     total = strlen(message);
     sent = 0;
     while (sent < total) {
-      bytes = write(sockfd, message + sent, total - sent);
+      bytes = send(sockfd, message + sent, total - sent, 0);
       if (bytes < 0) {
-	fprintf(stderr, "ERROR writing message to socket... ");
-	goto retry;
+        RETRY("writing message to socket ...");
       }
       if (bytes == 0) {
-	break;
+        break;
       }
       sent += bytes;
     }
@@ -84,20 +87,18 @@ Content-Length: %d\r\n\r\n\
     total = sizeof(response)-1;
     received = 0;
     while (received < total) {
-      bytes = read(sockfd, response + received, total - received);
+      bytes = recv(sockfd, response + received, total - received, 0);
       if (bytes < 0) {
-	fprintf(stderr, "ERROR reading response from socket... ");
-	goto retry;
+        RETRY("reading response from socket ...");
       }
       if (bytes == 0) {
-	break;
+        break;
       }
       received += bytes;
     }
 
     if (received == total) {
-      fprintf(stderr, "ERROR storing complete response from socket... ");
-      goto retry;
+      RETRY("storing complete response from socket ...");
     }
 
     close(sockfd);
