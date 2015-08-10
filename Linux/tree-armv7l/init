@@ -40,14 +40,11 @@ setup_gpios
 export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
 
-# Configure network (if needed)
-# FIXME: replace the following check with something stronger
-if [ "$(cat /sys/class/net/eth0/operstate)" = "down" ]; then
-    log_begin_msg "Configuring network"
-    ifconfig eth0 up
-    udhcpc -i eth0
-    log_end_msg
-fi
+# Configure network
+log_begin_msg "Configuring network"
+ifconfig eth0 up
+udhcpc -i eth0
+log_end_msg
 
 
 # Verbose mode
@@ -82,8 +79,9 @@ signal_state kernel-started
 # Adjust time
 if [ "$(get_any NO_NTPDATE)" != "1" ]; then
     log_begin_msg "Adjusting time (ntp)"
-    ntpdate -d -b -p 2 ntp.int.scaleway.com >/dev/null 2>&1 | tr '\r\n' '  '
-    ntpdate -d -b -p 6 ntp.int.scaleway.com >/dev/null 2>/dev/null &
+    NTPSRV=$(cat /etc/ntpsrv)
+    ntpdate -d -b -p 2 "${NTPSRV}" >/dev/null 2>&1 | tr '\r\n' '  '
+    ntpdate -d -b -p 6 "${NTPSRV}" >/dev/null 2>/dev/null &
     log_end_msg
 fi
 
