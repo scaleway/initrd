@@ -3,7 +3,6 @@ KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-a
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=	\
 	/bin/busybox \
-	/etc/udhcpc/default.script \
 	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
 	/sbin/mkfs.ext4 \
