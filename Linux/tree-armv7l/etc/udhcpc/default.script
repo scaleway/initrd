@@ -40,6 +40,8 @@ case $1 in
 nameserver $i"
         done
 
+	[ -n "$ntpsrv" ] && echo "$ntpsrv" > /etc/ntpsrv
+
 	[ -n "$hostname" ] && echo "$hostname" > /proc/sys/kernel/hostname
 
         if [ -x /sbin/resolvconf ]; then
@@ -48,7 +50,7 @@ nameserver $i"
             echo "$R" > "$RESOLV_CONF"
         fi
 
-        log info "$1: IP=$ip/$subnet router=$router domain=\"$domain\" dns=\"$dns\" lease=$lease ntpsrv=\"$ntpsrv\" serverid=\"$serverid\" staticroutes=\"$staticroutes\" hostname=\"$hostname\""
+        log info "$1: IP=$ip/$subnet router=$router domain=\"$domain\" dns=\"$dns\" lease=$lease ntpsrv=\"$ntpsrv\" serverid=\"$serverid\" staticroutes=\"$staticroutes\" hostname=\"$hostname\" nissrv=\"$timezone\" nissrv=\"$timezone\" tftp=\"$tftp\""
         ;;
 
     deconfig)
