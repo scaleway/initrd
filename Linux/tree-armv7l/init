@@ -43,7 +43,7 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 # Configure network
 log_begin_msg "Configuring network"
 ifconfig eth0 up
-udhcpc -i eth0
+udhcpc -n -q -i eth0
 log_end_msg
 
 
