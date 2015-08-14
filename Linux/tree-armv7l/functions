@@ -194,6 +194,16 @@ mount_nbd() {
 }
 
 
+start_sshd() {
+    mkdir -p /etc/dropbear /root/.ssh
+    chmod 700 /root/.ssh
+    dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+    dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+    oc-metadata --cached | grep "SSH_PUBLIC_KEYS_.*_KEY" | cut -d'=' -f 2- | tr -d \' > /root/.ssh/authorized_keys
+    dropbear -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key
+}
+
+
 # ask metadata and automatically attach nbd>=1 devices
 attach_secondary_nbd_devices() {
     log_begin_msg "Checking metadata in case we skip to wait for secondary volumes to be ready"

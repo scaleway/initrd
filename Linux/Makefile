@@ -7,6 +7,7 @@ DEPENDENCIES ?=	\
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
 	/sbin/mkfs.ext4 \
 	/sbin/parted \
+	/usr/bin/dropbearkey \
 	/usr/lib/klibc/bin/ipconfig \
 	/usr/sbin/dropbear \
 	/usr/sbin/ntpdate
