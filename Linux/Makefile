@@ -8,6 +8,7 @@ DEPENDENCIES ?=	\
 	/sbin/mkfs.ext4 \
 	/sbin/parted \
 	/usr/lib/klibc/bin/ipconfig \
+	/usr/sbin/dropbear \
 	/usr/sbin/ntpdate
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
