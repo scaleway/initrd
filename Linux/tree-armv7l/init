@@ -4,6 +4,7 @@
 /bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
 
+sleep .5
 
 cat <<EOF
 
@@ -207,6 +208,14 @@ if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
     # the initramfs can be cleared after switch_root
     # umount /sys /proc
+
+cat <<EOF
+End of Scaleway' initrd
+           _ _       _      _          _ _
+ ___ _ _ _|_| |_ ___| |_   | |_ ___   | |_|___ _ _ _ _ 
+|_ -| | | | |  _|  _|   |  |  _| . |  | | |   | | |_'_|
+|___|_____|_|_| |___|_|_|  |_| |___|  |_|_|_|_|___|_,_|
+EOF
 
     # Switch to the new root and execute init
     exec switch_root "${rootmnt}" "${init}"
