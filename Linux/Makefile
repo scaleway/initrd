@@ -159,8 +159,8 @@ output-armv7l/.deps:	dependencies-armv7l.tar.gz tree-armv7l/usr/sbin/xnbd-client
 
 output-armv7l/.clean: output-armv7l/.deps
 	find output-armv7l \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
-	sed -i 's/ZCOMMIT/$(shell git rev-parse --short HEAD)/' output-armv7l/init
-	sed -i 's@ZDATE_____@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-armv7l/init
+	sed -i 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-armv7l/init
+	sed -i 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-armv7l/init
 	touch $@
 
 

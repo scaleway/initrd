@@ -2,7 +2,7 @@
 
 
 mountroot() {
-    run attach_nbd_device 0
-    run mount_nbd 0 "${rootmnt}"
-    run attach_secondary_nbd_devices
+    attach_nbd_device 0
+    mount_nbd 0 "${rootmnt}"
+    attach_secondary_nbd_devices
 }

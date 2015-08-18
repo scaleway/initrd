@@ -49,11 +49,20 @@ eerror() {
     _log_msg "\033[1;31m>>> ${*}\033[0m\n"
 }
 edebug() {
-    _log_msg "\033[0;30m>>> ${*}\033[0m\n"
+    if [ "$VERBOSE" = "1" ]; then
+	_log_msg "\033[0;30m>>> ${*}\033[0m\n"
+    fi
 }
 die() {
     eerror "$*"
     rescueshell
+}
+
+emount() {
+    _log_file "mounting: mount $@"
+    target=$(echo $@ | awk '{ print $NF }')
+    einfo "Mounting $target..."
+    run mount $@
 }
 
 run() {
@@ -174,8 +183,8 @@ load_nolp_ko() {
 
 setup_gpios() {
     # Switch booted GPIO to enable serial for user
-    run sh -c "echo 42 > /sys/class/gpio/export"
-    run sh -c "echo out > /sys/class/gpio/gpio42/direction"
+    run sh -ec "echo 42 > /sys/class/gpio/export"
+    run sh -ec "echo out > /sys/class/gpio/gpio42/direction"
 }
 
 
@@ -212,7 +221,7 @@ attach_nbd_device() {
 	    /dev/nbd${device} 2>/dev/null
     )
     local nbd_pid=$$
-    run sh -c "echo -1000 > /proc/$nbd_pid/oom_score_adj"
+    run sh -ec "echo -1000 > /proc/$nbd_pid/oom_score_adj"
 
     # Checking if device is already attached
     run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
@@ -221,7 +230,7 @@ attach_nbd_device() {
     # Fixing IO scheduler
     if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
     then
-        run sh -c "echo deadline > /sys/block/nbd${device}/queue/scheduler"
+        run sh -ec "echo deadline > /sys/block/nbd${device}/queue/scheduler"
     fi
 
     log_end_msg
@@ -234,9 +243,11 @@ mount_nbd() {
     local dest="$2"    # ie: ${rootmnt}/
 
     log_begin_msg "Mounting nbd${device} root"
-    run mount /dev/nbd${device} ${dest}
+    run sh -ec "echo 0 > /proc/sys/kernel/printk"
+    emount /dev/nbd${device} ${dest}
+    run sh -ec "echo 1 > /proc/sys/kernel/printk"
     if [ "${device}" = "0" ]; then
-	run sh -c "echo 0x0100 > /proc/sys/kernel/real-root-dev"
+	run sh -ec "echo 0x0100 > /proc/sys/kernel/real-root-dev"
     fi
     run sync
     log_end_msg

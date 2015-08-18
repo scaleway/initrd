@@ -7,7 +7,7 @@
 
 cat <<EOF
 
-Welcome to Scaleway' initrd
+Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
 
 ███████╗ ██████╗ █████╗ ██╗     ███████╗██╗    ██╗ █████╗ ██╗   ██╗
 ██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██║    ██║██╔══██╗╚██╗ ██╔╝
@@ -16,15 +16,18 @@ Welcome to Scaleway' initrd
 ███████║╚██████╗██║  ██║███████╗███████╗╚███╔███╔╝██║  ██║   ██║
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝
 
-http://j.mp/scw-initrd-linux                ZCOMMIT - ZDATE_____
-
 EOF
+
+echo "Initrd build: INITRD_BUILD_COMMIT - INITRD_BUILD_DATE"
+echo "Kernel version: $(busybox uname -r)"
+echo ""
 
 # Create all the symlinks to /bin/busybox
 log_begin_msg "Installing busybox"
 /bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
 log_end_msg
+
 
 # prepare a tmpfs-based initramfs for shutdown
 log_begin_msg "Cloning initramfs for shutdown..."
@@ -36,20 +39,20 @@ log_end_msg
 # Mount things needed by this script
 log_begin_msg "Mounting pseudo-filesystems..."
 [ -d /dev ] || run mkdir -m 0755 /dev
-run mount -t devtmpfs -o mode=0755 none /dev
+emount -t devtmpfs -o mode=0755 none /dev
 run mkdir /dev/pts
-run mount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
+emount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
 
 [ -d /run ] || run mkdir -pm 0755 /run
-run mount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
+emount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
 [ -d /var ] || run mkdir -pm 0755 /var
 run ln -s /run /var/run
 
 [ -d /sys ] || run mkdir /sys
-run mount -t sysfs -o nodev,noexec,nosuid none /sys
+emount -t sysfs -o nodev,noexec,nosuid none /sys
 
 [ -d /proc ] || run mkdir /proc
-run mount -t proc -o nodev,noexec,nosuid none /proc
+emount -t proc -o nodev,noexec,nosuid none /proc
 log_end_msg
 
 
@@ -72,7 +75,7 @@ log_end_msg
 
 # Verbose mode
 log_begin_msg "Checking user input for debug/verbose mode"
-if [ "$(get_any INITRD_DEBUG)" = "1" ]; then
+if [ "$(get_any INITRD_VERBOSE)" = "1" ]; then
     VERBOSE=1
     log_success_msg "Verbose mode enabled"
 fi
@@ -143,18 +146,22 @@ esac
 
 
 # Mountroot
-run mountroot
+log_begin_msg "Initializing '${boot}' root file system"
+mountroot
+log_end_msg
 
 
 # Signal to the console that the server is booted
-run signal_state booted
+signal_state booted
 
 
 # Forward network configuration files
+log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
-[ -s ${rootmnt}/etc/hostname ] || run "oc-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname"
-grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
+[ -s ${rootmnt}/etc/hostname ] || run sh -ec "oc-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname"
+grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
+log_end_msg
 
 
 # Drop debug shell
@@ -194,10 +201,10 @@ killall dropbear &>/dev/null
 
 # Prepare mount pseudo filesystem moving
 run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
-run mount -o move /proc ${rootmnt}/proc
-run mount -o move /sys ${rootmnt}/sys
-run mount -o move /run ${rootmnt}/run
-run mount -o move /dev ${rootmnt}/dev
+emount -o move /proc ${rootmnt}/proc
+emount -o move /sys ${rootmnt}/sys
+emount -o move /run ${rootmnt}/run
+emount -o move /dev ${rootmnt}/dev
 [ -c ${rootmnt}/dev/console ] || run mknod -m 622 ${rootmnt}/dev/console c 5 1
 [ -c ${rootmnt}/dev/null ]    || run mknod -m 666 ${rootmnt}/dev/null    c 1 3
 [ -c ${rootmnt}/dev/zero ]    || run mknod -m 666 ${rootmnt}/dev/zero    c 1 5
@@ -209,7 +216,9 @@ run mount -o move /dev ${rootmnt}/dev
 
 
 # Move initramfs copy to /run/initramfs for shutdown
+log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
+log_end_msg
 
 
 # Check if $init exists and is executable
@@ -217,6 +226,9 @@ if [[ -x "${rootmnt}/${init}" ]] ; then
     # Unmount all other mounts so that the ram used by
     # the initramfs can be cleared after switch_root
     # umount /sys /proc
+
+    log_begin_msg "Switching to linux"
+    log_end_msg
 
 cat <<EOF
 End of Scaleway' initrd
