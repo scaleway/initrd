@@ -145,7 +145,7 @@ output-armv7l/usr/bin/oc-metadata:
 initrd.gz:	initrd-Linux-armv7l.gz
 
 
-initrd-Linux-armv7l.gz:	output-armv7l/.deps
+initrd-Linux-armv7l.gz:	output-armv7l/.clean
 	cd output-armv7l && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
@@ -157,8 +157,10 @@ output-armv7l/.deps:	dependencies-armv7l.tar.gz tree-armv7l/usr/sbin/xnbd-client
 	touch $@
 
 
-output-armv7l/.clean:
+output-armv7l/.clean: output-armv7l/.deps
 	find output-armv7l \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
+	sed -i 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-armv7l/init
+	sed -i 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-armv7l/init
 	touch $@
 
 

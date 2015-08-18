@@ -4,10 +4,7 @@
 
 RESOLV_CONF="/etc/resolv.conf"
 
-log() {
-    echo "$1" "$2"
-    logger -t "uchcpc[$PPID]" -p daemon.$1 "$interface: $2"
-}
+. /functions
 
 case $1 in
     bound|renew)
@@ -50,7 +47,10 @@ nameserver $i"
             echo "$R" > "$RESOLV_CONF"
         fi
 
-        log info "$1: IP=$ip/$subnet router=$router domain=\"$domain\" dns=\"$dns\" lease=$lease ntpsrv=\"$ntpsrv\" serverid=\"$serverid\" staticroutes=\"$staticroutes\" hostname=\"$hostname\" nissrv=\"$timezone\" nissrv=\"$timezone\" tftp=\"$tftp\""
+	esuccess "hostname=\"$hostname\""
+	esuccess "IP=$ip/$subnet router=$router"
+	esuccess "dns=\"$dns\" domain=\"$domain\""
+	esuccess "ntpsrv=\"$ntpsrv\""
         ;;
 
     deconfig)
@@ -59,11 +59,11 @@ nameserver $i"
         busybox ip -4 route flush dev $interface
         [ -x /sbin/resolvconf ] &&
             resolvconf -d "$interface.udhcpc"
-        log notice "deconfigured"
+        esuccess "deconfigured"
         ;;
 
     leasefail | nak)
-        log err "configuration failed: $1: $message"
+        eerror "configuration failed: $1: $message"
         ;;
 
     *)

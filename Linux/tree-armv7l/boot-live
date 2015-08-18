@@ -5,14 +5,14 @@ live_install() {
     local rescue_image="${1}"
 
     log_begin_msg "Formating nbd0"
-    mkfs.ext4 -F /dev/nbd0 || log_fatal_msg "Cannot format nbd0"
+    run sh -ec 'mkfs.ext4 -F /dev/nbd0 || log_fatal_msg "Cannot format nbd0"'
     log_end_msg
 
     mount_nbd 0 "${rootmnt}"
 
     log_begin_msg "Installing live image (${rescue_image})"
-    wget -qO- "${rescue_image}" | tar -C "${rootmnt}" -x -f -
-    sync
+    run sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
+    run sync
     log_end_msg
 }
 

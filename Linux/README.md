@@ -41,8 +41,10 @@ Here are the availble *initrd variables*:
 
 - **boot={nbd|rescue|nfs|live}**: change the [boot mode](#Boot-modes)
 - **INITRD_DEBUG=1**: enable initrd debug (apply a global `set -x`)
+- **INITRD_VERBOSE=1**: enable initrd verbose
 - **INITRD_PRE_SHELL=1**: drop a shell just after starting the initrd
 - **INITRD_POST_SHELL=1**: drop a shell just before leaving the initrd
+- **INITRD_DROPBEAR=1**: start a dropbear sshd server
 - **init=/sbin/init**: init script executed when leaving the initrd
 - **rescue_image=http://example.com/my-image.tar**: Tarball *URL* used to boot (no effect with *nfs* and *nbd* boot mode
 - **NO_NTPDATE=1**: disable NTP time synchronization
@@ -57,6 +59,23 @@ Here are the availble *initrd variables*:
 - **NFS**: boot on a NFS rootfs
 - **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
 
+## Changelog
+
+### v3
+
+- Worked on the fancyness
+- Added multiple boot mode: nfs, live, nbd, rescue
+- Added dropbear shell
+- Initrd version is now printed during boot
+- Size reduced
+
+### v2
+
+Initial open source version of the initrd
+
+### v1
+
+Initial version of the initrd, closed source
 
 ## Developement dependencies
 
