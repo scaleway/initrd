@@ -183,19 +183,19 @@ if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
     log_success_msg "Starting a debug sshd"
     start_sshd
     log_end_msg
-    echo "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
-    echo "To continue the initrd process, just type 'echo 1 > /continue' from the ssh server"
+    ewarn "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
+    ewarn "To continue the initrd process, just type 'echo 1 > /continue' from the ssh server"
     # FIXME: display ssh command and scw command
     # FIXME: display common usages (luks, lvm, etc) in a README.txt file
-    mkfifo /continue
-    cat /continue
+    run mkfifo /continue
+    run cat /continue
 else
     log_end_msg
 fi
 
 
 # Ensure sshd is killed if running
-killall dropbear &>/dev/null
+run killall dropbear
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
 
 
