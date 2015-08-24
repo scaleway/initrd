@@ -18,9 +18,9 @@ Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
 
 EOF
 
-echo "Initrd build: INITRD_BUILD_COMMIT - INITRD_BUILD_DATE"
-echo "Kernel version: $(busybox uname -r)"
-echo ""
+esuccess "Initrd build: INITRD_BUILD_COMMIT - INITRD_BUILD_DATE"
+esuccess "Kernel version: $(busybox uname -r)"
+echo
 
 # Create all the symlinks to /bin/busybox
 log_begin_msg "Installing busybox"
@@ -56,6 +56,11 @@ emount -t proc -o nodev,noexec,nosuid none /proc
 log_end_msg
 
 
+echo
+esuccess "Kernel cmdline: $(busybox cat /proc/cmdline)"
+echo
+
+
 # Configure GPIOs
 log_begin_msg "Configuring GPIOs"
 setup_gpios
@@ -71,6 +76,14 @@ log_begin_msg "Configuring network"
 run ifconfig eth0 up
 run udhcpc -n -q -i eth0
 log_end_msg
+
+
+echo
+esuccess "Server ID: $(oc-metadata --cached ID)"
+esuccess "Private IP: $(oc-metadata --cached PRIVATE_IP)"
+esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
+echo
 
 
 # Verbose mode
@@ -183,8 +196,14 @@ if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
     log_success_msg "Starting a debug sshd"
     start_sshd
     log_end_msg
+
+    ewarn ""
     ewarn "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
-    ewarn "To continue the initrd process, just type 'echo 1 > /continue' from the ssh server"
+    ewarn "To continue the initrd process, just type '1 > /continue' from the ssh server"
+    ewarn ""
+    ewarn "You can connect to your serveur using: 'scw exec $(oc-metadata --cached ID)'"
+    ewarn ""
+
     # FIXME: display ssh command and scw command
     # FIXME: display common usages (luks, lvm, etc) in a README.txt file
     run mkfifo /continue
