@@ -195,7 +195,9 @@ fi
 
 
 # Ensure sshd is killed if running
-run killall dropbear
+if [ "$(pgrep dropbear)" != "" ]; then
+    run killall dropbear
+fi
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
 
 
@@ -236,6 +238,7 @@ End of Scaleway' initrd
  ___ _ _ _|_| |_ ___| |_   | |_ ___   | |_|___ _ _ _ _
 |_ -| | | | |  _|  _|   |  |  _| . |  | | |   | | |_'_|
 |___|_____|_|_| |___|_|_|  |_| |___|  |_|_|_|_|___|_,_|
+
 EOF
 
     # Switch to the new root and execute init

@@ -280,3 +280,8 @@ attach_secondary_nbd_devices() {
 	log_end_msg
     fi
 }
+
+pgrep() {
+    seek="$1"
+    ps | grep "$seek" | grep -v "grep" | awk '{print $1}'
+}
