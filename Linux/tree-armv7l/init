@@ -128,7 +128,7 @@ fi
 
 
 # Defaults
-init=$(get_any init "/sbin/init")
+init=$(readlink $(get_any init "/sbin/init"))
 root=$(get_any root "/dev/nbd0")
 default_boot="local"
 if [ "${root}" = "/dev/nfs" ]; then
