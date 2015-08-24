@@ -199,7 +199,7 @@ if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
 
     ewarn ""
     ewarn "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
-    ewarn "To continue the initrd process, just type '1 > /continue' from the ssh server"
+    ewarn "To continue the initrd process, just type 'continue-boot'"
     ewarn ""
     ewarn "You can connect to your serveur using: 'scw exec $(oc-metadata --cached ID)'"
     ewarn ""

@@ -61,7 +61,12 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### v3
+### v3.1 (2015-08-24)
+
+* Improved debug/info/warn messages
+* Added 'continue-boot' helper
+
+### v3 (2015-08-18)
 
 - Worked on the fancyness
 - Added multiple boot mode: nfs, live, nbd, rescue
