@@ -1,8 +1,28 @@
 language: bash
 
-sudo: no
+services:
+- docker
+
+sudo: required
+
+env:
+- ACTION=check
+- ACTION=build
+
+before_install:
+- env
+- docker images
+- docker info
+- docker version
+- df -h
+#- if [ "$ACTION" = "build" -a -n "$TRAVIS_TAG" ]; then sudo apt-get update && sudo apt-get install -y u-boot-tools || true; fi
 
 script:
-- for TARGET in Linux Openbsd scw-boot-tools; do
-     make -C $TARGET travis;
-  done
+- if [ "$ACTION" = "check" ]; then make -C Linux          travis_check; fi
+- if [ "$ACTION" = "check" ]; then make -C Openbsd        travis_check; fi
+- if [ "$ACTION" = "check" ]; then make -C scw-boot-tools travis_check; fi
+- if [ "$ACTION" = "build" ]; then make -C Linux          travis_build; fi
+- if [ "$ACTION" = "build" ]; then make -C Openbsd        travis_build; fi
+- if [ "$ACTION" = "build" ]; then make -C scw-boot-tools travis_build; fi
+- ls -laR
+
