@@ -225,7 +225,7 @@ fi
 
 # Generate root password if empty or if reset is explicitely required by the user
 grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
-if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" ]]; then
+if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
     log_begin_msg "Changing root password"
     PASSWORD=$(gen_passwd)
     # update /etc/shadow
@@ -235,6 +235,8 @@ if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" ]]; then
     echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
     run chmod 700 "${rootmnt}/root/.pw"
     log_end_msg
+    # delete /.scw-reset-password-on-next-boot if it exists
+    run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
 fi
 
 
