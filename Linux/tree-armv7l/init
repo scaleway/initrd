@@ -223,6 +223,23 @@ fi
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
 
 
+# Generate root password if empty or if reset is explicitely required by the user
+grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
+if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
+    log_begin_msg "Changing root password"
+    PASSWORD=$(gen_passwd)
+    # update /etc/shadow
+    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
+    # update /root/.pw
+    run mkdir -p "${rootmnt}/root"
+    echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
+    run chmod 700 "${rootmnt}/root/.pw"
+    log_end_msg
+    # delete /.scw-reset-password-on-next-boot if it exists
+    run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
+fi
+
+
 # Prepare mount pseudo filesystem moving
 run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
 emount -o move /proc ${rootmnt}/proc
@@ -244,12 +261,6 @@ log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
 
-# Generate root password if is empty
-PASSWORD=$(gen_passwd)
-grep "^root::" ${rootmnt}/etc/shadow || [ "$(get_any RESET_PASSWORD)" = "1" ] \
-  && log_begin_msg "Changing root password"\
-  && run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root" \
-  && log_end_msg
 
 # Check if $init exists and is executable
 if [[ -x "${rootmnt}/${init}" ]] ; then
