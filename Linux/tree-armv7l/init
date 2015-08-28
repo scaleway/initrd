@@ -241,6 +241,12 @@ log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
 
+# Generate root password if is empty
+PASSWORD=$(gen_passwd)
+grep "^root::" ${rootmnt}/etc/shadow || [ "$(get_any RESET_PASSWORD)" = "1" ] \
+  && log_begin_msg "Changing root password"\
+  && run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root" \
+  && log_end_msg
 
 # Check if $init exists and is executable
 if [[ -x "${rootmnt}/${init}" ]] ; then
