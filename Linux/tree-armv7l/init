@@ -223,6 +223,16 @@ fi
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
 
 
+# Generate root password if empty or if reset is explicitely required by the user
+grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
+if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" ]]; then
+    log_begin_msg "Changing root password"
+    PASSWORD=$(gen_passwd)
+    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
+    log_end_msg
+fi
+
+
 # Prepare mount pseudo filesystem moving
 run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
 emount -o move /proc ${rootmnt}/proc
@@ -243,16 +253,6 @@ emount -o move /dev ${rootmnt}/dev
 log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
-
-
-# Generate root password if empty or if reset is explicitely required by the user
-grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
-if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" ]]; then
-    log_begin_msg "Changing root password"
-    PASSWORD=$(gen_passwd)
-    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
-    log_end_msg
-fi
 
 
 # Check if $init exists and is executable
