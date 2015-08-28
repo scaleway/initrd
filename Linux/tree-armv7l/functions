@@ -95,6 +95,13 @@ signal_state() {
 
     log_begin_msg "Signaling the server is ${state} to the control plane"
 
+    # FIXME: I don't know why, but the first scw-update-server-state will always fail
+    has_opt nometadata || (
+	scw-update-server-state "$state" &> /dev/null
+	sleep ${SLEEP_BETWEEN_RETRIES}
+    ) || true
+
+
     retries=0
     while [ "${retries}" -lt "${RETRIES}" ]; do
         has_opt nometadata || run scw-update-server-state "$state"
