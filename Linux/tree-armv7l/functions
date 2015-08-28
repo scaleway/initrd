@@ -281,6 +281,11 @@ attach_secondary_nbd_devices() {
     fi
 }
 
+# generate a random password
+gen_passwd() {
+	</dev/urandom tr -dc 'A-Za-z0-9' | head -c 12
+}
+
 pgrep() {
     seek="$1"
     ps | grep "$seek" | grep -v "grep" | awk '{print $1}'
