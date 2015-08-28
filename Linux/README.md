@@ -45,6 +45,7 @@ Here are the availble *initrd variables*:
 - **INITRD_PRE_SHELL=1**: drop a shell just after starting the initrd
 - **INITRD_POST_SHELL=1**: drop a shell just before leaving the initrd
 - **INITRD_DROPBEAR=1**: start a dropbear sshd server
+- **RESET_PASSWORD=1**: generate a new random password for root on boot
 - **init=/sbin/init**: init script executed when leaving the initrd
 - **rescue_image=http://example.com/my-image.tar**: Tarball *URL* used to boot (no effect with *nfs* and *nbd* boot mode
 - **NO_NTPDATE=1**: disable NTP time synchronization
@@ -60,6 +61,11 @@ Here are the availble *initrd variables*:
 - **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
 
 ## Changelog
+
+### v3.2 (2015-08-28)
+
+* Improved debug,warn,error messages
+* Setting up a random root password on first boot [#46](https://github.com/scaleway/initrd/issues/46)
 
 ### v3.1 (2015-08-24)
 
