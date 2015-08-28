@@ -228,7 +228,12 @@ grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
 if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" ]]; then
     log_begin_msg "Changing root password"
     PASSWORD=$(gen_passwd)
+    # update /etc/shadow
     run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
+    # update /root/.pw
+    run mkdir -p "${rootmnt}/root"
+    echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
+    run chmod 700 "${rootmnt}/root/.pw"
     log_end_msg
 fi
 
