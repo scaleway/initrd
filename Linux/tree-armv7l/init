@@ -199,12 +199,15 @@ if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
 
     ewarn ""
     ewarn "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
-    ewarn "To continue the initrd process, just type 'continue-boot'"
     ewarn ""
-    ewarn "You can connect to your serveur using: 'scw exec $(oc-metadata --cached ID)'"
+    ewarn "To continue the initrd process:"
+    ewarn " -- You must run 'continue-boot' with a remote access"
+    ewarn ""
+    ewarn "You can connect to your server with 'scw' or 'ssh'"
+    ewarn " -- scw exec $(oc-metadata --cached ID)"
+    ewarn " -- ssh root@$(oc-metadata --cached PUBLIC_IP_ADDRESS)"
     ewarn ""
 
-    # FIXME: display ssh command and scw command
     # FIXME: display common usages (luks, lvm, etc) in a README.txt file
     run mkfifo /continue
     run cat /continue
