@@ -19,15 +19,18 @@ TARGET = armv7l
 HOST_ARCH ?=		$(shell uname -m)
 PUBLISH_FILES ?=	uInitrd-Linux-armv7l initrd-Linux-armv7l.gz
 
-.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis dependencies-shell uInitrd-shell
+.PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
 
 
 # Phonies
 all:	uInitrd
 
 
-travis:
+travis_check:
 	bash -n tree-armv7l/init output-armv7l/shutdown output-armv7l/functions output-armv7l/boot-*
+
+
+travis_build: uInitrd
 
 
 qemu:
@@ -124,8 +127,9 @@ uInitrd-docker:	initrd-Linux-armv7l.gz
 		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd-Linux-armv7l.gz ./uInitrd && \
 		  cp uInitrd /host/ \
 		'
+	@sudo chown $(USER) uInitrd || true
 	mv uInitrd uInitrd-Linux-armv7l
-	touch uInitrd-Linux-armv7l
+	@touch uInitrd-Linux-armv7l || true
 
 
 uInitrd-shell: output-armv7l/.deps

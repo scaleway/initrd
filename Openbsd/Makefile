@@ -99,9 +99,13 @@ uInitrd-Openbsd-armv7: initrd-Openbsd-armv7.pax
 	mkuboot -a arm -o linux -t ramdisk initrd-Openbsd-armv7.pax $@
 
 
-.PHONY: travis
-travis:
+.PHONY: travis_check
+travis_check:
 	bash -n dependencies-Openbsd-armv7/export-assets
+
+
+.PHONY: travis_build
+	exit 0
 
 
 .PHONY: publish_on_s3
