@@ -280,6 +280,9 @@ End of Scaleway' initrd
 
 EOF
 
+    # Temporary hack to let ttyS0 flushing before distro's getty resets ttyS0
+    run sleep 1
+
     # Switch to the new root and execute init
     exec switch_root "${rootmnt}" "${init}"
 fi
