@@ -277,9 +277,8 @@ attach_secondary_nbd_devices() {
     if [ "x$(get_any INITRD_SKIP_SECONDARY_VOLUMES)" != "x1" ]; then
 	log_end_msg
 	for volume in $(oc-metadata --cached VOLUMES); do
-	    log_begin_msg "Attaching nbd${volume}"
 	    if [ "${volume}" -ne "0" ]; then
-		run setup_nbd_device "${volume}"
+		attach_nbd_device "${volume}"
 	    fi
 	    log_end_msg
 	done
