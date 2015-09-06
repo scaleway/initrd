@@ -153,8 +153,8 @@ case "${boot}" in
         . ./boot-live
         ;;
     *)
-	. ./boot-fallback
-	;;
+        . ./boot-fallback
+        ;;
 esac
 
 
@@ -263,13 +263,14 @@ log_end_msg
 
 
 # Check if $init exists and is executable
-if [[ -x "${rootmnt}/${init}" ]] ; then
-    # Unmount all other mounts so that the ram used by
-    # the initramfs can be cleared after switch_root
-    # umount /sys /proc
+if [[ ! -x "${rootmnt}/${init}" ]] ; then
+    ewarn "/sbin/init may be broken"
+    ewarn "make sure /sbin/init is an executable and not an absolute symlink"
+fi
 
-    log_begin_msg "Switching to linux"
-    log_end_msg
+# Trying to switch to linux
+log_begin_msg "Switching to linux"
+log_end_msg
 
 cat <<EOF
 End of Scaleway' initrd
@@ -280,12 +281,11 @@ End of Scaleway' initrd
 
 EOF
 
-    # Temporary hack to let ttyS0 flushing before distro's getty resets ttyS0
-    run sleep 1
+# Temporary hack to let ttyS0 flushing before distro's getty resets ttyS0
+run sleep 1
 
-    # Switch to the new root and execute init
-    exec switch_root "${rootmnt}" "${init}"
-fi
+# Switch to the new root and execute init
+exec switch_root "${rootmnt}" "${init}"
 
 
 # This will only be run if the exec above failed
