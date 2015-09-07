@@ -153,6 +153,11 @@ get_metadata() {
     done
 }
 
+get_userdata() {
+    key=$1
+    wget -qO- "http://169.254.42.42/user_data/${key}"
+}
+
 has_metadata() {
     (
 	for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
