@@ -62,6 +62,12 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### v3.3 (2015-09-07)
+
+* Do not test `/sbin/init` availability using `test -x` to works against absolute symlinks [#82](https://github.com/scaleway/initrd/issues/82)
+* Added `get_userdata` helper [#80](https://github.com/scaleway/initrd/issues/80)
+* Added a temporary hack for letting getty the time to flush [#76](https://github.com/scaleway/initrd/issues/76)
+
 ### v3.2 (2015-08-28)
 
 * Improved debug,warn,error messages
