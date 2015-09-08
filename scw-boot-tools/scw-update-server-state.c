@@ -697,6 +697,6 @@ main(int ac, const char **av) {
                 return (uf_userdata(optarg));
         }
     }
-    dprintf(2, "Usage: %s [ OPTIONS ] params\n   -s STATE\n   -u KEY=VALUE\n", av[0]);
+    dprintf(2, "Usage: %s [ OPTIONS ] params\n   -s STATE\n   -u \"[KEY[=[VALUE]]]\"\n", av[0]);
     return (1);
 }
