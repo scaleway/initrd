@@ -33,3 +33,5 @@ build_with_fallback:
 .PHONY: docker_build
 docker_build:
 	docker build -t $(NAME)-builder .
+	docker run --rm $(NAME)-builder > $(NAME)
+	chmod +x $(NAME)
