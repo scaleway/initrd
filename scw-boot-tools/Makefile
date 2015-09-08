@@ -1,5 +1,5 @@
 NAME = scw-update-server-state
-LDFLAGS = -static
+LDFLAGS = -static -lm
 
 all: $(NAME)
 
