@@ -26,34 +26,34 @@ static const char   *g_port = "80";
 
 char
 mf_print_infos(const char *file, int line, const char *fct) {
-	dprintf(2, "\033[0;37m%s, line \033[1;33m%d: \033[1;37m%s()\n\033[1;31m->\t", file, line, fct);
-	return (0);
+    dprintf(2, "\033[0;37m%s, line \033[1;33m%d: \033[1;37m%s()\n\033[1;31m->\t", file, line, fct);
+    return (0);
 }
 
 size_t
 mf_error(char nothing, size_t ret, const char *fmt, ...) {
-	va_list		ap;
+    va_list		ap;
 
-	va_start(ap, fmt);
+    va_start(ap, fmt);
     vdprintf(2, fmt, ap);
     dprintf(2, ".\033[0m\n");
-	va_end(ap);
-	(void)nothing;
-	return (ret);
+    va_end(ap);
+    (void)nothing;
+    return (ret);
 }
 
 void
 mf_infos(const char *funct, const char *infos, ...) {
-	va_list		ap;
+    va_list		ap;
 
-	va_start(ap, infos);
+    va_start(ap, infos);
     dprintf(2, "\033[1;37m->\t%s(): \033[0;33m", funct);
     vdprintf(2, infos, ap);
     dprintf(2, ".\033[0m\n");
-	va_end(ap);
+    va_end(ap);
 }
 
-#define D_PRINT_INFOS			mf_print_infos(__FILE__, __LINE__, __func__)
+#define D_PRINT_INFOS           mf_print_infos(__FILE__, __LINE__, __func__)
 #define M_ERROR(ret, fmt, ...)	mf_error(D_PRINT_INFOS, ret, fmt, ##__VA_ARGS__)
 #define M_INFOS(str_inf, ...)	mf_infos(__func__, str_inf, ##__VA_ARGS__)
 
@@ -67,22 +67,24 @@ sf_free(void **ptr) {
 
 char *
 strnstr(const char *s, const char *find, size_t slen) {
-	char c, sc;
-	size_t len;
+    char c, sc;
+    size_t len;
 
-	if ((c = *find++) != '\0') {
-		len = strlen(find);
-		do {
-			do {
-				if ((sc = *s++) == '\0' || slen-- < 1)
-					return (NULL);
-			} while (sc != c);
-			if (len > slen)
-				return (NULL);
-		} while (strncmp(s, find, len) != 0);
-		s--;
-	}
-	return ((char *)s);
+    if ((c = *find++) != '\0') {
+        len = strlen(find);
+        do {
+            do {
+                if ((sc = *s++) == '\0' || slen-- < 1) {
+                    return (NULL);
+                }
+            } while (sc != c);
+            if (len > slen) {
+                return (NULL);
+            }
+        } while (strncmp(s, find, len) != 0);
+        s--;
+    }
+    return ((char *)s);
 }
 
 /*
@@ -273,17 +275,17 @@ f_request_make_request(t_request *v_this) {
     size_t  i;
     size_t  length;
     char    *ret;
-	size_t	last;
+    size_t	last;
 
     i = 0;
-	last = 0;
+    last = 0;
     length = 0;
     while (i < e_req_max) {
         if (v_this->v_str[i] != NULL) {
             length = length + strlen(v_this->v_str[i]);
-			if (i < e_req_body) {
-				last = i;
-			}
+            if (i < e_req_body) {
+                last = i;
+            }
         } else {
             // M_INFOS("%d is not set", i);
         }
@@ -300,10 +302,10 @@ f_request_make_request(t_request *v_this) {
             strncat(ret, v_this->v_str[i], length);
             length = length - strlen(v_this->v_str[i]);
         }
-		if (i == last) {
-			strncat(ret, "\r\n", 2);
-			length = length - 2;
-		}
+        if (i == last) {
+            strncat(ret, "\r\n", 2);
+            length = length - 2;
+        }
         i = i + 1;
     }
     return (ret);
@@ -375,10 +377,10 @@ const char*
 f_buffer_dup(t_buffer *v_this) {
     char *ret;
 
-	if ((ret = malloc(v_this->v_length)) == NULL) {
-		return ((const char *)M_ERROR(0, "Bad alloc"));
-	}
-	memcpy(ret, v_this->v_data, v_this->v_length);
+    if ((ret = malloc(v_this->v_length)) == NULL) {
+        return ((const char *)M_ERROR(0, "Bad alloc"));
+    }
+    memcpy(ret, v_this->v_data, v_this->v_length);
     return (ret);
 }
 
@@ -525,8 +527,8 @@ f_client_send(t_client *v_this) {
                         return (false);
                     }
                 } else {
-					v_this->v_recv.v_data[v_this->v_recv.v_length] = '\0';
-					// dprintf(1, "<<< [%s]\n", buff);
+                    v_this->v_recv.v_data[v_this->v_recv.v_length] = '\0';
+                    // dprintf(1, "<<< [%s]\n", buff);
                     break ;
                 }
             } else if (FD_ISSET(v_this->v_fd, &write)) {
@@ -554,30 +556,30 @@ f_client_send(t_client *v_this) {
 
 int
 uf_get_statuscode(char *str, int length) {
-	int		ret;
-	char	tmp;
+    int		ret;
+    char	tmp;
 
     if (length < 13) {
         return (M_ERROR(-1, "An error has occured"));
     }
     str = str + 9;
-	tmp = str[4];
+    tmp = str[4];
     str[4] = '\0';
     // dprintf(1, ">>> %d <<< \n", atoi(str));
     ret = atoi(str);
-	str[4] = tmp;
-	return (ret);
+    str[4] = tmp;
+    return (ret);
 }
 
 const char *
 uf_get_body(char *str, int length) {
-	char	*ret;
+    char	*ret;
 
-	ret = strnstr(str, "\r\n\r\n", length);
-	if (ret == NULL) {
-		return ((const char *)M_ERROR(0, "Unable to find the body"));
-	}
-	return (ret + 4);
+    ret = strnstr(str, "\r\n\r\n", length);
+    if (ret == NULL) {
+        return ((const char *)M_ERROR(0, "Unable to find the body"));
+    }
+    return (ret + 4);
 }
 
 int
@@ -630,69 +632,69 @@ uf_userdata(const char *argv) {
     size_t      length;
     char        *path;
     bool        ret;
-	e_method	method;
-	const char	*tab_str[2] = {0, 0};
-	int			i;
-	char		*parse;
-	int			status_code;
+    e_method	method;
+    const char	*tab_str[2] = {0, 0};
+    int			i;
+    char		*parse;
+    int			status_code;
 
-	i = 0;
-	method = e_met_get;
-	parse = (char *)argv;
-	while ((tab_str[i] = strsep(&parse, "=")) != NULL && i < 2) {
-		i = i + 1;
-	}
-	if (tab_str[0] != NULL && tab_str[1] != NULL) {
-		if (tab_str[1][0] == '\0') {
-			method = e_met_delete;
-		} else {
-			method = e_met_patch;
-		}
-	}
-	length = strlen(argv) + strlen("/user_data/");
-	if ((path = malloc(length)) == NULL) {
-		return (M_ERROR(1, "Bad alloc"));
-	}
-	path[0] = '\0';
-	strncat(path, "/user_data/", length);
-	strncat(path, argv, length - strlen("/user_data/"));
+    i = 0;
+    method = e_met_get;
+    parse = (char *)argv;
+    while ((tab_str[i] = strsep(&parse, "=")) != NULL && i < 2) {
+        i = i + 1;
+    }
+    if (tab_str[0] != NULL && tab_str[1] != NULL) {
+        if (tab_str[1][0] == '\0') {
+            method = e_met_delete;
+        } else {
+            method = e_met_patch;
+        }
+    }
+    length = strlen(argv) + strlen("/user_data/");
+    if ((path = malloc(length)) == NULL) {
+        return (M_ERROR(1, "Bad alloc"));
+    }
+    path[0] = '\0';
+    strncat(path, "/user_data/", length);
+    strncat(path, argv, length - strlen("/user_data/"));
     D_REQUEST(init)(&request);
     if (D_REQUEST(add_host)(&request, g_host, g_port) == false
         || D_REQUEST(add_user_agent)(&request, "scw-boot-tools/0.1.0") == false
         || D_REQUEST(add_connection)(&request, "closed") == false
         || D_REQUEST(add_content_type)(&request, "text/plain") == false
         || D_REQUEST(add_accept)(&request, "*/*") == false) {
-		sf_free((void **)&path);
+        sf_free((void **)&path);
         D_REQUEST(destroy)(&request);
         return (1);
     }
     if (D_CLIENT(init)(&client, g_host, g_port) == false) {
-		sf_free((void **)&path);
+        sf_free((void **)&path);
         D_REQUEST(destroy)(&request);
         return (1);
     }
-	if (method == e_met_patch) {
-		if (D_REQUEST(add_body)(&request, tab_str[1]) == false) {
-			sf_free((void **)&path);
-			D_REQUEST(destroy)(&request);
-			return (1);
-		}
-	}
+    if (method == e_met_patch) {
+        if (D_REQUEST(add_body)(&request, tab_str[1]) == false) {
+            sf_free((void **)&path);
+            D_REQUEST(destroy)(&request);
+            return (1);
+        }
+    }
     ret = (D_REQUEST(add_method)(&request, method, path) == false
         || D_CLIENT(add_data_from_request)(&client, &request) == false
         || D_CLIENT(send)(&client) == false);
-	if (ret == false) {
-		status_code = uf_get_statuscode(client.v_recv.v_data, client.v_recv.v_length);
-	}
-	if (ret == false && status_code == 200) {
-		dprintf(1, "%s\n", uf_get_body(client.v_recv.v_data, client.v_recv.v_length));
-	}
+    if (ret == false) {
+        status_code = uf_get_statuscode(client.v_recv.v_data, client.v_recv.v_length);
+    }
+    if (ret == false && status_code == 200) {
+        dprintf(1, "%s\n", uf_get_body(client.v_recv.v_data, client.v_recv.v_length));
+    }
 	sf_free((void **)&path);
     D_CLIENT(destroy)(&client);
     D_REQUEST(destroy)(&request);
-	if (status_code != 200 && status_code != 204) {
-		dprintf(2, "REQUEST ERROR [%d]\n", status_code);
-	}
+    if (status_code != 200 && status_code != 204) {
+        dprintf(2, "REQUEST ERROR [%d]\n", status_code);
+    }
     return (!(status_code == 200 || status_code == 204));
 }
 
