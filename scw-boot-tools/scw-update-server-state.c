@@ -412,6 +412,8 @@ typedef struct  s_client {
 bool
 f_client_init(t_client *v_this, const char *host, const char *port) {
     struct sockaddr_in  serv_addr;
+    struct sockaddr_in  local_addr;
+    int                 local_port;
     size_t              retries;
 
     retries = 5;
@@ -424,9 +426,24 @@ f_client_init(t_client *v_this, const char *host, const char *port) {
     serv_addr.sin_addr.s_addr = inet_addr(host);
     while (retries > 0) {
         errno = 0;
+        local_port = 1;
         if ((v_this->v_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
             M_ERROR(false, "Unable to get a socket: %s", strerror(errno));
             goto retry;
+        }
+        while (local_port <= 1024) {
+            memset(&local_addr, 0, sizeof(local_addr));
+            local_addr.sin_family = AF_INET;
+            local_addr.sin_port = htons(local_port);
+            local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+            if (bind(v_this->v_fd, (struct sockaddr *)&local_addr, sizeof(local_addr)) != -1) {
+                break ;
+            }
+            local_port = local_port + 1;
+        }
+        if (local_port > 1024) {
+            close(v_this->v_fd);
+            return (M_ERROR(false, "Unable to bind the local port: %s"), strerror(errno));
         }
         if ((connect(v_this->v_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0) {
             close(v_this->v_fd);
