@@ -110,7 +110,7 @@ signal_state() {
 	    log_end_msg
             return
 	fi
-	
+
         retries=$((${retries}+1))
         test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
     done
@@ -234,6 +234,8 @@ attach_nbd_device() {
     )
     local nbd_pid=$$
     run sh -ec "echo -1000 > /proc/$nbd_pid/oom_score_adj"
+    run mkdir -p /run/sendsigs.omit.d
+    run sh -ec "echo {$nbd_pid} > /run/sendsigs.omit.d/nbd{$device}"
 
     # Checking if device is already attached
     run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
