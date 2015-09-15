@@ -62,6 +62,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### v3.4 (unreleased)
+
+* Register `xnbd-client` processes to `/run/sendsigs-omit.d/`
+
 ### v3.3 (2015-09-07)
 
 * Do not test `/sbin/init` availability using `test -x` to works against absolute symlinks [#82](https://github.com/scaleway/initrd/issues/82)
