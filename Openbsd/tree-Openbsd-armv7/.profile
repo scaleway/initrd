@@ -23,7 +23,7 @@ sleep 1
 
 
 echo "[+] Signal API current server state: kernel-started"
-scw-update-server-state kernel-started
+scw-update-server-state -s kernel-started
 sleep 1
 
 
@@ -45,7 +45,7 @@ mount /dev/nbd0a /mnt
 
 
 echo "[+] Signal API current server state: booted"
-scw-update-server-state booted
+scw-update-server-state -s booted
 
 
 echo "[+] pivot_root in /mnt"
