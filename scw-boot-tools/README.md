@@ -15,7 +15,7 @@ Inform the API about the current server state
 ### Usage
 
 ```command
-$ scw-update-server-state booted
+$ scw-update-server-state -s booted
 ```
 
 ### Use cases
