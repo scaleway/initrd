@@ -78,6 +78,10 @@ publish_on_s3:	$(PUBLISH_FILES)
 	done
 
 
+publish_on_store: $(PUBLISH_FILES)
+	rsync -avze ssh $(PUBLISH_FILES) store.scw.42.am:store/initrds/
+
+
 dist:
 	$(MAKE) dist_do || $(MAKE) dist_teardown
 
