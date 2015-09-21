@@ -153,7 +153,7 @@ initrd-Linux-$(TARGET).gz:	output-$(TARGET)/.clean
 	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
-output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xnbd-client tree-$(TARGET)/usr/bin/oc-metadata Makefile $(shell find tree-$(TARGET) -type f)
+output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xnbd-client tree-$(TARGET) tree-$(TARGET)/usr/bin/oc-metadata Makefile $(shell find tree-$(TARGET) -type f) $(shell find tree-common -type f)
 	rm -rf output-$(TARGET)
 	mkdir -p output-$(TARGET)
 	tar -m -C output-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
