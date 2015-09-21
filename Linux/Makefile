@@ -27,7 +27,7 @@ all:	uInitrd
 
 
 travis_check:
-	bash -n tree-$(TARGET)/init output-$(TARGET)/shutdown output-$(TARGET)/functions output-$(TARGET)/boot-*
+	bash -n tree-common/init tree-common/shutdown tree-common/functions tree-common/boot-*
 
 
 travis_build: uInitrd

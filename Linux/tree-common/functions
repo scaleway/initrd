@@ -170,9 +170,13 @@ get_any() {
     key=$1
     default=${2:-""}
 
-    ret=$(get_metadata $key)
-    if [ -n "$ret" ]; then
-	echo "$ret"
+    if [ "$(get_opt NO_METADATA)" != "1" ]; then
+	ret=$(get_metadata $key)
+	if [ -n "$ret" ]; then
+	    echo "$ret"
+	else
+	    get_opt "$key" "$default"
+	fi
     else
 	get_opt "$key" "$default"
     fi

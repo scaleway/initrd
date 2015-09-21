@@ -62,9 +62,11 @@ echo
 
 
 # Configure GPIOs
-log_begin_msg "Configuring GPIOs"
-setup_gpios
-log_end_msg
+if [ "$(get_opt SKIP_GPIO_SETUP)" != "1" ]; then
+    log_begin_msg "Configuring GPIOs"
+    setup_gpios
+    log_end_msg
+fi
 
 
 # Initial /proc/cmdline parsing
@@ -74,16 +76,21 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 # Configure network
 log_begin_msg "Configuring network"
 run ifconfig eth0 up
-run udhcpc -n -q -i eth0
+if [ "$(get_opt ip)" = "dhcp" ]; then
+    run udhcpc -n -q -i eth0
+fi
 log_end_msg
 
 
-echo
-esuccess "Server ID: $(oc-metadata --cached ID)"
-esuccess "Private IP: $(oc-metadata --cached PRIVATE_IP)"
-esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
-esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
-echo
+# Display metadata infos
+if [ "$(get_opt NO_METADATA)" != "1" ]; then
+    echo
+    esuccess "Server ID: $(oc-metadata --cached ID)"
+    esuccess "Private IP: $(oc-metadata --cached PRIVATE_IP)"
+    esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+    esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
+    echo
+fi
 
 
 # Verbose mode
