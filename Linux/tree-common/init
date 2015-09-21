@@ -159,6 +159,9 @@ case "${boot}" in
     live)
         . ./boot-live
         ;;
+    local)
+        . ./boot-local
+        ;;
     *)
         . ./boot-fallback
         ;;

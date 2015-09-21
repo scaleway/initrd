@@ -1,0 +1,8 @@
+# -*- shell-script -*-
+
+
+mountroot() {
+    log_begin_msg "Mounting local disk: ${root}"
+    /bin/sh
+    log_end_msg
+}
