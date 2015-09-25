@@ -3,6 +3,6 @@
 
 mountroot() {
     log_begin_msg "Mounting local disk: ${root}"
-    /bin/sh
+    emount "${root}" "${rootmnt}"
     log_end_msg
 }
