@@ -79,6 +79,9 @@ run ifconfig eth0 up
 if [ "$(get_opt ip)" = "dhcp" ]; then
     run udhcpc -n -q -i eth0
 fi
+if [ "$(get_opt nameserver)" != "" ]; then
+    run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
+fi
 log_end_msg
 
 
