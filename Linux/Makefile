@@ -5,6 +5,11 @@ DEPENDENCIES ?=	\
 	/bin/busybox \
 	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
+	/lib/x86_64-linux-gnu/libc.so.6 \
+	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
+	/lib/x86_64-linux-gnu/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/libresolv.so.2 \
 	/sbin/mkfs.ext4 \
 	/sbin/parted \
 	/usr/bin/dropbearkey \
