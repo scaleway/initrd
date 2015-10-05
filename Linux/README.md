@@ -65,6 +65,7 @@ Here are the availble *initrd variables*:
 ### v3.4 (unreleased)
 
 * Register `xnbd-client` processes to `/run/sendsigs-omit.d/`
+* Automatically attach NBD devices [#94](https://github.com/scaleway/initrd/issues/94)
 
 ### v3.3 (2015-09-07)
 
