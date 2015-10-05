@@ -66,6 +66,7 @@ Here are the availble *initrd variables*:
 
 * Made the `initrd` more architecture agnostic to allow testing on Travis [#92](https://github.com/scaleway/initrd/pull/92)
 * Register `xnbd-client` processes to `/run/sendsigs-omit.d/`
+* Automatically attach NBD devices [#94](https://github.com/scaleway/initrd/issues/94)
 
 ### v3.3 (2015-09-07)
 
