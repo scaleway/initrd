@@ -62,6 +62,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### v3.5 (unreleased)
+
+* No entry
+
 ### v3.4 (2015-10-05)
 
 * Made the `initrd` more architecture agnostic to allow testing on Travis [#92](https://github.com/scaleway/initrd/pull/92)
