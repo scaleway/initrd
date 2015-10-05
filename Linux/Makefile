@@ -5,6 +5,11 @@ DEPENDENCIES ?=	\
 	/bin/busybox \
 	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
 	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
+	/lib/x86_64-linux-gnu/libc.so.6 \
+	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
+	/lib/x86_64-linux-gnu/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/libresolv.so.2 \
 	/sbin/mkfs.ext4 \
 	/sbin/parted \
 	/usr/bin/dropbearkey \
@@ -15,9 +20,9 @@ DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
 INITRD_DEBUG ?=		0
-TARGET = armv7l
+TARGET ?= armv7l
 HOST_ARCH ?=		$(shell uname -m)
-PUBLISH_FILES ?=	uInitrd-Linux-armv7l initrd-Linux-armv7l.gz
+PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
 
@@ -27,7 +32,7 @@ all:	uInitrd
 
 
 travis_check:
-	bash -n tree-armv7l/init output-armv7l/shutdown output-armv7l/functions output-armv7l/boot-*
+	bash -n tree-common/init tree-common/shutdown tree-common/functions tree-common/boot-*
 
 
 travis_build: uInitrd
@@ -37,25 +42,25 @@ qemu:
 	$(MAKE) qemu-docker-text || $(MAKE) qemu-local-text
 
 
-qemu-local-text:	vmlinuz initrd-Linux-armv7l.gz
+qemu-local-text:	vmlinuz initrd-Linux-$(TARGET).gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
 		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
-		-initrd ./initrd-Linux-armv7l.gz \
+		-initrd ./initrd-Linux-$(TARGET).gz \
 		-nographic -monitor null
 
 
-qemu-local-vga:	vmlinuz initrd-Linux-armv7l.gz
+qemu-local-vga:	vmlinuz initrd-Linux-$(TARGET).gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
 		-append "$(CMDLINE)  INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
-		-initrd ./initrd-Linux-armv7l.gz \
+		-initrd ./initrd-Linux-$(TARGET).gz \
 		-monitor stdio
 
 
-qemu-docker qemu-docker-text:	vmlinuz initrd-Linux-armv7l.gz
+qemu-docker qemu-docker-text:	vmlinuz initrd-Linux-$(TARGET).gz
 	cd qemu; -docker-compose kill metadata
 	cd qemu; docker-compose run initrd /bin/bash -xc ' \
 		qemu-system-arm \
@@ -63,7 +68,7 @@ qemu-docker qemu-docker-text:	vmlinuz initrd-Linux-armv7l.gz
 		  $(QEMU_OPTIONS) \
 		  -append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG) METADATA_IP=$$METADATA_PORT_80_TCP_ADDR" \
 		  -kernel /boot/vmlinuz \
-		  -initrd /boot/initrd-Linux-armv7l.gz \
+		  -initrd /boot/initrd-Linux-$(TARGET).gz \
 		  -nographic -monitor null \
 		'
 
@@ -78,17 +83,21 @@ publish_on_s3:	$(PUBLISH_FILES)
 	done
 
 
+publish_on_store: $(PUBLISH_FILES)
+	rsync -avze ssh $(PUBLISH_FILES) store.scw.42.am:store/initrds/
+
+
 dist:
 	$(MAKE) dist_do || $(MAKE) dist_teardown
 
 
 dist_do:
-	-git branch -D dist-Linux-armv7l || true
-	git checkout -b dist-Linux-armv7l
-	-$(MAKE) dependencies-armv7l.tar.gz && git add -f dependencies-armv7l.tar.gz
-	-$(MAKE) uInitrd-Linux-armv7l && git add -f uInitrd-Linux-armv7l initrd-Linux-armv7l.gz output-armv7l
+	-git branch -D dist-Linux-$(TARGET) || true
+	git checkout -b dist-Linux-$(TARGET)
+	-$(MAKE) dependencies-$(TARGET).tar.gz && git add -f dependencies-$(TARGET).tar.gz
+	-$(MAKE) uInitrd-Linux-$(TARGET) && git add -f uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz output-$(TARGET)
 	git commit -am ":ship: dist"
-	git push -u origin dist-Linux-armv7l -f
+	git push -u origin dist-Linux-$(TARGET) -f
 	$(MAKE) dist_teardown
 
 
@@ -103,19 +112,19 @@ vmlinuz:
 	mv $@.tmp $@
 
 
-uInitrd:	uInitrd-Linux-armv7l
+uInitrd:	uInitrd-Linux-$(TARGET)
 
 
-uInitrd-Linux-armv7l:	initrd-Linux-armv7l.gz
+uInitrd-Linux-$(TARGET):	initrd-Linux-$(TARGET).gz
 	$(MAKE) uInitrd-local || $(MAKE) uInitrd-docker
 
 
-uInitrd-local:	initrd-Linux-armv7l.gz
-	mkimage $(MKIMAGE_OPTS) -d initrd-Linux-armv7l.gz uInitrd-Linux-armv7l
-	touch uInitrd-Linux-armv7l
+uInitrd-local:	initrd-Linux-$(TARGET).gz
+	mkimage $(MKIMAGE_OPTS) -d initrd-Linux-$(TARGET).gz uInitrd-Linux-$(TARGET)
+	touch uInitrd-Linux-$(TARGET)
 
 
-uInitrd-docker:	initrd-Linux-armv7l.gz
+uInitrd-docker:	initrd-Linux-$(TARGET).gz
 	docker run \
 		-it --rm \
 		-v $(PWD):/host \
@@ -123,77 +132,82 @@ uInitrd-docker:	initrd-Linux-armv7l.gz
 		moul/u-boot-tools \
 		/bin/bash -xec \
 		' \
-		  cp /host/initrd-Linux-armv7l.gz . && \
-		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd-Linux-armv7l.gz ./uInitrd && \
+		  cp /host/initrd-Linux-$(TARGET).gz . && \
+		  mkimage -A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs -d ./initrd-Linux-$(TARGET).gz ./uInitrd && \
 		  cp uInitrd /host/ \
 		'
 	@sudo chown $(USER) uInitrd || true
-	mv uInitrd uInitrd-Linux-armv7l
-	@touch uInitrd-Linux-armv7l || true
+	mv uInitrd uInitrd-Linux-$(TARGET)
+	@touch uInitrd-Linux-$(TARGET) || true
 
 
-uInitrd-shell: output-armv7l/.deps
-	test $(HOST_ARCH) = armv7l
+uInitrd-shell: output-$(TARGET)/.deps
+	test $(HOST_ARCH) = $(TARGET)
 	docker run \
 		-it --rm \
-		-v $(PWD)/output-armv7l:/chroot \
+		-v $(PWD)/output-$(TARGET):/chroot \
 		-w /tmp \
 		armbuild/busybox \
 		chroot /chroot /bin/sh
 
 
-output-armv7l/usr/bin/oc-metadata:
+output-$(TARGET)/usr/bin/oc-metadata:
 	mkdir -p $(shell dirname $@)
 
 
-initrd.gz:	initrd-Linux-armv7l.gz
+initrd.gz:	initrd-Linux-$(TARGET).gz
 
 
-initrd-Linux-armv7l.gz:	output-armv7l/.clean
-	cd output-armv7l && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
+initrd-Linux-$(TARGET).gz:	output-$(TARGET)/.clean
+	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
 
 
-output-armv7l/.deps:	dependencies-armv7l.tar.gz tree-armv7l/usr/sbin/xnbd-client tree-armv7l/usr/bin/oc-metadata Makefile $(shell find tree-armv7l -type f)
-	rm -rf output-armv7l
-	mkdir -p output-armv7l
-	tar -m -C output-armv7l/ -xzf dependencies-armv7l.tar.gz
-	rsync -az tree-armv7l/ output-armv7l
+output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xnbd-client tree-$(TARGET) tree-$(TARGET)/usr/bin/oc-metadata Makefile $(shell find tree-$(TARGET) -type f) $(shell find tree-common -type f)
+	rm -rf output-$(TARGET)
+	mkdir -p output-$(TARGET)
+	tar -m -C output-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
+	rsync -az tree-common/ output-$(TARGET)
+	rsync -az tree-$(TARGET)/ output-$(TARGET)
 	touch $@
 
 
-output-armv7l/.clean: output-armv7l/.deps
-	find output-armv7l \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
-	sed -i 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-armv7l/init
-	sed -i 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-armv7l/init
+output-$(TARGET)/.clean: output-$(TARGET)/.deps
+	find output-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
+	sed -i 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-$(TARGET)/init
+	sed -i 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-$(TARGET)/init
 	touch $@
 
 
-tree-armv7l/usr/bin/oc-metadata:
-	mkdir -p tree-armv7l/usr/bin
+tree-$(TARGET):
+	mkdir -p $@
+
+
+tree-$(TARGET)/usr/bin/oc-metadata:
+	mkdir -p tree-$(TARGET)/usr/bin
 	wget https://raw.githubusercontent.com/scaleway/image-tools/master/skeleton-common/usr/local/bin/oc-metadata -O $@
 	chmod +x $@
 
 
-tree-armv7l/usr/sbin/xnbd-client:
-	mkdir -p tree-armv7l/usr/sbin
+tree-$(TARGET)/usr/sbin/xnbd-client:
+	mkdir -p tree-$(TARGET)/usr/sbin
 	wget https://github.com/aimxhaisse/xnbd-client-static/raw/dist/bin/xnbd-client-static -O $@
 	chmod +x $@
-	ln -sf xnbd-client tree-armv7l/usr/sbin/@xnbd-client
+	ln -sf xnbd-client tree-$(TARGET)/usr/sbin/@xnbd-client
 
 
-dependencies.tar.gz:	dependencies-armv7l.tar.gz
+dependencies.tar.gz:	dependencies-$(TARGET).tar.gz
 
 
-dependencies-armv7l.tar.gz:	dependencies-armv7l/Dockerfile
-	$(MAKE) dependencies-armv7l.tar.gz-armhf || $(MAKE) dependencies-armv7l.tar.gz-dist
+dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
+	$(MAKE) dependencies-$(TARGET).tar.gz-armhf || $(MAKE) dependencies-$(TARGET).tar.gz-dist
 	tar tvzf $@ | grep bin/busybox || rm -f $@
 	@test -f $@ || echo $@ is broken
 	@test -f $@ || exit 1
 
 
 dependencies-shell:
-	test $(HOST_ARCH) = armv7l
-	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-armv7l/
+	test $(HOST_ARCH) = $(TARGET)
+	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
 	docker run -it $(DOCKER_DEPENDENCIES) /bin/bash
 
 
@@ -204,22 +218,22 @@ dependencies-shell:
 	chmod +x ../scw-boot-tools/usr/bin/scw-update-server-state
 
 
-dependencies-armv7l.tar.gz-armhf: dependencies-armv7l ../scw-boot-tools/usr/bin/scw-update-server-state
-	test $(HOST_ARCH) = armv7l
-	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-armv7l/
+dependencies-$(TARGET).tar.gz-armhf: dependencies-$(TARGET) ../scw-boot-tools/usr/bin/scw-update-server-state
+	test $(HOST_ARCH) = $(TARGET)
+	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
 	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
-	mv dependencies.tar dependencies-armv7l.tar
-	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-armv7l.tar usr/bin/scw-update-server-state)
+	mv dependencies.tar dependencies-$(TARGET).tar
+	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
 	docker rm `docker ps -lq`
-	rm -f dependencies-armv7l.tar.gz
-	@ls -lah dependencies-armv7l.tar
-	gzip dependencies-armv7l.tar
-	@ls -lah dependencies-armv7l.tar.gz
+	rm -f dependencies-$(TARGET).tar.gz
+	@ls -lah dependencies-$(TARGET).tar
+	gzip dependencies-$(TARGET).tar
+	@ls -lah dependencies-$(TARGET).tar.gz
 
 
-dependencies-armv7l.tar.gz-dist:
-	wget -O dependencies-armv7l.tar.gz https://github.com/scaleway/initrd/blob/dist-Linux-armv7l/Linux/dependencies-armv7l.tar.gz?raw=true
+dependencies-$(TARGET).tar.gz-dist:
+	wget -O dependencies-$(TARGET).tar.gz https://github.com/scaleway/initrd/blob/dist-Linux-$(TARGET)/Linux/dependencies-$(TARGET).tar.gz?raw=true
 
 
 minirootfs:

@@ -1,0 +1,8 @@
+# -*- shell-script -*-
+
+
+mountroot() {
+    log_begin_msg "Mounting local disk: ${root}"
+    emount "${root}" "${rootmnt}"
+    log_end_msg
+}

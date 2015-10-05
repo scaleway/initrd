@@ -93,6 +93,10 @@ signal_state() {
     METADATA_PORT=80
     SLEEP_BETWEEN_RETRIES=1
 
+    if [ "$(get_opt NO_METADATA)" = "1" ]; then
+	return
+    fi
+    
     log_begin_msg "Signaling the server is ${state} to the control plane"
 
     # FIXME: I don't know why, but the first scw-update-server-state will always fail
@@ -170,9 +174,13 @@ get_any() {
     key=$1
     default=${2:-""}
 
-    ret=$(get_metadata $key)
-    if [ -n "$ret" ]; then
-	echo "$ret"
+    if [ "$(get_opt NO_METADATA)" != "1" ]; then
+	ret=$(get_metadata $key)
+	if [ -n "$ret" ]; then
+	    echo "$ret"
+	else
+	    get_opt "$key" "$default"
+	fi
     else
 	get_opt "$key" "$default"
     fi
