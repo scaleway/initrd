@@ -62,7 +62,7 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### v3.4.1 (2015-10-06)
 
 * Fix: regression on booting servers with cmdline containing 'boot=local' [#97](https://github.com/scaleway/initrd/issues/97)
 
