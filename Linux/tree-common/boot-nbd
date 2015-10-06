@@ -1,8 +1,0 @@
-# -*- shell-script -*-
-
-
-mountroot() {
-    attach_nbd_device 0
-    mount_nbd 0 "${rootmnt}"
-    attach_secondary_nbd_devices
-}
