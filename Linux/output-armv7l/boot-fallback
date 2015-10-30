@@ -1,0 +1,6 @@
+mountroot() {
+  eerror "**********************************************************"
+  eerror "Invalid boot type (${boot})."
+  eerror "Choose a boot value in: 'local', 'rescue', 'nfs' or 'live'"
+  eerror "**********************************************************"
+}

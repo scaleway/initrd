@@ -1,0 +1,313 @@
+# -*- shell-script -*-
+
+VERBOSE=${VERBOSE:-0}
+
+## Logging functions
+
+_log_msg() {
+    echo -ne "${*}" >&2
+}
+_log_file() {
+    echo "${*}" >> /initrd.log
+}
+log_success_msg() {
+    einfo "${*}"
+    _log_file "success: ${*}"
+}
+log_failure_msg() {
+    eerror "${*}"
+    _log_file "failure: ${*}"
+}
+log_warning_msg() {
+    ewarn "${*}"
+    _log_file "warning: ${*}"
+}
+log_begin_msg() {
+    einfo "${*}..."
+    _log_file "info: ${*}"
+}
+log_end_msg() {
+    _log_msg ""
+}
+log_fatal_msg() {
+    _log_msg "Fatal: ${*}\n"
+    _log_file "fatal: ${*}\n"
+    sleep 5
+    # FIXME: drop a shell but reboot automatically if nothing happen on the debug shell
+    reboot
+}
+einfo() {
+    _log_msg "\033[1;36m>>> \033[0m${*}\n"
+}
+esuccess() {
+    _log_msg "\033[1;32m>>> \033[0m${*}\n"
+}
+ewarn() {
+    _log_msg "\033[1;33m>>> \033[0m${*}\n"
+}
+eerror() {
+    _log_msg "\033[1;31m>>> ${*}\033[0m\n"
+}
+edebug() {
+    if [ "$VERBOSE" = "1" ]; then
+	_log_msg "\033[0;30m>>> ${*}\033[0m\n"
+    fi
+}
+die() {
+    eerror "$*"
+    rescueshell
+}
+
+emount() {
+    _log_file "mounting: mount $@"
+    target=$(echo $@ | awk '{ print $NF }')
+    einfo "Mounting $target..."
+    run mount $@
+}
+
+run() {
+    _log_file "executing: $@"
+    edebug "Executing: $@"
+    "$@" >>/initrd.log 2>&1
+    ret=$?
+    if [[ $ret -eq 0 ]]; then
+	_log_file "Successfully ran '$@'"
+    else
+	eerror "'$@' failed"
+	return $ret
+    fi
+}
+
+rescueshell() {
+    ewarn "Rescue Shell (Busybox's /bin/sh)"
+    ewarn "To continue, press 'control-D'"
+    ewarn "To reboot, go to https://cloud.scaleway.com/"
+    exec /bin/sh
+}
+
+
+# Signal to SCW the current server state
+signal_state() {
+    state="${1}"
+    RETRIES=30
+    METADATA_PORT=80
+    SLEEP_BETWEEN_RETRIES=1
+
+    if [ "$(get_opt NO_METADATA)" = "1" ]; then
+	return
+    fi
+    
+    log_begin_msg "Signaling the server is ${state} to the control plane"
+
+    # FIXME: I don't know why, but the first scw-update-server-state will always fail
+    has_opt nometadata || (
+	scw-update-server-state -s "$state" &> /dev/null
+	sleep ${SLEEP_BETWEEN_RETRIES}
+    ) || true
+
+
+    retries=0
+    while [ "${retries}" -lt "${RETRIES}" ]; do
+        has_opt nometadata || run scw-update-server-state -s "$state"
+        if [ ${?} -eq 0 ]; then
+            # log_success_msg "control plane is aware that server is ${state}"
+	    log_end_msg
+            return
+	fi
+
+        retries=$((${retries}+1))
+        test ${retries} -eq ${RETRIES} || sleep ${SLEEP_BETWEEN_RETRIES}
+    done
+
+    log_failure_msg "unable to signal state=$state after ${RETRIES} attempts, continuing boot.."
+    log_end_msg
+}
+
+
+## Helpers
+
+resolve_hostnames() {
+    sed "s/metadata.local/${METADATA_IP}/g"
+}
+
+
+# Function for parsing command line options with "=" in them
+get_opt() {
+    key=$1
+    default=$2
+    ret=$(cat /proc/cmdline ${rootmnt}/proc/cmdline 2>/dev/null | tr " " "\n" | grep "^$1" | head -n 1 | cut -d "=" -f 2)
+    if [ -z "$ret" ]; then
+        echo "$default" | resolve_hostnames
+    else
+        echo "$ret" | resolve_hostnames
+    fi
+}
+
+has_opt() {
+    cat /proc/cmdline ${rootmnt}/proc/cmdline 2>/dev/null | tr " " "\n" | grep "^$1\$" >/dev/null
+}
+
+get_metadata() {
+    for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
+	tag=$(oc-metadata --cached TAGS_$idx)
+	if [ $(echo "$tag" | grep "^$1=") ]; then
+	    echo $tag | sed 's/^[^=]*=//' | resolve_hostnames
+	    return
+	fi
+    done
+}
+
+get_userdata() {
+    key=$1
+    wget -qO- "http://169.254.42.42/user_data/${key}"
+}
+
+has_metadata() {
+    (
+	for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
+	    oc-metadata --cached TAGS_$idx
+	done
+    ) | grep "^$1\$" >/dev/null
+}
+
+get_any() {
+    key=$1
+    default=${2:-""}
+
+    if [ "$(get_opt NO_METADATA)" != "1" ]; then
+	ret=$(get_metadata $key)
+	if [ -n "$ret" ]; then
+	    echo "$ret"
+	else
+	    get_opt "$key" "$default"
+	fi
+    else
+	get_opt "$key" "$default"
+    fi
+}
+
+
+load_nolp_ko() {
+    log_begin_msg "Loading nolp kernel module"
+    run wget -q http://169.254.42.24/kernel/$(uname -r)/custom/nolp.ko
+    run insmod $(pwd)/nolp.ko
+    if [ $? -eq 0 ]; then
+        log_success_msg "nolp.ko successfully loaded"
+        log_end_msg
+    else
+        log_warning_msg "cannot load nolp.ko"
+        log_end_msg
+    fi
+}
+
+
+setup_gpios() {
+    # Switch booted GPIO to enable serial for user
+    run sh -ec "echo 42 > /sys/class/gpio/export"
+    run sh -ec "echo out > /sys/class/gpio/gpio42/direction"
+}
+
+
+# Attach NBD device
+NBD_CLIENT=/usr/sbin/@xnbd-client
+attach_nbd_device() {
+    local device="$1"  # ie: 0
+    local retries=900
+
+    log_begin_msg "Attaching nbd${device}"
+
+    # Fetching metadatas
+    local export_uri=$(oc-metadata --cached VOLUMES_${device}_EXPORT_URI)
+    [ "$export_uri" = "" ] && log_fatal_msg "Unable to load metadatas..."
+
+    local nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
+    local nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
+    [ "$nbd_host" = "" -o "$nbd_port" = "" ] && log_fatal_msg "Parse error of $export_uri"
+
+
+    # Checking if device is already attached
+    run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then
+        return
+    fi
+
+    # Connecting the device
+    (
+	export PATH=$(dirname $NBD_CLIENT)
+	run $(basename $NBD_CLIENT) \
+	    --blocksize 4096 \
+	    --retry=$retries \
+	    $nbd_host $nbd_port \
+	    /dev/nbd${device} 2>/dev/null
+    )
+    local nbd_pid=$$
+    run sh -ec "echo -1000 > /proc/$nbd_pid/oom_score_adj"
+    run mkdir -p /run/sendsigs.omit.d
+    run sh -ec "echo {$nbd_pid} > /run/sendsigs.omit.d/nbd{$device}"
+
+    # Checking if device is already attached
+    run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
+        log_fatal_msg "Device connection failed."
+
+    # Fixing IO scheduler
+    if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
+    then
+        run sh -ec "echo deadline > /sys/block/nbd${device}/queue/scheduler"
+    fi
+
+    log_end_msg
+}
+
+
+# Mount NBD
+mount_nbd() {
+    local device="$1"  # ie: 0
+    local dest="$2"    # ie: ${rootmnt}/
+
+    log_begin_msg "Mounting nbd${device} root"
+    run sh -ec "echo 0 > /proc/sys/kernel/printk"
+    emount /dev/nbd${device} ${dest}
+    run sh -ec "echo 1 > /proc/sys/kernel/printk"
+    if [ "${device}" = "0" ]; then
+	run sh -ec "echo 0x0100 > /proc/sys/kernel/real-root-dev"
+    fi
+    run sync
+    log_end_msg
+}
+
+
+start_sshd() {
+    run mkdir -p /etc/dropbear /root/.ssh
+    run chmod 700 /root/.ssh
+    run dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+    run dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+    run sh -ec "oc-metadata --cached | grep 'SSH_PUBLIC_KEYS_.*_KEY' | cut -d'=' -f 2- | tr -d \' > /root/.ssh/authorized_keys"
+    run dropbear -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key
+}
+
+
+# ask metadata and automatically attach nbd>=1 devices
+attach_secondary_nbd_devices() {
+    log_begin_msg "Checking metadata in case we skip to wait for secondary volumes to be ready"
+    if [ "x$(get_any INITRD_SKIP_SECONDARY_VOLUMES)" != "x1" ]; then
+	log_end_msg
+	for volume in $(oc-metadata --cached VOLUMES); do
+	    if [ "${volume}" -ne "0" ]; then
+		attach_nbd_device "${volume}"
+	    fi
+	    log_end_msg
+	done
+    else
+	log_end_msg
+    fi
+}
+
+# generate a random password
+gen_passwd() {
+	</dev/urandom tr -dc 'A-Za-z0-9' | head -c 12
+}
+
+pgrep() {
+    seek="$1"
+    ps | grep "$seek" | grep -v "grep" | awk '{print $1}'
+}

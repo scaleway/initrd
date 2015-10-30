@@ -1,0 +1,9 @@
+# -*- shell-script -*-
+
+
+mountroot() {
+    nfsroot=$(get_any nfsroot)
+    log_begin_msg "Mounting nfs: ${nfsroot}"
+    emount -t nfs -o port=2049,nolock,proto=tcp "${nfsroot}" "${rootmnt}"
+    log_end_msg
+}

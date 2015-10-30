@@ -1,0 +1,14 @@
+# -*- shell-script -*-
+
+
+mountroot() {
+    if [ "$root" = "/dev/nbd0" ]; then
+	attach_nbd_device 0
+	mount_nbd 0 "${rootmnt}"
+	attach_secondary_nbd_devices
+    else
+	log_begin_msg "Mounting local disk: ${root}"
+	emount "${root}" "${rootmnt}"
+	log_end_msg
+    fi
+}

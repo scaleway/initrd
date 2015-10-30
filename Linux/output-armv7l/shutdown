@@ -1,0 +1,56 @@
+#!/bin/sh
+
+ACTION="${1:-halt}"
+
+
+# disable hotplug
+echo > /proc/sys/kernel/hotplug
+
+
+# systemd automatically pivots here, we support this extra-option for
+# other init systems that do not pivot prior to calling this script
+if ! [ -z "$DO_PIVOT" ]; then
+    # we need a dedicated mountpoint for pivot_root
+    mkdir -p /run/pivot-ramfs/
+    mount -t tmpfs tmpfs /run/pivot-ramfs
+    mv /run/initramfs/* /run/pivot-ramfs/
+
+    # umount special fs to allow pivot_root
+    mount --move /dev /run/pivot-ramfs/dev
+    mount --move /sys /run/pivot-ramfs/sys
+    mount --move /proc /run/pivot-ramfs/proc
+
+    # pivot_root to initramfs
+    mkdir -p /run/pivot-ramfs/oldroot
+    PATH=/run/pivot-ramfs/bin /run/pivot-ramfs/bin/busybox pivot_root /run/pivot-ramfs /run/pivot-ramfs/oldroot
+    cd /
+fi
+
+
+# here we are in the initramfs
+cp /proc/mounts  /etc/fstab
+swapoff -a
+
+
+# unmount nbd devices
+for device in $(mount | grep nbd | awk '{print $1}'); do
+    umount $device &>/dev/null || umount -l $device
+done
+
+
+# detach nbd devices
+for device in $(seq 0 15); do
+    xnbd-client -c /dev/nbd${device} && xnbd-client -d /dev/nbd${device} &>/dev/null
+done
+
+
+# send sysrq
+case "${ACTION}" in
+    reboot)    reboot -f;    break;;
+    poweroff)  poweroff -f;  break;;
+    halt)      halt -f;      break;;
+esac
+
+
+# this should never happen
+/bin/sh

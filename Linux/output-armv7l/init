@@ -1,0 +1,305 @@
+#!/bin/sh
+
+# Loading functions
+. /functions
+
+/bin/busybox sleep .5
+
+cat <<EOF
+
+Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
+
+███████╗ ██████╗ █████╗ ██╗     ███████╗██╗    ██╗ █████╗ ██╗   ██╗
+██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██║    ██║██╔══██╗╚██╗ ██╔╝
+███████╗██║     ███████║██║     █████╗  ██║ █╗ ██║███████║ ╚████╔╝
+╚════██║██║     ██╔══██║██║     ██╔══╝  ██║███╗██║██╔══██║  ╚██╔╝
+███████║╚██████╗██║  ██║███████╗███████╗╚███╔███╔╝██║  ██║   ██║
+╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝
+
+EOF
+
+esuccess "Initrd build: v3.4.1-2-gac5f6b9 - 2015/10/30"
+esuccess "Kernel version: $(busybox uname -r)"
+echo
+
+# Create all the symlinks to /bin/busybox
+log_begin_msg "Installing busybox"
+/bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
+/bin/busybox --install -s
+log_end_msg
+
+
+# prepare a tmpfs-based initramfs for shutdown
+log_begin_msg "Cloning initramfs for shutdown..."
+mkdir /initramfs
+cp -rf / /initramfs 2>/dev/null
+log_end_msg
+
+
+# Mount things needed by this script
+log_begin_msg "Mounting pseudo-filesystems..."
+[ -d /dev ] || run mkdir -m 0755 /dev
+emount -t devtmpfs -o mode=0755 none /dev
+run mkdir /dev/pts
+emount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
+
+[ -d /run ] || run mkdir -pm 0755 /run
+emount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
+[ -d /var ] || run mkdir -pm 0755 /var
+run ln -s /run /var/run
+
+[ -d /sys ] || run mkdir /sys
+emount -t sysfs -o nodev,noexec,nosuid none /sys
+
+[ -d /proc ] || run mkdir /proc
+emount -t proc -o nodev,noexec,nosuid none /proc
+log_end_msg
+
+
+echo
+esuccess "Kernel cmdline: $(busybox cat /proc/cmdline)"
+echo
+
+
+# Configure GPIOs
+if [ "$(get_opt SKIP_GPIO_SETUP)" != "1" ]; then
+    log_begin_msg "Configuring GPIOs"
+    setup_gpios
+    log_end_msg
+fi
+
+
+# Initial /proc/cmdline parsing
+export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
+
+
+# Configure network
+log_begin_msg "Configuring network"
+run ifconfig eth0 up
+if [ "$(get_opt ip)" = "dhcp" ]; then
+    run udhcpc -n -q -i eth0
+fi
+if [ "$(get_opt nameserver)" != "" ]; then
+    run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
+fi
+log_end_msg
+
+
+# Display metadata infos
+if [ "$(get_opt NO_METADATA)" != "1" ]; then
+    echo
+    esuccess "Server ID: $(oc-metadata --cached ID)"
+    esuccess "Private IP: $(oc-metadata --cached PRIVATE_IP)"
+    esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+    esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
+    echo
+fi
+
+
+# Verbose mode
+log_begin_msg "Checking user input for debug/verbose mode"
+if [ "$(get_any INITRD_VERBOSE)" = "1" ]; then
+    VERBOSE=1
+    log_success_msg "Verbose mode enabled"
+fi
+if [ "$(get_any INITRD_DEBUG)" = "1" ]; then
+    log_success_msg "Debug mode enabled"
+    set -x
+    run env
+fi
+log_end_msg
+
+
+# Drop debug shell
+log_begin_msg "Checking user input for debug shell"
+if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the user)"
+    echo "To continue the initrd process, just type C^d"
+    /bin/sh
+else
+    log_end_msg
+fi
+
+
+# Signal to the console that the kernel is started
+signal_state kernel-started
+
+
+# Adjust time
+if [ "$(get_any NO_NTPDATE)" != "1" ]; then
+    log_begin_msg "Adjusting time (ntp)"
+    NTPSRV=$(cat /etc/ntpsrv)
+    run ntpdate -d -b -p 2 "${NTPSRV}"
+    run ntpdate -d -b -p 6 "${NTPSRV}" &
+    log_end_msg
+fi
+
+
+# Defaults
+init=$(get_any init "/sbin/init")
+root=$(get_any root "/dev/nbd0")
+default_boot="local"
+if [ "${root}" = "/dev/nfs" ]; then
+    default_boot="nfs"
+fi
+boot=$(get_any boot "${default_boot}")
+rootmnt=$(get_any rootmnt "/newroot")
+
+
+# Import boot-type functions
+case "${boot}" in
+    rescue)
+        . ./boot-rescue
+        ;;
+    nfs)
+        . ./boot-nfs
+        ;;
+    live)
+        . ./boot-live
+        ;;
+    local)
+        . ./boot-local
+        ;;
+    *)
+        . ./boot-fallback
+        ;;
+esac
+
+
+# Mountroot
+log_begin_msg "Initializing '${boot}' root file system"
+mountroot
+log_end_msg
+
+
+# Signal to the console that the server is booted
+signal_state booted
+
+
+# Forward network configuration files
+log_begin_msg "Creating default configuration files on rootfs..."
+run mkdir -p "${rootmnt}/etc"
+run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
+[ -s ${rootmnt}/etc/hostname ] || run sh -ec "oc-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname"
+grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
+log_end_msg
+
+
+# Drop debug shell
+log_begin_msg "Checking metadata for debug shell"
+if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the TAGS metadata of the server)"
+    echo "To continue the initrd process, just type C^d"
+    /bin/sh
+else
+    log_end_msg
+fi
+
+
+# Drop debug shell
+log_begin_msg "Checking metadata for debug sshd (dropbear)"
+if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
+    log_success_msg "Starting a debug sshd"
+    start_sshd
+    log_end_msg
+
+    ewarn ""
+    ewarn "**DEBUG DROPBEAR** (requested from the TAGS metadata of the server)"
+    ewarn ""
+    ewarn "To continue the initrd process:"
+    ewarn " -- You must run 'continue-boot' with a remote access"
+    ewarn ""
+    ewarn "You can connect to your server with 'scw' or 'ssh'"
+    ewarn " -- scw exec $(oc-metadata --cached ID)"
+    ewarn " -- ssh root@$(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+    ewarn ""
+
+    # FIXME: display common usages (luks, lvm, etc) in a README.txt file
+    run mkfifo /continue
+    run cat /continue
+else
+    log_end_msg
+fi
+
+
+# Ensure sshd is killed if running
+if [ "$(pgrep dropbear)" != "" ]; then
+    run killall dropbear
+fi
+# FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
+
+
+# Generate root password if empty or if reset is explicitely required by the user
+grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
+if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
+    log_begin_msg "Changing root password"
+    PASSWORD=$(gen_passwd)
+    # update /etc/shadow
+    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
+    # update /root/.pw
+    run mkdir -p "${rootmnt}/root"
+    echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
+    run chmod 700 "${rootmnt}/root/.pw"
+    log_end_msg
+    # delete /.scw-reset-password-on-next-boot if it exists
+    run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
+    if [ "$(get_opt NO_METADATA)" != "1" ]; then
+        run /usr/bin/scw-update-server-state -u "root_password=$PASSWORD"
+    fi
+fi
+
+
+# Prepare mount pseudo filesystem moving
+run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
+emount -o move /proc ${rootmnt}/proc
+emount -o move /sys ${rootmnt}/sys
+emount -o move /run ${rootmnt}/run
+emount -o move /dev ${rootmnt}/dev
+[ -c ${rootmnt}/dev/console ] || run mknod -m 622 ${rootmnt}/dev/console c 5 1
+[ -c ${rootmnt}/dev/null ]    || run mknod -m 666 ${rootmnt}/dev/null    c 1 3
+[ -c ${rootmnt}/dev/zero ]    || run mknod -m 666 ${rootmnt}/dev/zero    c 1 5
+[ -c ${rootmnt}/dev/ptmx ]    || run mknod -m 666 ${rootmnt}/dev/ptmx    c 5 2
+[ -c ${rootmnt}/dev/tty ]     || run mknod -m 666 ${rootmnt}/dev/tty     c 5 0
+[ -c ${rootmnt}/dev/random ]  || run mknod -m 444 ${rootmnt}/dev/random  c 1 8
+[ -c ${rootmnt}/dev/urandom ] || run mknod -m 444 ${rootmnt}/dev/urandom c 1 9
+# chown -v root:tty /dev/{console,ptmx,tty}
+
+
+# Move initramfs copy to /run/initramfs for shutdown
+log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
+run mv /initramfs ${rootmnt}/run/initramfs
+log_end_msg
+
+
+# Check if $init exists and is executable
+if [[ ! -x "${rootmnt}/${init}" ]] ; then
+    ewarn "/sbin/init may be broken"
+    ewarn "make sure /sbin/init is an executable and not an absolute symlink"
+fi
+
+# Trying to switch to linux
+log_begin_msg "Switching to linux"
+log_end_msg
+
+cat <<EOF
+End of Scaleway' initrd
+           _ _       _      _          _ _
+ ___ _ _ _|_| |_ ___| |_   | |_ ___   | |_|___ _ _ _ _
+|_ -| | | | |  _|  _|   |  |  _| . |  | | |   | | |_'_|
+|___|_____|_|_| |___|_|_|  |_| |___|  |_|_|_|_|___|_,_|
+
+EOF
+
+# Temporary hack to let ttyS0 flushing before distro's getty resets ttyS0
+run sleep 1
+
+# Switch to the new root and execute init
+exec switch_root "${rootmnt}" "${init}"
+
+
+# This will only be run if the exec above failed
+die "Failed to switch_root, does ${rootmnt}/${init} exists ?"
