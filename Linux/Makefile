@@ -23,6 +23,7 @@ INITRD_DEBUG ?=		0
 TARGET ?= armv7l
 HOST_ARCH ?=		$(shell uname -m)
 PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz
+GIT_REMOTE ?=		origin
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
 
@@ -97,7 +98,7 @@ dist_do:
 	-$(MAKE) dependencies-$(TARGET).tar.gz && git add -f dependencies-$(TARGET).tar.gz
 	-$(MAKE) uInitrd-Linux-$(TARGET) && git add -f uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz output-$(TARGET)
 	git commit -am ":ship: dist"
-	git push -u origin dist-Linux-$(TARGET) -f
+	git push -u $(GIT_REMOTE) dist-Linux-$(TARGET) -f
 	$(MAKE) dist_teardown
 
 
