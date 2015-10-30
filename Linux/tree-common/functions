@@ -74,8 +74,8 @@ run() {
 	_log_file "Successfully ran '$@'"
     else
 	eerror "'$@' failed"
-	return $ret
     fi
+    return $ret
 }
 
 rescueshell() {
