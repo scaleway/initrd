@@ -91,7 +91,7 @@ signal_state() {
     state="${1}"
     RETRIES=30
     METADATA_PORT=80
-    SLEEP_BETWEEN_RETRIES=1
+    SLEEP_BETWEEN_RETRIES=3
 
     if [ "$(get_opt NO_METADATA)" = "1" ]; then
 	return
