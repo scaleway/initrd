@@ -10,12 +10,14 @@ make
 
 ## scw-update-server-state
 
-Inform the API about the current server state
+Allow to inform the API about the current server state or to interact with userdatas
 
 ### Usage
 
 ```command
-$ scw-update-server-state -s booted
+$ scw-update-server-state [ OPTIONS ] params
+   -s STATE
+   -u "[KEY[=[VALUE]]]"
 ```
 
 ### Use cases
