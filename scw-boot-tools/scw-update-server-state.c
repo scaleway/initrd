@@ -18,7 +18,7 @@
 
 static const char   *g_host = "169.254.42.42";
 static const char   *g_port = "80";
-
+static const char   *scw_boot_tools_version = "scw-boot-tools/0.1.1";
 
 /*
  * FUNCTIONS TO DISPLAY THE ERRORS
@@ -299,7 +299,7 @@ f_request_make_request(t_request *v_this) {
     i = 0;
     while (i < e_req_max) {
         if (v_this->v_str[i] != NULL) {
-            strncat(ret, v_this->v_str[i], length);
+            strncat(ret, v_this->v_str[i], strlen(v_this->v_str[i]));
             length = length - strlen(v_this->v_str[i]);
         }
         if (i == last) {
@@ -592,7 +592,7 @@ uf_state(const char *argv) {
 
     D_REQUEST(init)(&request);
     if (D_REQUEST(add_host)(&request, g_host, g_port) == false
-        || D_REQUEST(add_user_agent)(&request, "scw-boot-tools/0.1.0") == false
+        || D_REQUEST(add_user_agent)(&request, scw_boot_tools_version) == false
         || D_REQUEST(add_accept)(&request, "*/*") == false
         || D_REQUEST(add_connection)(&request, "closed") == false) {
         D_REQUEST(destroy)(&request);
@@ -628,7 +628,6 @@ uf_state(const char *argv) {
 int
 uf_userdata(const char *argv) {
     t_request   request;
-    t_client    client;
     size_t      length;
     char        *path;
     bool        ret;
@@ -651,24 +650,20 @@ uf_userdata(const char *argv) {
             method = e_met_patch;
         }
     }
-    length = strlen(argv) + strlen("/user_data/");
+    length = strlen(argv) + strlen("/user_data/") + 1;
     if ((path = malloc(length)) == NULL) {
         return (M_ERROR(1, "Bad alloc"));
     }
     path[0] = '\0';
-    strncat(path, "/user_data/", length);
-    strncat(path, argv, length - strlen("/user_data/"));
+    strncat(path, "/user_data/", strlen("/user_data/"));
+    strncat(path, argv, strlen(argv));
     D_REQUEST(init)(&request);
     if (D_REQUEST(add_host)(&request, g_host, g_port) == false
-        || D_REQUEST(add_user_agent)(&request, "scw-boot-tools/0.1.0") == false
+        || D_REQUEST(add_user_agent)(&request, scw_boot_tools_version) == false
         || D_REQUEST(add_connection)(&request, "closed") == false
         || D_REQUEST(add_content_type)(&request, "text/plain") == false
+        || D_REQUEST(add_method)(&request, method, path) == false
         || D_REQUEST(add_accept)(&request, "*/*") == false) {
-        sf_free((void **)&path);
-        D_REQUEST(destroy)(&request);
-        return (1);
-    }
-    if (D_CLIENT(init)(&client, g_host, g_port) == false) {
         sf_free((void **)&path);
         D_REQUEST(destroy)(&request);
         return (1);
@@ -680,17 +675,38 @@ uf_userdata(const char *argv) {
             return (1);
         }
     }
-    ret = (D_REQUEST(add_method)(&request, method, path) == false
-        || D_CLIENT(add_data_from_request)(&client, &request) == false
-        || D_CLIENT(send)(&client) == false);
-    if (ret == false) {
+
+    t_client    client;
+    int         timetosleep;
+
+    timetosleep = 1;
+    while (true) {
+        if (D_CLIENT(init)(&client, g_host, g_port) == false) {
+            sf_free((void **)&path);
+            D_REQUEST(destroy)(&request);
+            return (1);
+        }
+        if (D_CLIENT(add_data_from_request)(&client, &request) == false
+            || D_CLIENT(send)(&client) == false) {
+            sf_free((void **)&path);
+            D_REQUEST(destroy)(&request);
+            D_CLIENT(destroy)(&client);
+            return (1);
+        }
         status_code = uf_get_statuscode(client.v_recv.v_data, client.v_recv.v_length);
+        if (status_code == 200) {
+            dprintf(1, "%s\n", uf_get_body(client.v_recv.v_data, client.v_recv.v_length));
+            D_CLIENT(destroy)(&client);
+            break;
+        } else if (status_code != 429) {
+            D_CLIENT(destroy)(&client);
+            break;
+        }
+        sleep(timetosleep);
+        timetosleep++;
+        D_CLIENT(destroy)(&client);
     }
-    if (ret == false && status_code == 200) {
-        dprintf(1, "%s\n", uf_get_body(client.v_recv.v_data, client.v_recv.v_length));
-    }
-	sf_free((void **)&path);
-    D_CLIENT(destroy)(&client);
+    sf_free((void **)&path);
     D_REQUEST(destroy)(&request);
     if (status_code != 200 && status_code != 204) {
         dprintf(2, "REQUEST ERROR [%d]\n", status_code);
