@@ -187,6 +187,26 @@ grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt
 log_end_msg
 
 
+# Generate root password if empty or if reset is explicitely required by the user
+grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
+if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
+    log_begin_msg "Changing root password"
+    PASSWORD=$(gen_passwd)
+    # update /etc/shadow
+    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
+    # update /root/.pw
+    run mkdir -p "${rootmnt}/root"
+    echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
+    run chmod 700 "${rootmnt}/root/.pw"
+    log_end_msg
+    # delete /.scw-reset-password-on-next-boot if it exists
+    run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
+    if [ "$(get_opt NO_METADATA)" != "1" ]; then
+        sleep 3; scw-update-server-state -u "root_password=$PASSWORD" || (sleep 3; run scw-update-server-state -u "root_password=$PASSWORD")
+    fi
+fi
+
+
 # Drop debug shell
 log_begin_msg "Checking metadata for debug shell"
 if [ "$(get_any INITRD_POST_SHELL)" = "1" ]; then
@@ -231,26 +251,6 @@ if [ "$(pgrep dropbear)" != "" ]; then
     run killall dropbear
 fi
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
-
-
-# Generate root password if empty or if reset is explicitely required by the user
-grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
-if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
-    log_begin_msg "Changing root password"
-    PASSWORD=$(gen_passwd)
-    # update /etc/shadow
-    run chroot ${rootmnt} /bin/sh -ec "(echo $PASSWORD;echo $PASSWORD) | passwd root"
-    # update /root/.pw
-    run mkdir -p "${rootmnt}/root"
-    echo "$PASSWORD" | run tee "${rootmnt}/root/.pw"
-    run chmod 700 "${rootmnt}/root/.pw"
-    log_end_msg
-    # delete /.scw-reset-password-on-next-boot if it exists
-    run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
-    if [ "$(get_opt NO_METADATA)" != "1" ]; then
-        sleep 3; scw-update-server-state -u "root_password=$PASSWORD" || (sleep 3; run scw-update-server-state -u "root_password=$PASSWORD")
-    fi
-fi
 
 
 # Prepare mount pseudo filesystem moving

@@ -64,7 +64,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* Reordered actions so `INITRD_DROPBEAR` and `INITRD_POST_SHELL` are executed after root password configuration
 
 ### v3.4.1 (2015-10-06)
 
