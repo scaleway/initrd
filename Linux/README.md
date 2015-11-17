@@ -134,6 +134,7 @@ Here are the availble *initrd variables*:
 ### master (unreleased)
 
 * Reordered actions so `INITRD_DROPBEAR` and `INITRD_POST_SHELL` are executed after root password configuration
+* scw-update-server-state retries the request when an error 429 occurred [#106](https://github.com/scaleway/initrd/issues/106)
 
 ### v3.4.1 (2015-10-06)
 
