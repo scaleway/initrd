@@ -18,7 +18,7 @@
 
 static const char   *g_host = "169.254.42.42";
 static const char   *g_port = "80";
-static const char   *scw_boot_tools_version = "scw-boot-tools/0.1.1";
+static const char   *scw_boot_tools_version = "scw-boot-tools/0.1.2";
 
 /*
  * FUNCTIONS TO DISPLAY THE ERRORS
@@ -418,7 +418,7 @@ f_client_init(t_client *v_this, const char *host, const char *port) {
     int                 local_port;
     size_t              retries;
 
-    retries = 5;
+    retries = 10;
     v_this->v_fd = -1;
     D_BUFFER(init)(&v_this->v_send);
     D_BUFFER(init)(&v_this->v_recv);
@@ -573,7 +573,7 @@ uf_get_statuscode(char *str, int length) {
 
 const char *
 uf_get_body(char *str, int length) {
-    char	*ret;
+    char    *ret;
 
     ret = strnstr(str, "\r\n\r\n", length);
     if (ret == NULL) {
@@ -584,41 +584,60 @@ uf_get_body(char *str, int length) {
 
 int
 uf_state(const char *argv) {
-    t_request   request;
-    t_client    client;
-    size_t      length;
-    char        *body;
-    bool        ret;
+    t_request request;
+    size_t    length;
+    char      *body;
+
+    // <argv> <{"state_detail": ""}> <\0>
+    length = strlen(argv) + strlen("{\"state_detail\": \"\"}") + 1;
+    if ((body = malloc(length)) == NULL) {
+        return (M_ERROR(1, "Bad alloc"));
+    }
+    snprintf(body, length, "{\"state_detail\": \"%s\"}", argv);
 
     D_REQUEST(init)(&request);
     if (D_REQUEST(add_host)(&request, g_host, g_port) == false
         || D_REQUEST(add_user_agent)(&request, scw_boot_tools_version) == false
         || D_REQUEST(add_accept)(&request, "*/*") == false
-        || D_REQUEST(add_connection)(&request, "closed") == false) {
-        D_REQUEST(destroy)(&request);
-        return (1);
-    }
-    if (D_CLIENT(init)(&client, g_host, g_port) == false) {
-        D_REQUEST(destroy)(&request);
-        return (1);
-    }
-    // <argv> <{"state_detail": ""}> <\0>
-    length = strlen(argv) + strlen("{\"state_detail\": \"\"}") + 1;
-    if ((body = malloc(length)) == NULL) {
-        D_CLIENT(destroy)(&client);
-        return (M_ERROR(1, "Bad alloc"));
-    }
-    snprintf(body, length, "{\"state_detail\": \"%s\"}", argv);
-    ret = (D_REQUEST(add_method)(&request, e_met_patch, "/state") == false
+        || D_REQUEST(add_connection)(&request, "closed") == false
+        || D_REQUEST(add_method)(&request, e_met_patch, "/state") == false
         || D_REQUEST(add_content_type)(&request, "application/json") == false
-        || D_REQUEST(add_body)(&request, body) == false
-        || D_CLIENT(add_data_from_request)(&client, &request) == false
-        || D_CLIENT(send)(&client) == false
-        || uf_get_statuscode(client.v_recv.v_data, client.v_recv.v_length) != 200);
+        || D_REQUEST(add_body)(&request, body) == false) {
+        sf_free((void **)&body);
+        D_REQUEST(destroy)(&request);
+        return (1);
+    }
+
+    t_client   client;
+    int        timetosleep;
+    int        status_code;
+
+    timetosleep = 1;
+    while (true) {
+        if (D_CLIENT(init)(&client, g_host, g_port) == false) {
+            sf_free((void **)&body);
+            D_REQUEST(destroy)(&request);
+            return (1);
+        }
+        if (D_CLIENT(add_data_from_request)(&client, &request) == false
+            || D_CLIENT(send)(&client) == false) {
+            sf_free((void **)&body);
+            D_REQUEST(destroy)(&request);
+            D_CLIENT(destroy)(&client);
+            return (1);
+        }
+        status_code = uf_get_statuscode(client.v_recv.v_data, client.v_recv.v_length);
+        if (status_code != 429) {
+            D_CLIENT(destroy)(&client);
+            break;
+        }
+        sleep(timetosleep);
+        timetosleep++;
+        D_CLIENT(destroy)(&client);
+    }
     sf_free((void **)&body);
-    D_CLIENT(destroy)(&client);
     D_REQUEST(destroy)(&request);
-    return (ret == true);
+    return (!(status_code == 200));
 }
 
 /*
@@ -627,15 +646,14 @@ uf_state(const char *argv) {
 
 int
 uf_userdata(const char *argv) {
-    t_request   request;
-    size_t      length;
-    char        *path;
-    bool        ret;
-    e_method	method;
-    const char	*tab_str[2] = {0, 0};
-    int			i;
-    char		*parse;
-    int			status_code;
+    t_request     request;
+    size_t        length;
+    char          *path;
+    e_method      method;
+    const char    *tab_str[2] = {0, 0};
+    int           i;
+    char          *parse;
+    int           status_code;
 
     i = 0;
     method = e_met_get;
@@ -676,8 +694,8 @@ uf_userdata(const char *argv) {
         }
     }
 
-    t_client    client;
-    int         timetosleep;
+    t_client   client;
+    int        timetosleep;
 
     timetosleep = 1;
     while (true) {
