@@ -202,7 +202,7 @@ if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-re
     # delete /.scw-reset-password-on-next-boot if it exists
     run rm -f "${rootmnt}/.scw-reset-password-on-next-boot"
     if [ "$(get_opt NO_METADATA)" != "1" ]; then
-        sleep 3; scw-update-server-state -u "root_password=$PASSWORD" || (sleep 3; run scw-update-server-state -u "root_password=$PASSWORD")
+        scw-update-server-state -u "root_password=$PASSWORD"
     fi
 fi
 
