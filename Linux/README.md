@@ -133,7 +133,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* Speedup boot [#108](https://github.com/scaleway/initrd/issues/108)
 
 ### v3.5 (2015-11-19)
 
