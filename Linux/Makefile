@@ -29,7 +29,10 @@ GIT_REMOTE ?=		origin
 
 
 # Phonies
-all:	uInitrd
+all:	build
+
+.PHONY: build
+build:	uInitrd
 
 
 travis_check:
