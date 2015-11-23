@@ -23,7 +23,9 @@ QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
 INITRD_DEBUG ?=		0
 TARGET ?= armv7l
 HOST_ARCH ?=		$(shell uname -m)
-PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz
+COMMIT :=		$(shell git rev-parse HEAD)
+TAG :=			$(shell git describe --tags --always)
+PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz
 GIT_REMOTE ?=		origin
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
@@ -34,6 +36,14 @@ all:	build
 
 .PHONY: build
 build:	uInitrd
+
+
+initrd-Linux-$(TARGET)-$(TAG).gz: initrd-Linux-$(TARGET).gz
+	ln -f $< $@
+
+
+uInitrd-Linux-$(TARGET)-$(TAG): uInitrd-Linux-$(TARGET)
+	ln -f $< $@
 
 
 travis_check:
