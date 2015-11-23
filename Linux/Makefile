@@ -108,6 +108,11 @@ publish_on_store_ftp: $(PUBLISH_FILES)
 	  curl -T "$$file" --netrc ftp://$(STORE_HOSTNAME)/initrds/; \
 	done
 
+publish_on_store_sftp: $(PUBLISH_FILES)
+	for file in $(PUBLISH_FILES); do \
+	  lftp -p 2222 sftp://$(STORE_USERNAME):$(STORE_PASSWORD)@$(STORE_HOSTNAME) -e "cd store/initrds; put $$file; bye"; \
+	done
+
 
 dist:
 	$(MAKE) dist_do || $(MAKE) dist_teardown
