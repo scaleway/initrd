@@ -11,7 +11,7 @@ DEPENDENCIES ?=	\
 	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
 	/lib/x86_64-linux-gnu/libnss_files.so.2 \
 	/lib/x86_64-linux-gnu/libresolv.so.2 \
-	/sbin/mkfs.ext4 \s
+	/sbin/mkfs.ext4 \
 	/sbin/parted \
 	/usr/bin/dropbearkey \
 	/usr/lib/klibc/bin/ipconfig \
