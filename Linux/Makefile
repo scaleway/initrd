@@ -104,9 +104,8 @@ publish_on_store: $(PUBLISH_FILES)
 
 
 publish_on_store_ftp: $(PUBLISH_FILES)
-	echo mkdir ./initrds | ftp $(STORE_HOSTNAME)
 	for file in $(PUBLISH_FILES); do \
-	  printf "cd ./initrds\nput $$file\n" | ftp $(STORE_HOSTNAME); \
+	  curl -T "$$file" --netrc ftp://$(STORE_HOSTNAME)/initrds/; \
 	done
 
 
