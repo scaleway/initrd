@@ -1,4 +1,5 @@
 S3_TARGET ?=		s3://$(shell whoami)/
+STORE_TARGET ?=		store.scw.42.am:store/initrds/
 KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=	\
@@ -10,7 +11,7 @@ DEPENDENCIES ?=	\
 	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
 	/lib/x86_64-linux-gnu/libnss_files.so.2 \
 	/lib/x86_64-linux-gnu/libresolv.so.2 \
-	/sbin/mkfs.ext4 \
+	/sbin/mkfs.ext4 \s
 	/sbin/parted \
 	/usr/bin/dropbearkey \
 	/usr/lib/klibc/bin/ipconfig \
@@ -88,7 +89,7 @@ publish_on_s3:	$(PUBLISH_FILES)
 
 
 publish_on_store: $(PUBLISH_FILES)
-	rsync -avze ssh $(PUBLISH_FILES) store.scw.42.am:store/initrds/
+	rsync -avze ssh $(PUBLISH_FILES) $(STORE_TARGET)
 
 
 dist:
