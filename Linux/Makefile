@@ -1,5 +1,6 @@
 S3_TARGET ?=		s3://$(shell whoami)/
-STORE_TARGET ?=		store.scw.42.am:store/initrds/
+STORE_HOSTNAME ?=	store.scw.42.am
+STORE_TARGET ?=		$(STORE_HOSTNAME):store/initrds/
 KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
 DEPENDENCIES ?=	\
@@ -102,6 +103,13 @@ publish_on_store: $(PUBLISH_FILES)
 	rsync -avze ssh $(PUBLISH_FILES) $(STORE_TARGET)
 
 
+publish_on_store_ftp: $(PUBLISH_FILES)
+	echo mkdir ./initrds | ftp $(STORE_HOSTNAME)
+	for file in $(PUBLISH_FILES); do \
+	  printf "cd ./initrds\nput $$file\n" | ftp $(STORE_HOSTNAME); \
+	done
+
+
 dist:
 	$(MAKE) dist_do || $(MAKE) dist_teardown
 
@@ -188,8 +196,9 @@ output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xn
 
 output-$(TARGET)/.clean: output-$(TARGET)/.deps
 	find output-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
-	sed -i 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-$(TARGET)/init
-	sed -i 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-$(TARGET)/init
+	sed 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-$(TARGET)/init > output-$(TARGET)/init.tmp
+	sed 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-$(TARGET)/init.tmp > output-$(TARGET)/init
+	rm -f output-$(TARGET)/init.tmp
 	touch $@
 
 
