@@ -110,7 +110,7 @@ publish_on_store_ftp: $(PUBLISH_FILES)
 
 publish_on_store_sftp: $(PUBLISH_FILES)
 	for file in $(PUBLISH_FILES); do \
-	  lftp -p 2222 sftp://$(STORE_HOSTNAME) -e "cd store/initrds; put $$file; bye"; \
+	  lftp -u $(STORE_USERNAME) -p 2222 sftp://$(STORE_HOSTNAME) -e "cd store/initrds; put $$file; bye"; \
 	done
 
 
