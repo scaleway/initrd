@@ -131,7 +131,7 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### v3.6 (2015-11-24)
 
 * Speedup boot [#108](https://github.com/scaleway/initrd/issues/108)
 * Do not store serial root password in standard user data
