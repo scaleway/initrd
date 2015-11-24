@@ -15,7 +15,7 @@ Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
 ███████║╚██████╗██║  ██║███████╗███████╗╚███╔███╔╝██║  ██║   ██║
 ╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝
 
->>> Initrd build: v3.4.1-11-g66278c5 - 2015/10/30
+>>> Initrd build: v3.6 - 2015/11/24
 >>> Kernel version: 3.2.34-30
 
 >>> Installing busybox...
@@ -130,6 +130,10 @@ Here are the availble *initrd variables*:
 - **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
 
 ## Changelog
+
+### master (unreleased)
+
+* No entry
 
 ### v3.6 (2015-11-24)
 
