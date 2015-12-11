@@ -10,6 +10,7 @@ RUN apt-get update \
    nfs-common \
    ntpdate \
    parted \
+   btrfs-tools \
    udhcpc \
    wget \
  && apt-get clean

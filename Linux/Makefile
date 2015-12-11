@@ -13,6 +13,7 @@ DEPENDENCIES ?=	\
 	/lib/x86_64-linux-gnu/libnss_files.so.2 \
 	/lib/x86_64-linux-gnu/libresolv.so.2 \
 	/sbin/mkfs.ext4 \
+	/sbin/mkfs.btrfs \
 	/sbin/parted \
 	/usr/bin/dropbearkey \
 	/usr/lib/klibc/bin/ipconfig \
@@ -58,11 +59,22 @@ qemu:
 	$(MAKE) qemu-docker-text || $(MAKE) qemu-local-text
 
 
+armdisk.img:
+	qemu-img create -f raw armdisk.img 8G
+
 qemu-local-text:	vmlinuz initrd-Linux-$(TARGET).gz
 	qemu-system-arm \
 		$(QEMU_OPTIONS) \
 		-append "console=ttyAMA0 earlyprink=ttyAMA0 $(CMDLINE) INITRD_DEBUG=$(INITRD_DEBUG)" \
 		-kernel ./vmlinuz \
+		-initrd ./initrd-Linux-$(TARGET).gz \
+		-nographic -monitor null
+
+qemu-live-btrfs-text:	vmlinuz initrd-Linux-$(TARGET).gz armdisk.img
+	qemu-system-arm \
+		$(QEMU_OPTIONS) \
+		-append "console=ttyAMA0 earlyprink=ttyAMA0 ip=dhcp root=/dev/sda boot=live live_mkfs=btrfs nousb noplymouth INITRD_POST_SHELL=1" \
+		-kernel ./vmlinuz -drive file=armdisk.img,format=raw \
 		-initrd ./initrd-Linux-$(TARGET).gz \
 		-nographic -monitor null
 

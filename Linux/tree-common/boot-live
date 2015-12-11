@@ -4,11 +4,22 @@
 live_install() {
     local rescue_image="${1}"
 
-    log_begin_msg "Formating nbd0"
-    run sh -ec 'mkfs.ext4 -F /dev/nbd0 || log_fatal_msg "Cannot format nbd0"'
+    filesystem=$(get_any live_mkfs "ext4")
+    log_begin_msg "Formating root:${root} with mkfs.${filesystem}"
+
+    case "${filesystem}" in
+        btrfs)
+            load_btrfs_ko
+            run sh -ec "mkfs.btrfs -f -O ^extref,^skinny-metadata '${root}'" || log_fatal_msg "Cannot format root"
+            ;;
+        *)
+            #default to ext4
+            run sh -ec "mkfs.ext4 -F '${root}'" || log_fatal_msg "Cannot format root"
+            ;;
+    esac
     log_end_msg
 
-    mount_nbd 0 "${rootmnt}"
+    test ${root} == /dev/nbd0 && mount_nbd 0 ${rootmnt} || mount ${root} ${rootmnt}
 
     log_begin_msg "Installing live image (${rescue_image})"
     run sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
@@ -18,7 +29,7 @@ live_install() {
 
 
 mountroot() {
-    attach_nbd_device 0
+    test ${root} == /dev/nbd0 && attach_nbd_device 0
 
     live_mode=$(get_any live_mode "auto")
     rescue_image=$(get_any rescue_image)
