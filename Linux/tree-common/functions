@@ -187,19 +187,30 @@ get_any() {
 }
 
 
-load_nolp_ko() {
-    log_begin_msg "Loading nolp kernel module"
-    run wget -q http://169.254.42.24/kernel/$(uname -r)/custom/nolp.ko
-    run insmod $(pwd)/nolp.ko
+insmod_ko() {
+    mod_path=$1
+    log_begin_msg "Loading ${mod_path} kernel module"
+    run wget -q -O mod.ko http://169.254.42.24/kernel/$(uname -r)/kernel/${mod_path}
+    run insmod $(pwd)/mod.ko
     if [ $? -eq 0 ]; then
-        log_success_msg "nolp.ko successfully loaded"
+        log_success_msg "successfully loaded"
         log_end_msg
     else
-        log_warning_msg "cannot load nolp.ko"
+        log_warning_msg "cannot load module"
         log_end_msg
     fi
 }
 
+load_nolp_ko() {
+    insmod_ko custom/nolp.ko
+}
+
+load_btrfs_ko() {
+    insmod_ko crypto/xor.ko
+    insmod_ko lib/raid6/raid6_pq.ko
+    insmod_ko lib/zlib_deflate/zlib_deflate.ko
+    insmod_ko fs/btrfs/btrfs.ko
+}
 
 setup_gpios() {
     # Switch booted GPIO to enable serial for user

@@ -9,6 +9,7 @@ live_install() {
 
     case "${filesystem}" in
         btrfs)
+            load_btrfs_ko
             run sh -ec "mkfs.btrfs -f -O ^extref,^skinny-metadata '${root}'" || log_fatal_msg "Cannot format root"
             ;;
         *)
