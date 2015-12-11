@@ -1,5 +1,6 @@
-FROM ubuntu:vivid
+FROM scaleway/ubuntu:amd64-wily
 
+RUN /usr/local/sbin/builder-enter
 
 # Install dependencies
 RUN apt-get update \
@@ -10,6 +11,7 @@ RUN apt-get update \
    nfs-common \
    ntpdate \
    parted \
+   btrfs-tools \
    udhcpc \
    wget \
  && apt-get clean

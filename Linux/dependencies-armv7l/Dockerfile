@@ -1,5 +1,6 @@
-FROM armbuild/ubuntu:vivid
+FROM scaleway/ubuntu:armhf-wily
 
+RUN /usr/local/sbin/builder-enter
 
 # Install dependencies
 RUN apt-get update \

@@ -239,7 +239,19 @@ dependencies.tar.gz:	dependencies-$(TARGET).tar.gz
 
 
 dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
-	$(MAKE) dependencies-$(TARGET).tar.gz-armhf || $(MAKE) dependencies-$(TARGET).tar.gz-dist
+	test $(HOST_ARCH) = $(TARGET) || docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
+	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
+	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
+	mv dependencies.tar dependencies-$(TARGET).tar
+	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
+	docker rm `docker ps -lq`
+	rm -f dependencies-$(TARGET).tar.gz
+	@ls -lah dependencies-$(TARGET).tar
+	gzip dependencies-$(TARGET).tar
+	@ls -lah dependencies-$(TARGET).tar.gz
+
 	tar tvzf $@ | grep bin/busybox || rm -f $@
 	@test -f $@ || echo $@ is broken
 	@test -f $@ || exit 1
@@ -256,24 +268,6 @@ dependencies-shell:
 	mkdir -p ../scw-boot-tools/usr/bin
 	cp ../scw-boot-tools/scw-update-server-state ../scw-boot-tools/usr/bin/
 	chmod +x ../scw-boot-tools/usr/bin/scw-update-server-state
-
-
-dependencies-$(TARGET).tar.gz-armhf: dependencies-$(TARGET) ../scw-boot-tools/usr/bin/scw-update-server-state
-	test $(HOST_ARCH) = $(TARGET)
-	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
-	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
-	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
-	mv dependencies.tar dependencies-$(TARGET).tar
-	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
-	docker rm `docker ps -lq`
-	rm -f dependencies-$(TARGET).tar.gz
-	@ls -lah dependencies-$(TARGET).tar
-	gzip dependencies-$(TARGET).tar
-	@ls -lah dependencies-$(TARGET).tar.gz
-
-
-dependencies-$(TARGET).tar.gz-dist:
-	wget -O dependencies-$(TARGET).tar.gz https://github.com/scaleway/initrd/blob/dist-Linux-$(TARGET)/Linux/dependencies-$(TARGET).tar.gz?raw=true
 
 
 minirootfs:

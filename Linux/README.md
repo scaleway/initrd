@@ -133,6 +133,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
+* Improve multiarch and cross-build support
 * Initial BTRFS support [#123](https://github.com/scaleway/initrd/pull/123) ([@boris-arzur](https://github.com/boris-arzur))
 
 ### v3.6 (2015-11-24)
