@@ -53,7 +53,11 @@ travis_check:
 	bash -n tree-common/init tree-common/shutdown tree-common/functions tree-common/boot-*
 
 
-travis_build: uInitrd
+travis_build:
+	$(MAKE) TARGET=x86_64
+
+	#$(MAKE) TARGET=armv7l
+	# due to the lack of binfmt-support in travis, armv7l is currently disabled
 
 
 qemu:
