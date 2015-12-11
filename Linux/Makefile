@@ -247,11 +247,10 @@ dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
 	test $(HOST_ARCH) = $(TARGET) || docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
-	docker run -it $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
-	docker cp `docker ps -lq`:/tmp/dependencies.tar $(PWD)/
+	rm -f dependencies.tar
+	docker run -it --rm -v $(PWD):/host $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	mv dependencies.tar dependencies-$(TARGET).tar
 	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
-	docker rm `docker ps -lq`
 	rm -f dependencies-$(TARGET).tar.gz
 	@ls -lah dependencies-$(TARGET).tar
 	gzip dependencies-$(TARGET).tar
