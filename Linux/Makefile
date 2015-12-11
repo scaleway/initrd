@@ -14,6 +14,7 @@ DEPENDENCIES ?=	\
 	/lib/x86_64-linux-gnu/libresolv.so.2 \
 	/sbin/mkfs.ext4 \
 	/sbin/mkfs.btrfs \
+	/bin/mkfs.btrfs \
 	/sbin/parted \
 	/usr/bin/dropbearkey \
 	/usr/lib/klibc/bin/ipconfig \
