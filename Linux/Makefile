@@ -171,7 +171,7 @@ uInitrd-local:	initrd-Linux-$(TARGET).gz
 uInitrd-docker:	initrd-Linux-$(TARGET).gz
 	docker run \
 		-it --rm \
-		-v $(PWD):/host \
+		-v $(shell pwd):/host \
 		-w /tmp \
 		moul/u-boot-tools \
 		/bin/bash -xec \
@@ -189,7 +189,7 @@ uInitrd-shell: output-$(TARGET)/.deps
 	test $(HOST_ARCH) = $(TARGET)
 	docker run \
 		-it --rm \
-		-v $(PWD)/output-$(TARGET):/chroot \
+		-v $(shell pwd)/output-$(TARGET):/chroot \
 		-w /tmp \
 		armbuild/busybox \
 		chroot /chroot /bin/sh
@@ -203,7 +203,7 @@ initrd.gz:	initrd-Linux-$(TARGET).gz
 
 
 initrd-Linux-$(TARGET).gz:	output-$(TARGET)/.clean
-	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(PWD)/$@
+	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(shell pwd)/$@
 
 
 output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xnbd-client tree-$(TARGET) tree-$(TARGET)/usr/bin/oc-metadata Makefile $(shell find tree-$(TARGET) -type f) $(shell find tree-common -type f)
@@ -248,7 +248,7 @@ dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
 
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
 	rm -f dependencies.tar
-	docker run -it --rm -v $(PWD):/host $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
+	docker run -it --rm -v $(shell pwd):/host $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	mv dependencies.tar dependencies-$(TARGET).tar
 	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
 	rm -f dependencies-$(TARGET).tar.gz
