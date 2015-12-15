@@ -243,14 +243,14 @@ tree-$(TARGET)/usr/sbin/xnbd-client:
 dependencies.tar.gz:	dependencies-$(TARGET).tar.gz
 
 
-dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile
+dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
 	test $(HOST_ARCH) = $(TARGET) || docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
 	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
 	rm -f dependencies.tar
 	docker run -it --rm -v $(shell pwd):/host $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
 	mv dependencies.tar dependencies-$(TARGET).tar
-	(cd ../scw-boot-tools; tar -uf ../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
+	(cd ../scw-boot-tools/$(TARGET); tar -uf ../../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
 	rm -f dependencies-$(TARGET).tar.gz
 	@ls -lah dependencies-$(TARGET).tar
 	gzip dependencies-$(TARGET).tar
@@ -267,11 +267,11 @@ dependencies-shell:
 	docker run -it $(DOCKER_DEPENDENCIES) /bin/bash
 
 
-../scw-boot-tools/usr/bin/scw-update-server-state: ../scw-boot-tools/scw-update-server-state.c
-	make -C ../scw-boot-tools
-	mkdir -p ../scw-boot-tools/usr/bin
-	cp ../scw-boot-tools/scw-update-server-state ../scw-boot-tools/usr/bin/
-	chmod +x ../scw-boot-tools/usr/bin/scw-update-server-state
+../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state: ../scw-boot-tools/scw-update-server-state.c
+	make -C ../scw-boot-tools TARGET=$(TARGET)
+	mkdir -p ../scw-boot-tools/$(TARGET)/usr/bin
+	cp ../scw-boot-tools/$(TARGET)-scw-update-server-state ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
+	chmod +x ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
 
 
 minirootfs:
