@@ -6,8 +6,8 @@ services:
 sudo: required
 
 env:
-- ACTION=check
-- ACTION=build
+- ACTION=check  TARGET=x86_64
+- ACTION=build  TARGET=x86_64
 
 before_install:
 - env
