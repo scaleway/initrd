@@ -302,3 +302,10 @@ metadata_mock/static/minirootfs.tar:	minirootfs.tar
 minirootfs.tar:	minirootfs
 	tar --format=gnu -C $< -cf $@.tmp . 2>/dev/null || tar --format=pax -C $< -cf $@.tmp . 2>/dev/null
 	mv $@.tmp $@
+
+
+clean:
+	rm -rf output-$(TARGET) dependencies-$(TARGET).tar.gz initrd-Linux-$(TARGET).gz uInitrd-Linux-$(TARGET)
+
+
+re: clean all
