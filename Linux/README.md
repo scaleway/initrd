@@ -131,6 +131,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* No entry.
+
 ### 3.7 (2015-12-16)
 
 * Complete multiarch refactor [#124](https://github.com/scaleway/initrd/pull/124)
