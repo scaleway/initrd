@@ -38,10 +38,10 @@ RUN wget -O /usr/bin/oc-metadata                                                
 
 
 # Fetch static xnbd-client
-RUN mkdir -p /usr/sbin                                                                  \
- && wget -O /usr/sbin/xnbd-client                                                       \
-      https://github.com/aimxhaisse/xnbd-client-static/raw/dist/bin/xnbd-client-static  \
- && chmod +x /usr/sbin/xnbd-client                                                      \
+RUN mkdir -p /usr/sbin                                                                                                 \
+ && wget -O /usr/sbin/xnbd-client                                                                                      \
+      https://github.com/multiarch/build-xnbd-client-static/releases/download/v1.0/armv7l-xnbd-client-static-stripped  \
+ && chmod +x /usr/sbin/xnbd-client                                                                                     \
  && ln -s xnbd-client /usr/sbin/@xnbd-client
 
 
