@@ -1,14 +1,26 @@
 #!/bin/bash
 
-EXPORT=/tmp/dependencies.tar
+EXPORT=/dependencies.tar
 
 cd /
 tar -cf ${EXPORT} dev/null
 for bin in $@; do
-    for file in $bin $(ldd-rec.pl $@); do
+    if [ ! -f $bin ]; then
+	continue
+    fi
+    echo "Exporting '$file' and dependencies."
+
+    for file in $bin $(ldd-rec.pl $bin); do
+	if [ ! -f $file ]; then
+	    continue
+	fi
+
+	echo "$file"
+	    
 	tar -uf ${EXPORT} $(echo $file | sed -e 's/^\///')
 	tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
     done
 done
 tar --delete -f ${EXPORT} dev/null
 tar -tvf ${EXPORT}
+tar tvf /dependencies.tar | grep -q bin/busybox || (echo "Invalid tarball, no busybox found, exiting."; exit 1)
