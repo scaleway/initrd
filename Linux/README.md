@@ -133,7 +133,10 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* Improve multiarch and cross-build support
+* Complete multiarch refactor [#124](https://github.com/scaleway/initrd/pull/124)
+* Complete dependencies refactor, huge speed gain
+* Travis builds fixed
+* Bump dependencies to the latest version (taking binaries from `ubuntu:wily` instead of `ubuntu:vivid`)
 * Initial BTRFS support [#123](https://github.com/scaleway/initrd/pull/123) ([@boris-arzur](https://github.com/boris-arzur))
 
 ### v3.6 (2015-11-24)
