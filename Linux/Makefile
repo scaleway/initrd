@@ -3,23 +3,6 @@ STORE_HOSTNAME ?=	store.scw.42.am
 STORE_TARGET ?=		$(STORE_HOSTNAME):store/initrds/
 KERNEL_URL ?=		http://ports.ubuntu.com/ubuntu-ports/dists/lucid/main/installer-armel/current/images/versatile/netboot/vmlinuz
 MKIMAGE_OPTS ?=		-A arm -O linux -T ramdisk -C none -a 0 -e 0 -n initramfs
-DEPENDENCIES ?=	\
-	/bin/busybox \
-	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
-	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
-	/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
-	/lib/x86_64-linux-gnu/libc.so.6 \
-	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
-	/lib/x86_64-linux-gnu/libnss_files.so.2 \
-	/lib/x86_64-linux-gnu/libresolv.so.2 \
-	/sbin/mkfs.ext4 \
-	/sbin/mkfs.btrfs \
-	/bin/mkfs.btrfs \
-	/sbin/parted \
-	/usr/bin/dropbearkey \
-	/usr/lib/klibc/bin/ipconfig \
-	/usr/sbin/dropbear \
-	/usr/sbin/ntpdate
 DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
@@ -138,7 +121,7 @@ dist:
 dist_do:
 	-git branch -D dist-Linux-$(TARGET) || true
 	git checkout -b dist-Linux-$(TARGET)
-	-$(MAKE) dependencies-$(TARGET).tar.gz && git add -f dependencies-$(TARGET).tar.gz
+	-$(MAKE) dependencies-$(TARGET).tar && git add -f dependencies-$(TARGET).tar
 	-$(MAKE) uInitrd-Linux-$(TARGET) && git add -f uInitrd-Linux-$(TARGET) initrd-Linux-$(TARGET).gz output-$(TARGET)
 	git commit -am ":ship: dist"
 	git push -u $(GIT_REMOTE) dist-Linux-$(TARGET) -f
@@ -195,10 +178,6 @@ uInitrd-shell: output-$(TARGET)/.deps
 		chroot /chroot /bin/sh
 
 
-output-$(TARGET)/usr/bin/oc-metadata:
-	mkdir -p $(shell dirname $@)
-
-
 initrd.gz:	initrd-Linux-$(TARGET).gz
 
 
@@ -206,10 +185,10 @@ initrd-Linux-$(TARGET).gz:	output-$(TARGET)/.clean
 	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(shell pwd)/$@
 
 
-output-$(TARGET)/.deps:	dependencies-$(TARGET).tar.gz tree-$(TARGET)/usr/sbin/xnbd-client tree-$(TARGET) tree-$(TARGET)/usr/bin/oc-metadata Makefile $(shell find tree-$(TARGET) -type f) $(shell find tree-common -type f)
+output-$(TARGET)/.deps:	dependencies-$(TARGET).tar tree-$(TARGET) Makefile $(shell find tree-$(TARGET) -type f) $(shell find tree-common -type f)
 	rm -rf output-$(TARGET)
 	mkdir -p output-$(TARGET)
-	tar -m -C output-$(TARGET)/ -xzf dependencies-$(TARGET).tar.gz
+	tar -m -C output-$(TARGET)/ -xf dependencies-$(TARGET).tar
 	rsync -az tree-common/ output-$(TARGET)
 	rsync -az tree-$(TARGET)/ output-$(TARGET)
 	touch $@
@@ -227,38 +206,14 @@ tree-$(TARGET):
 	mkdir -p $@
 
 
-tree-$(TARGET)/usr/bin/oc-metadata:
-	mkdir -p tree-$(TARGET)/usr/bin
-	wget https://raw.githubusercontent.com/scaleway/image-tools/master/skeleton-common/usr/local/bin/oc-metadata -O $@
-	chmod +x $@
+dependencies.tar:	dependencies-$(TARGET).tar
 
 
-tree-$(TARGET)/usr/sbin/xnbd-client:
-	mkdir -p tree-$(TARGET)/usr/sbin
-	wget https://github.com/aimxhaisse/xnbd-client-static/raw/dist/bin/xnbd-client-static -O $@
-	chmod +x $@
-	ln -sf xnbd-client tree-$(TARGET)/usr/sbin/@xnbd-client
-
-
-dependencies.tar.gz:	dependencies-$(TARGET).tar.gz
-
-
-dependencies-$(TARGET).tar.gz:	dependencies-$(TARGET)/Dockerfile ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
+dependencies-$(TARGET).tar:	dependencies-$(TARGET)/Dockerfile dependencies-$(TARGET)/tmp/scw-update-server-state
 	test $(HOST_ARCH) = $(TARGET) || docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
-	docker build -q -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
-	rm -f dependencies.tar
-	docker run -it --rm -v $(shell pwd):/host $(DOCKER_DEPENDENCIES) export-assets $(DEPENDENCIES)
-	mv dependencies.tar dependencies-$(TARGET).tar
-	(cd ../scw-boot-tools/$(TARGET); tar -uf ../../Linux/dependencies-$(TARGET).tar usr/bin/scw-update-server-state)
-	rm -f dependencies-$(TARGET).tar.gz
-	@ls -lah dependencies-$(TARGET).tar
-	gzip dependencies-$(TARGET).tar
-	@ls -lah dependencies-$(TARGET).tar.gz
-
-	tar tvzf $@ | grep bin/busybox || rm -f $@
-	@test -f $@ || echo $@ is broken
-	@test -f $@ || exit 1
+	docker build -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
+	docker run --rm $(DOCKER_DEPENDENCIES) > $@
 
 
 dependencies-shell:
@@ -267,11 +222,12 @@ dependencies-shell:
 	docker run -it $(DOCKER_DEPENDENCIES) /bin/bash
 
 
-../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state: ../scw-boot-tools/scw-update-server-state.c
+dependencies-$(TARGET)/tmp/scw-update-server-state: ../scw-boot-tools/scw-update-server-state.c
 	make -C ../scw-boot-tools TARGET=$(TARGET)
 	mkdir -p ../scw-boot-tools/$(TARGET)/usr/bin
-	cp ../scw-boot-tools/$(TARGET)-scw-update-server-state ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
-	chmod +x ../scw-boot-tools/$(TARGET)/usr/bin/scw-update-server-state
+	mkdir -p $(shell dirname $@)
+	cp ../scw-boot-tools/$(TARGET)-scw-update-server-state $@
+	chmod +x $@
 
 
 minirootfs:
@@ -305,7 +261,7 @@ minirootfs.tar:	minirootfs
 
 
 clean:
-	rm -rf output-$(TARGET) dependencies-$(TARGET).tar.gz initrd-Linux-$(TARGET).gz uInitrd-Linux-$(TARGET)
+	rm -rf output-$(TARGET) dependencies-$(TARGET).tar initrd-Linux-$(TARGET).gz uInitrd-Linux-$(TARGET)
 
 
 re: clean all

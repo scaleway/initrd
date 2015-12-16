@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXPORT=/host/dependencies.tar
+EXPORT=/dependencies.tar
 
 cd /
 tar -cf ${EXPORT} dev/null
@@ -23,3 +23,4 @@ for bin in $@; do
 done
 tar --delete -f ${EXPORT} dev/null
 tar -tvf ${EXPORT}
+tar tvf /dependencies.tar | grep -q bin/busybox || (echo "Invalid tarball, no busybox found, exiting."; exit 1)

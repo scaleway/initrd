@@ -22,3 +22,4 @@ minirootfs.tar
 armdisk.img
 
 qemu/metadata_mock/static/
+*/dependencies-*/tmp
