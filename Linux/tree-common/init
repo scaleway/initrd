@@ -19,7 +19,7 @@ Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
 EOF
 
 esuccess "Initrd build: INITRD_BUILD_COMMIT - INITRD_BUILD_DATE"
-esuccess "Kernel version: $(busybox uname -r)"
+esuccess "Kernel version: $(busybox uname -a)"
 echo
 
 # Create all the symlinks to /bin/busybox
