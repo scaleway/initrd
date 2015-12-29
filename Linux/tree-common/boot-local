@@ -5,7 +5,9 @@ mountroot() {
     if [ "$root" = "/dev/nbd0" ]; then
 	attach_nbd_device 0
 	mount_nbd 0 "${rootmnt}"
-	attach_secondary_nbd_devices
+	if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
+	    attach_secondary_nbd_devices
+	fi
     else
 	log_begin_msg "Mounting local disk: ${root}"
 	emount "${root}" "${rootmnt}"
