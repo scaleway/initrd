@@ -93,7 +93,7 @@ qemu-docker-rescue:	metadata_mock/static/minirootfs.tar
 	$(MAKE) qemu-docker-text CMDLINE='boot=rescue rescue_image=http://metadata.local/static/$(shell basename $<)'
 
 
-uInitrd-Linux-$(TARGET)-latest initrd-Linux-$(TARGET).gz:
+uInitrd-Linux-$(TARGET)-latest initrd-Linux-$(TARGET)-latest.gz: uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz
 	ln -sf uInitrd-Linux-$(TARGET)-$(TAG) uInitrd-Linux-$(TARGET)-latest
 	ln -sf initrd-Linux-$(TARGET)-$(TAG).gz initrd-Linux-$(TARGET)-latest.gz
 
