@@ -61,14 +61,6 @@ esuccess "Kernel cmdline: $(busybox cat /proc/cmdline)"
 echo
 
 
-# Configure GPIOs
-if [ "$(get_opt SKIP_GPIO_SETUP)" != "1" ]; then
-    log_begin_msg "Configuring GPIOs"
-    setup_gpios
-    log_end_msg
-fi
-
-
 # Initial /proc/cmdline parsing
 export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
@@ -93,6 +85,16 @@ if [ "$(get_opt NO_METADATA)" != "1" ]; then
     esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
     esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
     echo
+fi
+
+
+# Configure GPIOs
+if [ "$(oc-metadata --cached COMMERCIAL_TYPE)" = "C1" ]; then
+    if [ "$(get_any SKIP_GPIO_SETUP)" != "1" ]; then
+	log_begin_msg "Configuring GPIOs"
+	setup_gpios
+	log_end_msg
+    fi
 fi
 
 
