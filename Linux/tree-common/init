@@ -57,7 +57,12 @@ log_end_msg
 
 
 echo
-esuccess "Kernel cmdline: $(busybox cat /proc/cmdline)"
+log_begin_msg "Retrieving system info"
+esuccess "Kernel cmdline:    $(cat /proc/cmdline)"
+esuccess "Physycal memory:   $(grep MemTotal /proc/meminfo | awk '{ print $2 " " $3}')"
+esuccess "CPU model:         $(echo -ne $(grep ^model\ name /proc/cpuinfo  | cut -d: -f2 | uniq))"
+esuccess "CPU cores:         $(grep -c ^processor /proc/cpuinfo)"
+log_end_msg
 echo
 
 
@@ -78,18 +83,32 @@ log_end_msg
 
 
 # Display metadata infos
+COMMERCIAL_TYPE=$(oc-metadata --cached COMMERCIAL_TYPE)
+
 if [ "$(get_opt NO_METADATA)" != "1" ]; then
     echo
-    esuccess "Server ID: $(oc-metadata --cached ID)"
-    esuccess "Private IP: $(oc-metadata --cached PRIVATE_IP)"
-    esuccess "Public IP: $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
-    esuccess "Hostname: $(oc-metadata --cached HOSTNAME)"
+    log_begin_msg "Retrieving metadata info"
+    esuccess "Server ID:        $(oc-metadata --cached ID)"
+    esuccess "Private IP:       $(oc-metadata --cached PRIVATE_IP)"
+    esuccess "Public IP:        $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+    esuccess "Hostname:         $(oc-metadata --cached HOSTNAME)"
+    esuccess "Commercial type:  $(oc-metadata --cached COMMERCIAL_TYPE)"
+    esuccess "Platform:         $(oc-metadata --cached LOCATION_PLATFORM_ID)"
+    # FIXME: display full location (depends on the commercial type)
+    esuccess "Organization:     $(oc-metadata --cached ORGANIZATION | sed 's/^\(.\{8\}\).*\(.\{8\}\)$/\1-xxxx-xxxx-xxxx-xxxx\2/')"
+    esuccess "Timezone:         $(oc-metadata --cached TIMEZONE)"
+    esuccess "Server (user) tags:"
+    for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
+	if [ "${idx}" -eq "$(oc-metadata --cached TAGS)" ]; then break; fi
+	esuccess $(printf "  - %s\n" "$(oc-metadata --cached TAGS_${idx})")
+    done
+    log_end_msg
     echo
 fi
 
 
 # Configure GPIOs
-if [ "$(oc-metadata --cached COMMERCIAL_TYPE)" = "C1" ]; then
+if [ "${COMMERCIAL_TYPE}" = "C1" ]; then
     if [ "$(get_any SKIP_GPIO_SETUP)" != "1" ]; then
 	log_begin_msg "Configuring GPIOs"
 	setup_gpios
