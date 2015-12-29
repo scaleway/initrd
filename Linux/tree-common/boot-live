@@ -56,4 +56,5 @@ mountroot() {
     if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
 	attach_secondary_nbd_devices
     fi
+    show_nbd_devices
 }

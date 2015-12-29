@@ -11,6 +11,7 @@ mountroot() {
 	log_begin_msg "Attaching nbd devices for easier debugging"
 	attach_nbd_device 0
 	attach_secondary_nbd_devices
+	show_nbd_devices
 	log_end_msg
     fi
 }

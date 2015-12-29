@@ -270,6 +270,20 @@ attach_nbd_device() {
 }
 
 
+# Show NBD devices info
+show_nbd_devices() {
+    echo
+    log_begin_msg "Retrieving NBD devices info"
+    for i in $(seq 0 15); do
+	oc-metadata --cached VOLUMES_${i} | grep " " >/dev/null || continue
+	SIZE=$(( $(oc-metadata --cached VOLUMES_${i}_SIZE) / 1000 / 1000 / 1000 ))G
+	esuccess $(printf "  - nbd%s:\t%s\n" "$i" "$(oc-metadata --cached VOLUMES_${i}_VOLUME_TYPE) ${SIZE}")
+    done
+    log_end_msg
+    echo
+}
+
+
 # Mount NBD
 mount_nbd() {
     local device="$1"  # ie: 0
