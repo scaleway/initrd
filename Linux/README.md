@@ -119,6 +119,7 @@ Here are the availble *initrd variables*:
 - **rescue_image=http://example.com/my-image.tar**: Tarball *URL* used to boot (no effect with *nfs* and *nbd* boot mode
 - **NO_NTPDATE=1**: disable NTP time synchronization
 - **INITRD_WAIT_SECONDARY_VOLUMES=1**: Attach secondary *NBD* devices before leaving the initrd (future default option)
+- **SKIP_OPTIONAL_NBD_DEVICES**: Skip *NBD* devices auto-attach if the volume is optional (all the volumes for rescue, only secondary volumes for NBD-based boots)
 - **nfsroot=server:path**: *NFS* mountpoint (ignored for non-*NFS* boot modes)
 
 
