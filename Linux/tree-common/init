@@ -83,9 +83,10 @@ log_end_msg
 
 
 # Display metadata infos
-COMMERCIAL_TYPE=$(scw-metadata --cached COMMERCIAL_TYPE)
-
+COMMERCIAL_TYPE=unknown
 if [ "$(get_opt NO_METADATA)" != "1" ]; then
+    COMMERCIAL_TYPE=$(oc-metadata --cached COMMERCIAL_TYPE)
+
     echo
     log_begin_msg "Retrieving metadata info"
     esuccess "Server ID:        $(scw-metadata --cached ID)"
