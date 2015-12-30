@@ -52,6 +52,9 @@ mountroot() {
 	    log_fatal_msg "Invalid live_mode: ${live_mode}, choose 'install' or 'auto'"
 	    ;;
     esac
-
-    attach_secondary_nbd_devices
+    
+    if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
+	attach_secondary_nbd_devices
+    fi
+    show_nbd_devices
 }

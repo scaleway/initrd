@@ -11,7 +11,7 @@ TARGET ?= armv7l
 HOST_ARCH ?=		$(shell uname -m)
 COMMIT :=		$(shell git rev-parse HEAD)
 TAG :=			$(shell git describe --tags --always)
-PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz
+PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz uInitrd-Linux-$(TARGET)-latest initrd-Linux-$(TARGET)-latest.gz
 GIT_REMOTE ?=		origin
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
@@ -91,6 +91,11 @@ qemu-docker qemu-docker-text:	vmlinuz initrd-Linux-$(TARGET).gz
 
 qemu-docker-rescue:	metadata_mock/static/minirootfs.tar
 	$(MAKE) qemu-docker-text CMDLINE='boot=rescue rescue_image=http://metadata.local/static/$(shell basename $<)'
+
+
+uInitrd-Linux-$(TARGET)-latest initrd-Linux-$(TARGET)-latest.gz: uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz
+	ln -sf uInitrd-Linux-$(TARGET)-$(TAG) uInitrd-Linux-$(TARGET)-latest
+	ln -sf initrd-Linux-$(TARGET)-$(TAG).gz initrd-Linux-$(TARGET)-latest.gz
 
 
 publish_on_s3:	$(PUBLISH_FILES)

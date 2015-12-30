@@ -133,7 +133,12 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry.
+* Restrict GPIO configuration to C1 servers
+* Publishing (on store, s3) a "latest" symlink
+* Printing more information about the current kernel
+* Printing information about the CPU and physycal memory
+* Add a `SKIP_OPTIONAL_NBD_DEVICES` option to ... skip ... optional ... nbd ... devices ...
+* Printing information about NBD devices
 
 ### 3.7 (2015-12-16)
 
