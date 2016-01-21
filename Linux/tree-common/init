@@ -83,24 +83,24 @@ log_end_msg
 
 
 # Display metadata infos
-COMMERCIAL_TYPE=$(oc-metadata --cached COMMERCIAL_TYPE)
+COMMERCIAL_TYPE=$(scw-metadata --cached COMMERCIAL_TYPE)
 
 if [ "$(get_opt NO_METADATA)" != "1" ]; then
     echo
     log_begin_msg "Retrieving metadata info"
-    esuccess "Server ID:        $(oc-metadata --cached ID)"
-    esuccess "Private IP:       $(oc-metadata --cached PRIVATE_IP)"
-    esuccess "Public IP:        $(oc-metadata --cached PUBLIC_IP_ADDRESS)"
-    esuccess "Hostname:         $(oc-metadata --cached HOSTNAME)"
-    esuccess "Commercial type:  $(oc-metadata --cached COMMERCIAL_TYPE)"
-    esuccess "Platform:         $(oc-metadata --cached LOCATION_PLATFORM_ID)"
+    esuccess "Server ID:        $(scw-metadata --cached ID)"
+    esuccess "Private IP:       $(scw-metadata --cached PRIVATE_IP)"
+    esuccess "Public IP:        $(scw-metadata --cached PUBLIC_IP_ADDRESS)"
+    esuccess "Hostname:         $(scw-metadata --cached HOSTNAME)"
+    esuccess "Commercial type:  $(scw-metadata --cached COMMERCIAL_TYPE)"
+    esuccess "Platform:         $(scw-metadata --cached LOCATION_PLATFORM_ID)"
     # FIXME: display full location (depends on the commercial type)
-    esuccess "Organization:     $(oc-metadata --cached ORGANIZATION | sed 's/^\(.\{8\}\).*\(.\{8\}\)$/\1-xxxx-xxxx-xxxx-xxxx\2/')"
-    esuccess "Timezone:         $(oc-metadata --cached TIMEZONE)"
+    esuccess "Organization:     $(scw-metadata --cached ORGANIZATION | sed 's/^\(.\{8\}\).*\(.\{8\}\)$/\1-xxxx-xxxx-xxxx-xxxx\2/')"
+    esuccess "Timezone:         $(scw-metadata --cached TIMEZONE)"
     esuccess "Server (user) tags:"
-    for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
-	if [ "${idx}" -eq "$(oc-metadata --cached TAGS)" ]; then break; fi
-	esuccess $(printf "  - %s\n" "$(oc-metadata --cached TAGS_${idx})")
+    for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
+	if [ "${idx}" -eq "$(scw-metadata --cached TAGS)" ]; then break; fi
+	esuccess $(printf "  - %s\n" "$(scw-metadata --cached TAGS_${idx})")
     done
     log_end_msg
     echo
@@ -203,7 +203,7 @@ signal_state booted
 log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
-[ -s ${rootmnt}/etc/hostname ] || run sh -ec "oc-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname"
+[ -s ${rootmnt}/etc/hostname ] || run sh -ec "scw-metadata --cached HOSTNAME > ${rootmnt}/etc/hostname"
 grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
 log_end_msg
 
@@ -255,8 +255,8 @@ if [ "$(get_any INITRD_DROPBEAR)" = "1" ]; then
     ewarn " -- You must run 'continue-boot' with a remote access"
     ewarn ""
     ewarn "You can connect to your server with 'scw' or 'ssh'"
-    ewarn " -- scw exec $(oc-metadata --cached ID)"
-    ewarn " -- ssh root@$(oc-metadata --cached PUBLIC_IP_ADDRESS)"
+    ewarn " -- scw exec $(scw-metadata --cached ID)"
+    ewarn " -- ssh root@$(scw-metadata --cached PUBLIC_IP_ADDRESS)"
     ewarn ""
 
     # FIXME: display common usages (luks, lvm, etc) in a README.txt file

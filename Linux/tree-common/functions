@@ -148,8 +148,8 @@ has_opt() {
 }
 
 get_metadata() {
-    for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
-	tag=$(oc-metadata --cached TAGS_$idx)
+    for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
+	tag=$(scw-metadata --cached TAGS_$idx)
 	if [ $(echo "$tag" | grep "^$1=") ]; then
 	    echo $tag | sed 's/^[^=]*=//' | resolve_hostnames
 	    return
@@ -164,8 +164,8 @@ get_userdata() {
 
 has_metadata() {
     (
-	for idx in $(seq -w 0 $(oc-metadata --cached TAGS)); do
-	    oc-metadata --cached TAGS_$idx
+	for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
+	    scw-metadata --cached TAGS_$idx
 	done
     ) | grep "^$1\$" >/dev/null
 }
@@ -228,7 +228,7 @@ attach_nbd_device() {
     log_begin_msg "Attaching nbd${device}"
 
     # Fetching metadatas
-    local export_uri=$(oc-metadata --cached VOLUMES_${device}_EXPORT_URI)
+    local export_uri=$(scw-metadata --cached VOLUMES_${device}_EXPORT_URI)
     [ "$export_uri" = "" ] && log_fatal_msg "Unable to load metadatas..."
 
     local nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
@@ -275,9 +275,9 @@ show_nbd_devices() {
     echo
     log_begin_msg "Retrieving NBD devices info"
     for i in $(seq 0 15); do
-	oc-metadata --cached VOLUMES_${i} | grep " " >/dev/null || continue
-	SIZE=$(( $(oc-metadata --cached VOLUMES_${i}_SIZE) / 1000 / 1000 / 1000 ))G
-	esuccess $(printf "  - nbd%s:\t%s\n" "$i" "$(oc-metadata --cached VOLUMES_${i}_VOLUME_TYPE) ${SIZE}")
+	scw-metadata --cached VOLUMES_${i} | grep " " >/dev/null || continue
+	SIZE=$(( $(scw-metadata --cached VOLUMES_${i}_SIZE) / 1000 / 1000 / 1000 ))G
+	esuccess $(printf "  - nbd%s:\t%s\n" "$i" "$(scw-metadata --cached VOLUMES_${i}_VOLUME_TYPE) ${SIZE}")
     done
     log_end_msg
     echo
@@ -306,7 +306,7 @@ start_sshd() {
     run chmod 700 /root/.ssh
     run dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
     run dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-    run sh -ec "oc-metadata --cached | grep 'SSH_PUBLIC_KEYS_.*_KEY' | cut -d'=' -f 2- | tr -d \' > /root/.ssh/authorized_keys"
+    run sh -ec "scw-metadata --cached | grep 'SSH_PUBLIC_KEYS_.*_KEY' | cut -d'=' -f 2- | tr -d \' > /root/.ssh/authorized_keys"
     run dropbear -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key
 }
 
@@ -316,7 +316,7 @@ attach_secondary_nbd_devices() {
     log_begin_msg "Checking metadata in case we skip to wait for secondary volumes to be ready"
     if [ "x$(get_any INITRD_SKIP_SECONDARY_VOLUMES)" != "x1" ]; then
 	log_end_msg
-	for volume in $(oc-metadata --cached VOLUMES); do
+	for volume in $(scw-metadata --cached VOLUMES); do
 	    if [ "${volume}" -ne "0" ]; then
 		attach_nbd_device "${volume}"
 	    fi
