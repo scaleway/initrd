@@ -1,6 +1,6 @@
 FROM scaleway/ubuntu:amd64-wily
 
-RUN /usr/local/sbin/builder-enter
+RUN /usr/local/sbin/scw-builder-enter
 
 # Install dependencies
 RUN apt-get update          \
@@ -30,11 +30,11 @@ RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl  \
  && chmod +x /usr/local/bin/ldd-rec.pl
 
 
-# Fetch oc-metadata
-ENV IMAGE_TOOLS_REV=5aa5c8e18e4c53aed84b6212439ab9158e570d55
-RUN wget -O /usr/bin/oc-metadata                                                                                           \
-      https://raw.githubusercontent.com/scaleway/image-tools/${IMAGE_TOOLS_REV}/skeleton-common/usr/local/bin/oc-metadata  \
- && chmod +x /usr/bin/oc-metadata
+# Fetch scw-metadata
+ENV IMAGE_TOOLS_REV=2086abd6fcd71fa215ce76cc244af90651c3c6ae
+RUN wget -O /usr/bin/scw-metadata                                                                                           \
+      https://raw.githubusercontent.com/scaleway/image-tools/${IMAGE_TOOLS_REV}/skeleton-common/usr/local/bin/scw-metadata  \
+ && chmod +x /usr/bin/scw-metadata
 
 
 # Fetch static xnbd-client
@@ -69,7 +69,7 @@ RUN export-assets \
       /sbin/mkfs.ext4 \
       /sbin/parted \
       /usr/bin/dropbearkey \
-      /usr/bin/oc-metadata \
+      /usr/bin/scw-metadata \
       /usr/lib/klibc/bin/ipconfig \
       /usr/sbin/@xnbd-client \
       /usr/sbin/dropbear \
