@@ -140,6 +140,7 @@ Here are the availble *initrd variables*:
 * Printing information about the CPU and physycal memory
 * Add a `SKIP_OPTIONAL_NBD_DEVICES` option to ... skip ... optional ... nbd ... devices ...
 * Printing information about NBD devices
+* Printing information about the running image ([#131](https://github.com/scaleway/initrd/issues/131))
 
 ### 3.7 (2015-12-16)
 
