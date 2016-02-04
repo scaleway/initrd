@@ -203,7 +203,7 @@ log_end_msg
 	esuccess "Image name:     ${IMAGE_DESCRIPTION}"
 	esuccess "Image release:  ${IMAGE_RELEASE}"
     fi
-    esuccess "Usage on /:     $(df -h / | awk '/\// {print $(NF-1)}')"
+    esuccess "Usage on /:     $(df -h ${rootmnt} | awk '/\// {print $(NF-1)}')"
     echo
 )
 
