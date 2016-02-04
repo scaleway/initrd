@@ -195,6 +195,19 @@ mountroot
 log_end_msg
 
 
+# Print rootfs information
+(
+    echo
+    if [ -r ${rootmnt}/etc/scw-release ]; then
+	. ${rootmnt}/etc/scw-release
+	esuccess "Image name:     ${IMAGE_DESCRIPTION}"
+	esuccess "Image release:  ${IMAGE_RELEASE}"
+    fi
+    esuccess "Usage on /:     $(df -h / | awk '/\// {print $(NF-1)}')"
+    echo
+)
+
+
 # Signal to the console that the server is booted
 signal_state booted
 
