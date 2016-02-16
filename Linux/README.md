@@ -134,6 +134,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
+* Be more strict when using get_any ([#134](https://github.com/scaleway/initrd/issues/134))
 * Restrict GPIO configuration to C1 servers
 * Publishing (on store, s3) a "latest" symlink
 * Printing more information about the current kernel
