@@ -132,6 +132,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* No entry
+
 ### 3.8 (2016-02-18)
 
 * Be more strict when using get_any ([#134](https://github.com/scaleway/initrd/issues/134))
