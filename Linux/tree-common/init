@@ -72,9 +72,16 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
 # Configure network
 log_begin_msg "Configuring network"
-run ifconfig eth0 up
+
+INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
+
+for INTERFACE in $INTERFACES; do
+    run ifconfig $INTERFACE up
+done
 if [ "$(get_opt ip)" = "dhcp" ]; then
-    run udhcpc -n -q -i eth0
+    for INTERFACE in $INTERFACES; do
+        run udhcpc -n -q -i $INTERFACE up
+    done
 fi
 if [ "$(get_opt nameserver)" != "" ]; then
     run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
