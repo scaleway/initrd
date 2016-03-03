@@ -224,7 +224,9 @@ log_end_msg
 
 
 # Signal to the console that the server is booted
-signal_state booted
+if [ "$(get_any DONT_SEND_STATE)" != "1" ]; then
+    signal_state booted
+fi
 
 
 # Forward network configuration files
