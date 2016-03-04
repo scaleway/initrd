@@ -93,7 +93,7 @@ signal_state() {
     METADATA_PORT=80
     SLEEP_BETWEEN_RETRIES=1
 
-    if [ "$(get_opt NO_METADATA)" = "1" ]; then
+    if [[ "$(get_opt NO_METADATA)" == "1" || "$(get_any NO_SIGNAL_STATE)" == "1" ]]; then
 	return
     fi
     
