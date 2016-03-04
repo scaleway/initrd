@@ -50,7 +50,7 @@ eerror() {
 }
 edebug() {
     if [ "$VERBOSE" = "1" ]; then
-	_log_msg "\033[0;30m>>> ${*}\033[0m\n"
+	_log_msg "\033[0;90m>>> ${*}\033[0m\n"
     fi
 }
 die() {
