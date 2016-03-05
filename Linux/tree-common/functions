@@ -243,22 +243,22 @@ attach_nbd_device() {
     fi
 
     # Connecting the device
-    (
-	export PATH=$(dirname $NBD_CLIENT)
+    PATH="$(dirname $NBD_CLIENT):$PATH" \
 	run $(basename $NBD_CLIENT) \
-	    --blocksize 4096 \
-	    --retry=$retries \
-	    $nbd_host $nbd_port \
-	    /dev/nbd${device} 2>/dev/null
-    )
-    local nbd_pid=$$
-    run sh -ec "echo -1000 > /proc/$nbd_pid/oom_score_adj"
-    run mkdir -p /run/sendsigs.omit.d
-    run sh -ec "echo {$nbd_pid} > /run/sendsigs.omit.d/nbd{$device}"
+		--blocksize 4096 \
+		--retry=$retries \
+		${nbd_host} ${nbd_port} \
+		/dev/nbd${device} 2>/dev/null
 
-    # Checking if device is already attached
-    run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null || \
-        log_fatal_msg "Device connection failed."
+    # Checking device connection
+    local nbd_pid=$($NBD_CLIENT --check /dev/nbd${device} 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        log_fatal_msg "Device connection failed." && return;
+    fi
+
+    run sh -ec "echo -1000 > /proc/${nbd_pid}/oom_score_adj"
+    run mkdir -p /run/sendsigs.omit.d
+    run sh -ec "echo ${nbd_pid} > /run/sendsigs.omit.d/nbd${device}.pid"
 
     # Fixing IO scheduler
     if grep -q '\[cfq\]' /sys/block/nbd${device}/queue/scheduler
