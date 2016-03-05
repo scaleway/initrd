@@ -1,5 +1,7 @@
 #!/bin/sh
 
+VERBOSE=${INITRD_VERBOSE:-0}
+
 # Loading functions
 . /functions
 
