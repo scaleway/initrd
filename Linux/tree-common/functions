@@ -248,7 +248,7 @@ attach_nbd_device() {
 		--blocksize 4096 \
 		--retry=$retries \
 		${nbd_host} ${nbd_port} \
-		/dev/nbd${device} 2>/dev/null
+		/dev/nbd${device}
 
     # Checking device connection
     local nbd_pid=$($NBD_CLIENT --check /dev/nbd${device} 2>/dev/null)
