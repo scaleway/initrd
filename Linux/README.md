@@ -132,6 +132,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* No entry
+
 ### 3.9 (2016-03-07)
 
 * Configure all interfaces ([#137](https://github.com/scaleway/initrd/issues/137))
