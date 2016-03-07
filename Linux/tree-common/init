@@ -1,5 +1,7 @@
 #!/bin/sh
 
+VERBOSE=${INITRD_VERBOSE:-0}
+
 # Loading functions
 . /functions
 
@@ -72,15 +74,37 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 
 # Configure network
 log_begin_msg "Configuring network"
-run ifconfig eth0 up
+
+INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
+
+for INTERFACE in $INTERFACES; do
+    run ifconfig $INTERFACE up
+done
 if [ "$(get_opt ip)" = "dhcp" ]; then
-    run udhcpc -n -q -i eth0
+    for INTERFACE in $INTERFACES; do
+        run udhcpc -n -q -i $INTERFACE up
+    done
 fi
 if [ "$(get_opt nameserver)" != "" ]; then
     run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
 fi
 log_end_msg
 
+# Configure ipv6
+if [ "$(get_any NO_IPV6)" != "1" ]; then
+	IPV6=$(scw-metadata --cached IPV6)
+
+	if [ "$IPV6" != "" ]; then
+		log_begin_msg "Configuring ipv6"
+
+		IP=$(scw-metadata --cached IPV6_ADDRESS)
+		GW=$(scw-metadata --cached IPV6_GATEWAY)
+		MASK=$(scw-metadata --cached IPV6_NETMASK)
+		run ip -6 addr add dev eth0 $IP/$MASK
+		run ip -6 route add default via $GW
+		log_end_msg
+	fi
+fi
 
 # Display metadata infos
 COMMERCIAL_TYPE=unknown
