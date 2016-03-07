@@ -135,6 +135,10 @@ Here are the availble *initrd variables*:
 ### master (unreleased)
 
 * Configure all interfaces ([#137](https://github.com/scaleway/initrd/issues/137))
+* Initial support of IPV6
+* Add a way to enable early VERBOSE mode using bootscript's cmdline
+* Add a flag not to signal the current state to the metadata server
+* Improved logging
 
 ### 3.8 (2016-02-18)
 
