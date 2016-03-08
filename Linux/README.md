@@ -134,7 +134,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* Allow alternative ip option
 
 ### 3.9 (2016-03-07)
 
