@@ -132,9 +132,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### 3.10 (2016-03-08)
 
 * Allow alternative ip option
+* Fixing attach_nbd_device() captures of @xnbd-client PIDs [#147](https://github.com/scaleway/initrd/pull/147)
 
 ### 3.9 (2016-03-07)
 
