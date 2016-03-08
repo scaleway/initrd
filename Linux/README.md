@@ -132,6 +132,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* No entry
+
 ### 3.10 (2016-03-08)
 
 * Allow alternative ip option
