@@ -80,7 +80,7 @@ INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
 for INTERFACE in $INTERFACES; do
     run ifconfig $INTERFACE up
 done
-if [ "$(get_opt ip)" = "dhcp" ]; then
+if [ "$(get_opt ip)" = "dhcp" -o "$(get_opt ip)" = ":::::eth0:" ]; then
     for INTERFACE in $INTERFACES; do
         run udhcpc -n -q -i $INTERFACE up
     done
