@@ -3,6 +3,123 @@
 
 Initrd used to boot Linux images on Scaleway servers
 
+## Schema (boot timeline)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          electrical poweron                          │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                  ┌─────x86_64──────┴───────armhf─────┐                 
+                  │                                   │                 
+                  ▼                                   ▼                 
+┌──────────────────────────────────┐ ┌─────────────────────────────────┐
+│  start bios                      │ │  start u-boot                   │
+│                                  │ │                                 │
+│* activate serial port            │ │* dhcp request                   │
+│* dhcp request                    │ │* TFTP requests to download      │
+│* TFTP request to get iPXE        │ │  the kernel and the initrd      │
+│* HTTP request to the metadata    │ │* set the linux cmdline          │
+│  server to get bootscript details│ │* activate serial port           │
+│* HTTP requests to download       │ │* jump to kernel code            │
+│  kernel and initrd               │ │                                 │
+│* download initrd in memory       │ │                                 │
+│* set the linux cmdline           │ │                                 │
+└──────────────────────────────────┘ └─────────────────────────────────┘
+                  │                                   │                 
+                  └─────────────────┬─────────────────┘                 
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* kernel is booting                                                   │
+│* dhcp request                                                        │
+│* jump to initrd                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* initrd is starting                                                  │
+│* display scaleway banner                                             │
+│* display kernel/initrd build info                                    │
+│* create busybox symlinks                                             │
+│* mount /dev,/run,/sys,/proc                                          │
+│* display system info                                                 │
+│* configure IPV4 network                                              │
+│* configure IPV6 network                                              │
+│* run scw-metadata to create initial metadata cache                   │
+│* display metadata info                                               │
+│* configure GPIOs (C1 only)                                           │
+│* Enable debug/verbose mode                                           │
+│* drop a shell if INITRD_PRE_SHELL=1                                  │
+│* signal server is "kernel-started"                                   │
+│  HTTP request to the metadata API to signal the kernel is started.   │
+│  Useful for debugging purpose: if the boot fails for any reason,     │
+│  you know it failed before/after the kernel started                  │
+│* quick sync with ntp server                                          │
+│* mount rootfs                                                        │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+          ┌────────────────────┬ boot=XXX ────────┬──────────────┐      
+          ▼                    ▼                  ▼              ▼      
+      ┌──────┐              ┌────┐        ┌───────────────┐   ┌─────┐   
+      │rescue│              │live│        │local (default)│   │ nfs │   
+      └──────┘              └────┘        └───────────────┘   └─────┘   
+          │                    │                  │              │      
+          ▼                    ▼                  ▼              ▼      
+┌──────────────────┐┌────────────────────┐┌───────────────┐┌───────────┐
+│                  ││   attach nbd0 if   ││               ││           │
+│                  ││  ${root} is nbd0   ││               ││           │
+│                  ││                    ││               ││           │
+│  mount tmpfs on  ││ format ${root} if  ││               ││           │
+│    ${rootmnt}    ││ first boot (empty  ││               ││           │
+│                  ││   parted) or if    ││attach nbd0 if ││           │
+│                  ││ live_mode=install  ││${root} is nbd0││           │
+│                  ││                    ││               ││ mount nfs │
+│                  ││   mount ${root}    ││               ││           │
+└──────────────────┘└────────────────────┘│ mount ${root} ││           │
+          │                    │          │               ││           │
+          └──────────┬─────────┘          │               ││           │
+                     ▼                    │               ││           │
+┌────────────────────────────────────────┐│               ││           │
+│download ${rescue_image} using HTTP and ││               ││           │
+│        extract it to ${rootmnt}        ││               ││           │
+└────────────────────────────────────────┘└───────────────┘└───────────┘
+                     │                            │              │      
+                     └──────────────┬─────────────┴──────────────┘      
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* attach non-rootfs nbd volumes                                       │
+│* display image info (/etc/scw-release)                               │
+│* signal server is "booted"                                           │
+│  HTTP request to the metadata API to signal the server               │
+│  is successfully booted.                                             │
+│  If we don't make this request, the server will be automatically     │
+│  powered off after a few minutes because the boot is                 │
+│  considered failed                                                   │
+│* configure /etc/hostname if empty                                    │
+│* configure /etc/resolv.conf if empty                                 │
+│* create a random root password on first boot                         │
+│  (no root password in /etc/shadow)                                   │
+│* drop a shell if INITRD_POST_SHELL=1                                 │
+│* start a dropbear server if INITRD_DROPBEAR=1                        │
+│* mount /proc,/sys,/run,/dev on rootfs                                │
+│* ensure minimal devices (console,null,zero,ptmx,tty,random,urandom)  │
+│  are mknoded                                                         │
+│* copy the whole initramfs in ${rootfs}/run/initramfs (for shutdown)  │
+│* display bottom footer                                               │
+│* switch_root on /sbin/init                                           │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│                  distribution/image is starting...                   │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│                             ssh is ready                             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
 ## Example of output
 
 ```python
