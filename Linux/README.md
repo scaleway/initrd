@@ -132,7 +132,7 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### 3.10.1 (2015-03-16)
 
 * Add server tags ssh keys if available
 
