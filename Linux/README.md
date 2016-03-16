@@ -3,6 +3,109 @@
 
 Initrd used to boot Linux images on Scaleway servers
 
+## Schema (boot timeline)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          electrical poweron                          │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+          ┌───────x86_64────────────┴──────────armhf───────────┐        
+          ▼                                                    ▼        
+      ┌──────┐                                            ┌────────┐    
+      │ bios │                                            │ u-boot │    
+      └──────┘                                            └────────┘    
+          │                                                    │        
+          └─────────────────────────┬──────────────────────────┘        
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* dhcp                                                                │
+│* download kernel in memory                                           │
+│* download initrd in memory                                           │
+│* set the linux cmdline                                               │
+│* jump to kernel code                                                 │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* kernel is booting                                                   │
+│* dhcp request                                                        │
+│* jump to initrd                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* initrd is starting                                                  │
+│* display scaleway banner                                             │
+│* display kernel/initrd build info                                    │
+│* create busybox symlinks                                             │
+│* mount /dev,/run,/sys,/proc                                          │
+│* display system info                                                 │
+│* configure IPV4 network                                              │
+│* configure IPV6 network                                              │
+│* display metadata info                                               │
+│* configure GPIOs (C1 only)                                           │
+│* Enable debug/verbose mode                                           │
+│* drop a shell if INITRD_PRE_SHELL=1                                  │
+│* signal server is "kernel-started"                                   │
+│* quick sync with ntp server                                          │
+│* mount rootfs                                                        │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+          ┌────────────────────┬────┴─────────────┬──────────────┐      
+          ▼                    ▼                  ▼              ▼      
+      ┌──────┐              ┌────┐        ┌───────────────┐   ┌─────┐   
+      │rescue│              │live│        │local (default)│   │ nfs │   
+      └──────┘              └────┘        └───────────────┘   └─────┘   
+          │                    │                  │              │      
+          ▼                    ▼                  ▼              ▼      
+┌──────────────────┐┌────────────────────┐┌───────────────┐┌───────────┐
+│                  ││   attach nbd0 if   ││               ││           │
+│                  ││  ${root} is nbd0   ││               ││           │
+│                  ││                    ││               ││           │
+│  mount tmpfs on  ││ format ${root} if  ││               ││           │
+│    ${rootmnt}    ││  first boot or if  ││               ││           │
+│                  ││ live_mode=install  ││attach nbd0 if ││           │
+│                  ││                    ││${root} is nbd0││           │
+│                  ││   mount ${root}    ││               ││ mount nfs │
+└──────────────────┘└────────────────────┘│               ││           │
+          │                    │          │ mount ${root} ││           │
+          └──────────┬─────────┘          │               ││           │
+                     ▼                    │               ││           │
+┌────────────────────────────────────────┐│               ││           │
+│   download and extract a rootfs.tar    ││               ││           │
+│                                        ││               ││           │
+└────────────────────────────────────────┘└───────────────┘└───────────┘
+                     │                            │              │      
+                     └──────────────┬─────────────┴──────────────┘      
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│* optionally attach non-rootfs nbd volumes                            │
+│* display image info (/etc/scw-release)                               │
+│* signal server is "booted"                                           │
+│* configure /etc/hostname if empty                                    │
+│* configure /etc/resolv.conf if empty                                 │
+│* create a random root password on first boot                         │
+│* drop a shell if INITRD_POST_SHELL=1                                 │
+│* start a dropbear server if INITRD_DROPBEAR=1                        │
+│* mount /proc,/sys,/run,/dev on rootfs                                │
+│* ensure minimal devices are mknoded                                  │
+│* copy the whole initramfs in ${rootfs}/run/initramfs (for shutdown)  │
+│* display bottom footer                                               │
+│* switch_root on /sbin/init                                           │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│                  distribution/image is starting...                   │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │                                   
+                                    ▼                                   
+┌──────────────────────────────────────────────────────────────────────┐
+│                             ssh is ready                             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
 ## Example of output
 
 ```python
