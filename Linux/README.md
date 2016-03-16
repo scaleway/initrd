@@ -134,7 +134,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* Add server tags ssh keys if available
 
 ### 3.10 (2016-03-08)
 
