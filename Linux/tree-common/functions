@@ -306,7 +306,10 @@ start_sshd() {
     run chmod 700 /root/.ssh
     run dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
     run dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+    # add scaleway account keys
     run sh -ec "scw-metadata --cached | grep 'SSH_PUBLIC_KEYS_.*_KEY' | cut -d'=' -f 2- | tr -d \' > /root/.ssh/authorized_keys"
+    # add server tags keys
+    run sh -ec "scw-metadata --cached | grep 'TAGS_.*=AUTHORIZED_KEY' | cut -d'=' -f 3- | sed 's/_/\ /g' >> /root/.ssh/authorized_keys"
     run dropbear -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key
 }
 
