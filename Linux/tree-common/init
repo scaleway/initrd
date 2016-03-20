@@ -183,9 +183,9 @@ signal_state kernel-started
 # Adjust time
 if [ "$(get_any NO_NTPDATE)" != "1" ]; then
     log_begin_msg "Adjusting time (ntp)"
-    NTPSRV=$(cat /etc/ntpsrv)
-    run ntpdate -d -b -p 2 "${NTPSRV}"
-    run ntpdate -d -b -p 6 "${NTPSRV}" &
+    # Clock is stepped after 3 NTP probes to each server, each query timeout in 1 second
+    # /etc/ntpsrv was improved with any NTP server(s) provided thru DHCP (see etc/udhcpc/default.script)
+    run ntpdate -b -p 3 -t 1 $(cat /etc/ntpsrv)
     log_end_msg
 fi
 
