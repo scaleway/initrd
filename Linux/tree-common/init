@@ -250,11 +250,11 @@ run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
 [ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
 if ! $(cat /etc/hosts | grep -q "127.0.0.1"); then
-echo '127.0.0.1 '${HOSTNAME} >>/etc/hosts
-echo '::1 '${HOSTNAME} >>/etc/hosts
+echo '127.0.0.1 '${HOSTNAME} >>${rootmnt}/etc/hosts
+echo '::1 '${HOSTNAME} >>${rootmnt}/etc/hosts
 fi
-sed -i "s/127.0.0.1.*server/127.0.0.1 ${HOSTNAME}/g" /etc/hosts
-sed -i "s/::1.*server/::1 ${HOSTNAME}/g" /etc/hosts
+sed -i "s/127.0.0.1.*server/127.0.0.1 ${HOSTNAME}/g" ${rootmnt}/etc/hosts
+sed -i "s/::1.*server/::1 ${HOSTNAME}/g" ${rootmnt}/etc/hosts
 grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
 log_end_msg
 
