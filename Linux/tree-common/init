@@ -249,8 +249,8 @@ log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
 [ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
-if ! $(cat /etc/hosts | grep -q "127.0.0.1"); then
-echo '127.0.0.1 '${HOSTNAME} >>${rootmnt}/etc/hosts
+if ! $(cat /etc/hosts | grep -q "127.0.1.1"); then
+echo '127.0.1.1 '${HOSTNAME} >>${rootmnt}/etc/hosts
 echo '::1 '${HOSTNAME} >>${rootmnt}/etc/hosts
 fi
 sed -i "s/127.0.0.1.*server/127.0.0.1 ${HOSTNAME}/g" ${rootmnt}/etc/hosts
