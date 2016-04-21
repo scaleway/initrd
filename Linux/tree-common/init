@@ -231,9 +231,9 @@ log_end_msg
 (
     echo
     if [ -r ${rootmnt}/etc/scw-release ]; then
-	. ${rootmnt}/etc/scw-release
-	esuccess "Image name:     ${IMAGE_DESCRIPTION}"
-	esuccess "Image release:  ${IMAGE_RELEASE}"
+        . ${rootmnt}/etc/scw-release
+        esuccess "Image name:     ${IMAGE_DESCRIPTION}"
+        esuccess "Image release:  ${IMAGE_RELEASE}"
     fi
     esuccess "Usage on /:     $(df -h ${rootmnt} | awk '/\// {print $(NF-1)}')"
     echo
@@ -249,6 +249,14 @@ log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
 [ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
+if [ ! -f ${rootmnt}/etc/hosts.bak ]; then
+    cp ${rootmnt}/etc/hosts ${rootmnt}/etc/hosts.bak
+
+    FQDN=$(echo $HOSTNAME | cut -d'.' -f1)
+    TEMPLATE="/etc/hosts.tmpl"
+    cat $TEMPLATE | sed 's/HOSTNAME/'$HOSTNAME'/' | sed 's/FQDN/'$FQDN'/' > ${rootmnt}/etc/hosts
+fi
+
 grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
 log_end_msg
 
