@@ -251,7 +251,7 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* Add hostname to /etc/hosts ([#155](https://github.com/scaleway/initrd/issues/155))
 
 ### 3.10.1 (2015-03-16)
 
