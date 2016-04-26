@@ -1,7 +1,7 @@
 # Initrd on Scaleway
 [![Build Status](https://travis-ci.org/scaleway/initrd.svg?branch=master)](https://travis-ci.org/scaleway/initrd)
 
-Ramdisk image used to boot the C1 servers.
+Ramdisk image used to boot the Scaleway servers.
 
 ## Components
 
