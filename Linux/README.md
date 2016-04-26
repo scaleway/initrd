@@ -253,7 +253,7 @@ Here are the availble *initrd variables*:
 
 * Add hostname to /etc/hosts ([#155](https://github.com/scaleway/initrd/issues/155))
 
-### 3.10.1 (2015-03-16)
+### 3.10.1 (2016-03-16)
 
 * Add server tags ssh keys if available
 
