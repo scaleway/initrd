@@ -166,6 +166,10 @@ log_end_msg
 # Drop debug shell
 log_begin_msg "Checking user input for debug shell"
 if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
+    # Prevent the server to stop automatically every 5 minutes (boot timeout)
+    signal_state booted
+
+    # drop the shell
     log_success_msg "Dropping a debug shell"
     log_end_msg
     echo "**DEBUG SHELL** (requested from the user)"

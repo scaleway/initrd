@@ -252,6 +252,7 @@ Here are the availble *initrd variables*:
 ### master (unreleased)
 
 * Add hostname to /etc/hosts ([#155](https://github.com/scaleway/initrd/issues/155))
+* Prevent the server to stop every 5 minutes when using `INITRD_PRE_SHELL=1`
 
 ### 3.10.1 (2016-03-16)
 
