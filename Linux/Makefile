@@ -7,12 +7,62 @@ DOCKER_DEPENDENCIES ?=	armbuild/initrd-dependencies
 CMDLINE ?=		ip=dhcp root=/dev/nbd0 nbd.max_parts=8 boot=local nousb noplymouth
 QEMU_OPTIONS ?=		-M versatilepb -cpu cortex-a9 -m 256 -no-reboot
 INITRD_DEBUG ?=		0
-TARGET ?= armv7l
 HOST_ARCH ?=		$(shell uname -m)
+TARGET ?=		$(HOST_ARCH)
 COMMIT :=		$(shell git rev-parse HEAD)
 TAG :=			$(shell git describe --tags --always)
 PUBLISH_FILES ?=	uInitrd-Linux-$(TARGET)-$(TAG) initrd-Linux-$(TARGET)-$(TAG).gz uInitrd-Linux-$(TARGET)-latest initrd-Linux-$(TARGET)-latest.gz
 GIT_REMOTE ?=		origin
+
+ifeq ($(TARGET),arm)
+	TARGET_QEMU_ARCH=arm
+	TARGET_UNAME_ARCH=armv7l
+	TARGET_DOCKER_TAG_ARCH=armhf
+	TARGET_GOLANG_ARCH=arm
+endif
+ifeq ($(TARGET),armhf)
+	TARGET_QEMU_ARCH=arm
+	TARGET_UNAME_ARCH=armv7l
+	TARGET_DOCKER_TAG_ARCH=armhf
+	TARGET_GOLANG_ARCH=arm
+endif
+ifeq ($(TARGET),armv7l)
+	TARGET_QEMU_ARCH=arm
+	TARGET_UNAME_ARCH=armv7l
+	TARGET_DOCKER_TAG_ARCH=armhf
+	TARGET_GOLANG_ARCH=arm
+endif
+ifeq ($(TARGET),arm64)
+	TARGET_QEMU_ARCH=aarch64
+	TARGET_UNAME_ARCH=arm64
+	TARGET_DOCKER_TAG_ARCH=arm64
+	TARGET_GOLANG_ARCH=arm64
+endif
+ifeq ($(TARGET),x86_64)
+	TARGET_QEMU_ARCH=x86_64
+	TARGET_UNAME_ARCH=x86_64
+	TARGET_DOCKER_TAG_ARCH=amd64
+	TARGET_GOLANG_ARCH=amd64
+endif
+ifeq ($(TARGET),amd64)
+	TARGET_QEMU_ARCH=x86_64
+	TARGET_UNAME_ARCH=x86_64
+	TARGET_DOCKER_TAG_ARCH=amd64
+	TARGET_GOLANG_ARCH=amd64
+endif
+ifeq ($(TARGET),mips)
+	TARGET_QEMU_ARCH=mips
+	TARGET_UNAME_ARCH=mips
+	TARGET_DOCKER_TAG_ARCH=mips
+	TARGET_GOLANG_ARCH=unsupported
+endif
+ifeq ($(TARGET),powerpc)
+	TARGET_QEMU_ARCH=powerpc
+	TARGET_UNAME_ARCH=powerpc
+	TARGET_DOCKER_TAG_ARCH=powerpc
+	TARGET_GOLANG_ARCH=unsupported
+endif
+
 
 .PHONY: publish_on_s3 qemu dist dist_do dist_teardown all travis_check travis_build dependencies-shell uInitrd-shell
 
@@ -179,7 +229,7 @@ uInitrd-shell: output-$(TARGET)/.deps
 		-it --rm \
 		-v $(shell pwd)/output-$(TARGET):/chroot \
 		-w /tmp \
-		armbuild/busybox \
+		multiarch/busybox:$(TARGET_DOCKER_TAG_ARCH) \
 		chroot /chroot /bin/sh
 
 
