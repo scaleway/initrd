@@ -238,6 +238,8 @@ Here are the availble *initrd variables*:
 - **INITRD_WAIT_SECONDARY_VOLUMES=1**: Attach secondary *NBD* devices before leaving the initrd (future default option)
 - **SKIP_OPTIONAL_NBD_DEVICES**: Skip *NBD* devices auto-attach if the volume is optional (all the volumes for rescue, only secondary volumes for NBD-based boots)
 - **nfsroot=server:path**: *NFS* mountpoint (ignored for non-*NFS* boot modes)
+- **KEXEC_KERNEL=path**: http or local url of the kernel to kexec in on boot
+- **KEXEC_INITRD=path**: http or local url of the initrd to kexec in on boot
 
 
 ## Boot-modes
@@ -252,6 +254,8 @@ Here are the availble *initrd variables*:
 ### master (unreleased)
 
 * Add hostname to /etc/hosts ([#155](https://github.com/scaleway/initrd/issues/155))
+* Prevent the server to stop every 5 minutes when using `INITRD_PRE_SHELL=1`
+* Initial support of kexec using servers tags ([#91](https://github.com/scaleway/initrd/issues/91))
 
 ### 3.10.1 (2016-03-16)
 
