@@ -66,6 +66,7 @@ RUN export-assets \
       /lib/x86_64-linux-gnu/libnss_dns.so.2 \
       /lib/x86_64-linux-gnu/libnss_files.so.2 \
       /lib/x86_64-linux-gnu/libresolv.so.2 \
+      /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
       /sbin/parted \
