@@ -248,6 +248,34 @@ log_end_msg
 signal_state booted
 
 
+# optional kexec
+if [ "$(get_any is_in_kexec no)" = "yes" ]; then
+    esuccess "Running in a kexec"
+else
+    if [ "$(get_any KEXEC_KERNEL 'default')" != "default" -a "$(get_any KEXEC_INITRD 'default')" != "default" ]; then
+	KEXEC_KERNEL="$(get_any KEXEC_KERNEL default)"
+	KEXEC_INITRD="$(get_any KEXEC_INITRD default)"
+	esuccess "kexec: kernel=${KEXEC_KERNEL} initrd=${KEXEC_INITRD}"
+
+	# get kernel and initrd
+	mkdir -p /boot
+	if [ -f "${rootmnt}/${KEXEC_KERNEL}" ]; then
+	    cp "${rootmnt}/${KEXEC_KERNEL}" /boot/kernel
+	else
+	    wget ${KEXEC_KERNEL} -O /boot/kernel
+	fi
+	if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
+	    cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
+	else
+	    wget ${KEXEC_INITRD} -O /boot/initrd
+	fi
+
+	# run kexec
+	kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+    fi
+fi
+
+
 # Forward network configuration files
 log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
