@@ -272,11 +272,20 @@ else
 	    wget ${KEXEC_INITRD} -O /boot/initrd
 	fi
 
-	# detach nbd devices
-	detach_nbd_devices
-
 	# run kexec
-	kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+	if [ -f /boot/kernel ]; then
+	    if [ -f /boot/initrd ]; then
+		# detach nbd devices
+		detach_nbd_devices
+		
+		# kexec
+		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+	    else
+		ewarn "kexec: initrd not found"
+	    fi
+	else
+	    ewarn "kexec: kernel not found"
+	fi
     fi
 fi
 
