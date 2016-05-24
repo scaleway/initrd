@@ -168,6 +168,7 @@ log_begin_msg "Checking user input for debug shell"
 if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
     # Prevent the server to stop automatically every 5 minutes (boot timeout)
     signal_state booted
+    export NO_SIGNAL_STATE=1
 
     # drop the shell
     log_success_msg "Dropping a debug shell"
@@ -251,6 +252,7 @@ signal_state booted
 # optional kexec
 if [ "$(get_any is_in_kexec no)" = "yes" ]; then
     esuccess "Running in a kexec"
+    export NO_SIGNAL_STATE=1
 else
     if [ "$(get_any KEXEC_KERNEL 'default')" != "default" -a "$(get_any KEXEC_INITRD 'default')" != "default" ]; then
 	KEXEC_KERNEL="$(get_any KEXEC_KERNEL default)"
@@ -271,7 +273,19 @@ else
 	fi
 
 	# run kexec
-	kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+	if [ -f /boot/kernel ]; then
+	    if [ -f /boot/initrd ]; then
+		# detach nbd devices
+		detach_nbd_devices
+		
+		# kexec
+		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+	    else
+		ewarn "kexec: initrd not found"
+	    fi
+	else
+	    ewarn "kexec: kernel not found"
+	fi
     fi
 fi
 
