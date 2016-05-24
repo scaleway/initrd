@@ -219,6 +219,23 @@ setup_gpios() {
 }
 
 
+# detach NBD devices
+detach_nbd_devices() {
+    cp /proc/mounts  /etc/fstab
+    swapoff -a
+
+    # unmount nbd devices
+    for device in $(mount | grep nbd | awk '{print $1}'); do
+	umount $device &>/dev/null || umount -l $device
+    done
+
+    # detach nbd devices
+    for device in $(seq 0 15); do
+	xnbd-client -c /dev/nbd${device} && xnbd-client -d /dev/nbd${device} &>/dev/null
+    done
+}
+
+
 # Attach NBD device
 NBD_CLIENT=/usr/sbin/@xnbd-client
 attach_nbd_device() {

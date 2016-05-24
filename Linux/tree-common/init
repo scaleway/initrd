@@ -270,6 +270,9 @@ else
 	    wget ${KEXEC_INITRD} -O /boot/initrd
 	fi
 
+	# detach nbd devices
+	detach_nbd_devices
+
 	# run kexec
 	kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
     fi
