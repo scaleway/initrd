@@ -259,14 +259,20 @@ Here are the availble *initrd variables*:
 * Disconnect NBD devices before kexecing ([#161](https://github.com/scaleway/initrd/issues/161))
 * Improve initial time set-up ([#153](https://github.com/scaleway/initrd/issues/153)) ([@ElNounch](https://github.com/ElNounch))
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.10.1...master)
+
 ### 3.10.1 (2016-03-16)
 
 * Add server tags ssh keys if available
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.10...v3.10.1)
 
 ### 3.10 (2016-03-08)
 
 * Allow alternative ip option
 * Fixing attach_nbd_device() captures of @xnbd-client PIDs [#147](https://github.com/scaleway/initrd/pull/147)
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.9...v3.10)
 
 ### 3.9 (2016-03-07)
 
@@ -275,6 +281,8 @@ Here are the availble *initrd variables*:
 * Add a way to enable early VERBOSE mode using bootscript's cmdline
 * Add a flag not to signal the current state to the metadata server
 * Improved logging
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.8...v3.9)
 
 ### 3.8 (2016-02-18)
 
@@ -287,6 +295,8 @@ Here are the availble *initrd variables*:
 * Printing information about NBD devices
 * Printing information about the running image ([#131](https://github.com/scaleway/initrd/issues/131))
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.7...v3.8)
+
 ### 3.7 (2015-12-16)
 
 * Complete multiarch refactor [#124](https://github.com/scaleway/initrd/pull/124)
@@ -295,19 +305,27 @@ Here are the availble *initrd variables*:
 * Bump dependencies to the latest version (taking binaries from `ubuntu:wily` instead of `ubuntu:vivid`)
 * Initial BTRFS support [#123](https://github.com/scaleway/initrd/pull/123) ([@boris-arzur](https://github.com/boris-arzur))
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.6...v3.7)
+
 ### v3.6 (2015-11-24)
 
 * Speedup boot [#108](https://github.com/scaleway/initrd/issues/108)
 * Do not store serial root password in standard user data
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.5...v3.6)
 
 ### v3.5 (2015-11-19)
 
 * Reordered actions so `INITRD_DROPBEAR` and `INITRD_POST_SHELL` are executed after root password configuration
 * scw-update-server-state retries the request when an error 429 occurred [#106](https://github.com/scaleway/initrd/issues/106)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.4.1...v3.5)
+
 ### v3.4.1 (2015-10-06)
 
 * Fix: regression on booting servers with cmdline containing 'boot=local' [#97](https://github.com/scaleway/initrd/issues/97)
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.4...v3.4.1)
 
 ### v3.4 (2015-10-05)
 
@@ -315,21 +333,29 @@ Here are the availble *initrd variables*:
 * Register `xnbd-client` processes to `/run/sendsigs-omit.d/`
 * Automatically attach NBD devices [#94](https://github.com/scaleway/initrd/issues/94)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.3...v3.4)
+
 ### v3.3 (2015-09-07)
 
 * Do not test `/sbin/init` availability using `test -x` to works against absolute symlinks [#82](https://github.com/scaleway/initrd/issues/82)
 * Added `get_userdata` helper [#80](https://github.com/scaleway/initrd/issues/80)
 * Added a temporary hack for letting getty the time to flush [#76](https://github.com/scaleway/initrd/issues/76)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.2...v3.3)
+
 ### v3.2 (2015-08-28)
 
 * Improved debug,warn,error messages
 * Setting up a random root password on first boot [#46](https://github.com/scaleway/initrd/issues/46)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.1...v3.2)
+
 ### v3.1 (2015-08-24)
 
 * Improved debug/info/warn messages
 * Added 'continue-boot' helper
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3...v3.1)
 
 ### v3 (2015-08-18)
 
@@ -338,6 +364,8 @@ Here are the availble *initrd variables*:
 - Added dropbear shell
 - Initrd version is now printed during boot
 - Size reduced
+
+[full commits list](https://github.com/scaleway/initrd/compare/v2...v3)
 
 ### v2
 
