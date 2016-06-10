@@ -9,10 +9,10 @@ Initrd used to boot Linux images on Scaleway servers
 ┌──────────────────────────────────────────────────────────────────────┐
 │                          electrical poweron                          │
 └──────────────────────────────────────────────────────────────────────┘
-                                    │                                   
-                  ┌─────x86_64──────┴───────armhf─────┐                 
-                  │                                   │                 
-                  ▼                                   ▼                 
+                                    │
+                  ┌─────x86_64──────┴───────armhf─────┐
+                  │                                   │
+                  ▼                                   ▼
 ┌──────────────────────────────────┐ ┌─────────────────────────────────┐
 │  start bios                      │ │  start u-boot                   │
 │                                  │ │                                 │
@@ -26,16 +26,16 @@ Initrd used to boot Linux images on Scaleway servers
 │* download initrd in memory       │ │                                 │
 │* set the linux cmdline           │ │                                 │
 └──────────────────────────────────┘ └─────────────────────────────────┘
-                  │                                   │                 
-                  └─────────────────┬─────────────────┘                 
-                                    ▼                                   
+                  │                                   │
+                  └─────────────────┬─────────────────┘
+                                    ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │* kernel is booting                                                   │
 │* dhcp request                                                        │
 │* jump to initrd                                                      │
 └──────────────────────────────────────────────────────────────────────┘
-                                    │                                   
-                                    ▼                                   
+                                    │
+                                    ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │* initrd is starting                                                  │
 │* display scaleway banner                                             │
@@ -57,14 +57,14 @@ Initrd used to boot Linux images on Scaleway servers
 │* quick sync with ntp server                                          │
 │* mount rootfs                                                        │
 └──────────────────────────────────────────────────────────────────────┘
-                                    │                                   
-          ┌────────────────────┬ boot=XXX ────────┬──────────────┐      
-          ▼                    ▼                  ▼              ▼      
-      ┌──────┐              ┌────┐        ┌───────────────┐   ┌─────┐   
-      │rescue│              │live│        │local (default)│   │ nfs │   
-      └──────┘              └────┘        └───────────────┘   └─────┘   
-          │                    │                  │              │      
-          ▼                    ▼                  ▼              ▼      
+                                    │
+          ┌────────────────────┬ boot=XXX ────────┬──────────────┐
+          ▼                    ▼                  ▼              ▼
+      ┌──────┐              ┌────┐        ┌───────────────┐   ┌─────┐
+      │rescue│              │live│        │local (default)│   │ nfs │
+      └──────┘              └────┘        └───────────────┘   └─────┘
+          │                    │                  │              │
+          ▼                    ▼                  ▼              ▼
 ┌──────────────────┐┌────────────────────┐┌───────────────┐┌───────────┐
 │                  ││   attach nbd0 if   ││               ││           │
 │                  ││  ${root} is nbd0   ││               ││           │
@@ -83,9 +83,9 @@ Initrd used to boot Linux images on Scaleway servers
 │download ${rescue_image} using HTTP and ││               ││           │
 │        extract it to ${rootmnt}        ││               ││           │
 └────────────────────────────────────────┘└───────────────┘└───────────┘
-                     │                            │              │      
-                     └──────────────┬─────────────┴──────────────┘      
-                                    ▼                                   
+                     │                            │              │
+                     └──────────────┬─────────────┴──────────────┘
+                                    ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │* attach non-rootfs nbd volumes                                       │
 │* display image info (/etc/scw-release)                               │
@@ -108,13 +108,13 @@ Initrd used to boot Linux images on Scaleway servers
 │* display bottom footer                                               │
 │* switch_root on /sbin/init                                           │
 └──────────────────────────────────────────────────────────────────────┘
-                                    │                                   
-                                    ▼                                   
+                                    │
+                                    ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                  distribution/image is starting...                   │
 └──────────────────────────────────────────────────────────────────────┘
-                                    │                                   
-                                    ▼                                   
+                                    │
+                                    ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                             ssh is ready                             │
 └──────────────────────────────────────────────────────────────────────┘
@@ -257,6 +257,7 @@ Here are the availble *initrd variables*:
 * Prevent the server to stop every 5 minutes when using `INITRD_PRE_SHELL=1`
 * Initial support of kexec using servers tags ([#91](https://github.com/scaleway/initrd/issues/91))
 * Disconnect NBD devices before kexecing ([#161](https://github.com/scaleway/initrd/issues/161))
+* Improve initial time set-up ([#153](https://github.com/scaleway/initrd/issues/153)) ([@ElNounch](https://github.com/ElNounch))
 
 ### 3.10.1 (2016-03-16)
 
