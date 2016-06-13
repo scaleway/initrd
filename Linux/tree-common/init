@@ -261,10 +261,14 @@ else
 
 	# get kernel and initrd
 	mkdir -p /boot
-	if [ -f "${rootmnt}/${KEXEC_KERNEL}" ]; then
-	    cp "${rootmnt}/${KEXEC_KERNEL}" /boot/kernel
+	if [ "${KEXEC_KERNEL}" = "latest" ]; then
+	    cp $(ls "${rootmnt}"/boot/vmlinuz* | tail -n 1) /boot/kernel
 	else
-	    wget ${KEXEC_KERNEL} -O /boot/kernel
+	    if [ -f "${rootmnt}/${KEXEC_KERNEL}" ]; then
+		cp "${rootmnt}/${KEXEC_KERNEL}" /boot/kernel
+	    else
+		wget ${KEXEC_KERNEL} -O /boot/kernel
+	    fi
 	fi
 	if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
 	    cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
