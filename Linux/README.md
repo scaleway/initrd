@@ -251,6 +251,12 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* No entry
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.11.1...master)
+
 ### 3.11.1 (2016-06-13)
 
 * Fix syntax in /etc/hosts ([#165](https://github.com/scaleway/initrd/pull/165))
