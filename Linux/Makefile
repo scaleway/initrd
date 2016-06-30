@@ -253,6 +253,8 @@ output-$(TARGET)/.clean: output-$(TARGET)/.deps
 	find output-$(TARGET) \( -name "*~" -or -name ".??*~" -or -name "#*#" -or -name ".#*" \) -delete
 	sed 's/INITRD_BUILD_COMMIT/$(shell git describe --long --tags)/' output-$(TARGET)/init > output-$(TARGET)/init.tmp
 	sed 's@INITRD_BUILD_DATE@$(shell TZ=Europe/Paris date "+%Y/%m/%d")@' output-$(TARGET)/init.tmp > output-$(TARGET)/init
+	echo "INITRD_BUILD_COMMIT=$(shell git describe --long --tags)" > output-$(TARGET)/version
+	echo "INITRD_BUILD_DATE=$(shell TZ=Europe/Paris date '+%Y/%m/%d')" >> output-$(TARGET)/version
 	rm -f output-$(TARGET)/init.tmp
 	touch $@
 
