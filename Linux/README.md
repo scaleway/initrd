@@ -251,13 +251,13 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### 3.12 (2016-10-19)
 
 * kexec improvements
 * Generate machine id
 * Fetch kernel modules
 
-[full commits list](https://github.com/scaleway/initrd/compare/v3.11.1...master)
+[full commits list](https://github.com/scaleway/initrd/compare/v3.11.1...3.12)
 
 ### 3.11.1 (2016-06-13)
 
