@@ -253,7 +253,9 @@ Here are the availble *initrd variables*:
 
 ### master (unreleased)
 
-* No entry
+* kexec improvements
+* Generate machine id
+* Fetch kernel modules
 
 [full commits list](https://github.com/scaleway/initrd/compare/v3.11.1...master)
 
