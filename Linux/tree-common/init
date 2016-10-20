@@ -403,6 +403,17 @@ log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
 
+if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ]; then
+    log_begin_msg "Fetching kernel modules"
+    chroot /newroot /usr/local/sbin/scw-sync-kernel-modules || chroot /newroot /usr/local/sbin/oc-sync-kernel-modules || true
+    log_end_msg
+fi
+
+if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ]; then
+    log_begin_msg "Generating machine-id"
+    chroot /newroot /usr/local/sbin/scw-gen-machine-id || chroot /newroot /usr/local/sbin/oc-gen-machine-id || true
+    log_end_msg
+fi
 
 # Check if $init exists and is executable
 if [[ ! -x "${rootmnt}/${init}" ]] ; then
