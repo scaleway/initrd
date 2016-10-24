@@ -251,6 +251,12 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### master (unreleased)
+
+* Add custom parameters to the cmdline when KEXECing with `KEXEC_APPEND=xxx` ([#168](https://github.com/scaleway/initrd/issues/168))
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.12...master)
+
 ### 3.12 (2016-10-19)
 
 * kexec improvements

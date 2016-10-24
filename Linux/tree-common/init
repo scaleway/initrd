@@ -257,7 +257,8 @@ else
     if [ "$(get_any KEXEC_KERNEL 'default')" != "default" -a "$(get_any KEXEC_INITRD 'default')" != "default" ]; then
 	KEXEC_KERNEL="$(get_any KEXEC_KERNEL default)"
 	KEXEC_INITRD="$(get_any KEXEC_INITRD default)"
-	esuccess "kexec: kernel=${KEXEC_KERNEL} initrd=${KEXEC_INITRD}"
+	KEXEC_APPEND="$(get_any KEXEC_APPEND '')"
+	esuccess "kexec: kernel=${KEXEC_KERNEL} initrd=${KEXEC_INITRD} append='${KEXEC_APPEND}'"
 
 	# get kernel and initrd
 	mkdir -p /boot
@@ -281,9 +282,9 @@ else
 	    if [ -f /boot/initrd ]; then
 		# detach nbd devices
 		detach_nbd_devices
-		
+
 		# kexec
-		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes" -f
+		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes ${KEXEC_APPEND}" -f
 	    else
 		ewarn "kexec: initrd not found"
 	    fi
