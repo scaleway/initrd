@@ -51,10 +51,10 @@ emount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
 run ln -s /run /var/run
 
 [ -d /sys ] || run mkdir /sys
-emount -t sysfs -o nodev,noexec,nosuid none /sys
+emount -t sysfs -o nodev,noexec,nosuid sys /sys
 
 [ -d /proc ] || run mkdir /proc
-emount -t proc -o nodev,noexec,nosuid none /proc
+emount -t proc -o nodev,noexec,nosuid proc /proc
 log_end_msg
 
 
