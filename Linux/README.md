@@ -251,6 +251,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.2 (unreleased)
+
+* init: mount fix sysfs/proc options ([#171](https://github.com/scaleway/initrd/issues/171))
+
 ### 3.12.1 (2016-10-24)
 
 * Add custom parameters to the cmdline when KEXECing with `KEXEC_APPEND=xxx` ([#168](https://github.com/scaleway/initrd/issues/168))
