@@ -251,6 +251,10 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.3 (2016-12-07)
+
+* armv7 add kexec support thanks @Firefishy
+
 ### 3.12.2 (unreleased)
 
 * init: mount fix sysfs/proc options ([#171](https://github.com/scaleway/initrd/issues/171))
