@@ -49,6 +49,11 @@ case "${ACTION}" in
     reboot)    reboot -f;    break;;
     poweroff)  poweroff -f;  break;;
     halt)      halt -f;      break;;
+    kexec)     
+        kexec -e
+        # if no kexec kernel was loaded, just reboot
+        reboot -f
+        ;;
 esac
 
 
