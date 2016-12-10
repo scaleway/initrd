@@ -1,4 +1,4 @@
-FROM scaleway/ubuntu:arm64-wily
+FROM scaleway/ubuntu:arm64-xenial
 
 RUN /usr/local/sbin/scw-builder-enter
 
