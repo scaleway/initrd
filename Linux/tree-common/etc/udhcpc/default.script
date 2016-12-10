@@ -37,7 +37,7 @@ case $1 in
 nameserver $i"
         done
 
-	[ -n "$ntpsrv" ] && echo "$ntpsrv" > /etc/ntpsrv
+	[ -n "${ntpsrv}" ] && echo "${ntpsrv}" >> /etc/ntpsrv
 
 	[ -n "$hostname" ] && echo "$hostname" > /proc/sys/kernel/hostname
 

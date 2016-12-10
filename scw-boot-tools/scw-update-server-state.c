@@ -16,8 +16,8 @@
  * GLOBAL PARAMETERS
  */
 
-static const char   *g_host = "169.254.42.42";
-static const char   *g_port = "80";
+static const char   *g_host;	// getenv("METADATA_IP"), default to "169.254.42.42" if unspecified
+static const char   *g_port;	// getenv("METADATA_PORT"), default to "80" if unspecified
 static const char   *scw_boot_tools_version = "scw-boot-tools/0.1.2";
 
 /*
@@ -742,6 +742,14 @@ main(int ac, const char **av) {
                         };
 
     mlockall(MCL_CURRENT | MCL_FUTURE);
+    g_host = getenv("METADATA_IP");
+    if ((g_host == NULL) || (strlen(g_host) == 0)) {
+        g_host = "169.254.42.42";
+    }
+    g_port = getenv("METADATA_PORT");
+    if ((g_port == NULL) || (strlen(g_port) == 0)) {
+        g_port = "80";
+    }
     while ((ch = getopt_long(ac, (char * const *)av, "s:u:", long_options, NULL)) != -1) {
         switch (ch) {
             case 's':

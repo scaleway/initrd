@@ -51,10 +51,10 @@ emount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
 run ln -s /run /var/run
 
 [ -d /sys ] || run mkdir /sys
-emount -t sysfs -o nodev,noexec,nosuid none /sys
+emount -t sysfs -o nodev,noexec,nosuid sys /sys
 
 [ -d /proc ] || run mkdir /proc
-emount -t proc -o nodev,noexec,nosuid none /proc
+emount -t proc -o nodev,noexec,nosuid proc /proc
 log_end_msg
 
 
@@ -166,6 +166,11 @@ log_end_msg
 # Drop debug shell
 log_begin_msg "Checking user input for debug shell"
 if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
+    # Prevent the server to stop automatically every 5 minutes (boot timeout)
+    signal_state booted
+    export NO_SIGNAL_STATE=1
+
+    # drop the shell
     log_success_msg "Dropping a debug shell"
     log_end_msg
     echo "**DEBUG SHELL** (requested from the user)"
@@ -183,9 +188,9 @@ signal_state kernel-started
 # Adjust time
 if [ "$(get_any NO_NTPDATE)" != "1" ]; then
     log_begin_msg "Adjusting time (ntp)"
-    NTPSRV=$(cat /etc/ntpsrv)
-    run ntpdate -d -b -p 2 "${NTPSRV}"
-    run ntpdate -d -b -p 6 "${NTPSRV}" &
+    # Clock is stepped after 3 NTP probes to each server, each query timeout in 1 second
+    # /etc/ntpsrv was improved with any NTP server(s) provided thru DHCP (see etc/udhcpc/default.script)
+    run ntpdate -b -p 3 -t 1 $(cat /etc/ntpsrv)
     log_end_msg
 fi
 
@@ -231,9 +236,9 @@ log_end_msg
 (
     echo
     if [ -r ${rootmnt}/etc/scw-release ]; then
-	. ${rootmnt}/etc/scw-release
-	esuccess "Image name:     ${IMAGE_DESCRIPTION}"
-	esuccess "Image release:  ${IMAGE_RELEASE}"
+        . ${rootmnt}/etc/scw-release
+        esuccess "Image name:     ${IMAGE_DESCRIPTION}"
+        esuccess "Image release:  ${IMAGE_RELEASE}"
     fi
     esuccess "Usage on /:     $(df -h ${rootmnt} | awk '/\// {print $(NF-1)}')"
     echo
@@ -244,11 +249,65 @@ log_end_msg
 signal_state booted
 
 
+# optional kexec
+if [ "$(get_any is_in_kexec no)" = "yes" ]; then
+    esuccess "Running in a kexec"
+    export NO_SIGNAL_STATE=1
+else
+    if [ "$(get_any KEXEC_KERNEL 'default')" != "default" -a "$(get_any KEXEC_INITRD 'default')" != "default" ]; then
+	KEXEC_KERNEL="$(get_any KEXEC_KERNEL default)"
+	KEXEC_INITRD="$(get_any KEXEC_INITRD default)"
+	KEXEC_APPEND="$(get_any KEXEC_APPEND '')"
+	esuccess "kexec: kernel=${KEXEC_KERNEL} initrd=${KEXEC_INITRD} append='${KEXEC_APPEND}'"
+
+	# get kernel and initrd
+	mkdir -p /boot
+	if [ "${KEXEC_KERNEL}" = "latest" ]; then
+	    cp $(ls "${rootmnt}"/boot/vmlinuz* | tail -n 1) /boot/kernel
+	else
+	    if [ -f "${rootmnt}/${KEXEC_KERNEL}" ]; then
+		cp "${rootmnt}/${KEXEC_KERNEL}" /boot/kernel
+	    else
+		wget ${KEXEC_KERNEL} -O /boot/kernel
+	    fi
+	fi
+	if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
+	    cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
+	else
+	    wget ${KEXEC_INITRD} -O /boot/initrd
+	fi
+
+	# run kexec
+	if [ -f /boot/kernel ]; then
+	    if [ -f /boot/initrd ]; then
+		# detach nbd devices
+		detach_nbd_devices
+
+		# kexec
+		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes ${KEXEC_APPEND}" -f
+	    else
+		ewarn "kexec: initrd not found"
+	    fi
+	else
+	    ewarn "kexec: kernel not found"
+	fi
+    fi
+fi
+
+
 # Forward network configuration files
 log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
 run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
 [ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
+if [ ! -f ${rootmnt}/etc/hosts.bak ]; then
+    cp ${rootmnt}/etc/hosts ${rootmnt}/etc/hosts.bak
+
+    FQDN=$(echo $HOSTNAME | cut -d'.' -f1)
+    TEMPLATE="/etc/hosts.tmpl"
+    cat $TEMPLATE | sed 's/HOSTNAME/'$HOSTNAME'/' | sed 's/FQDN/'$FQDN'/' > ${rootmnt}/etc/hosts
+fi
+
 grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
 log_end_msg
 
@@ -345,6 +404,17 @@ log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
 
+if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ]; then
+    log_begin_msg "Fetching kernel modules"
+    chroot /newroot /usr/local/sbin/scw-sync-kernel-modules || chroot /newroot /usr/local/sbin/oc-sync-kernel-modules || true
+    log_end_msg
+fi
+
+if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ]; then
+    log_begin_msg "Generating machine-id"
+    chroot /newroot /usr/local/sbin/scw-gen-machine-id || chroot /newroot /usr/local/sbin/oc-gen-machine-id || true
+    log_end_msg
+fi
 
 # Check if $init exists and is executable
 if [[ ! -x "${rootmnt}/${init}" ]] ; then

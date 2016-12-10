@@ -3,6 +3,123 @@
 
 Initrd used to boot Linux images on Scaleway servers
 
+## Schema (boot timeline)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          electrical poweron                          │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                  ┌─────x86_64──────┴───────armhf─────┐
+                  │                                   │
+                  ▼                                   ▼
+┌──────────────────────────────────┐ ┌─────────────────────────────────┐
+│  start bios                      │ │  start u-boot                   │
+│                                  │ │                                 │
+│* activate serial port            │ │* dhcp request                   │
+│* dhcp request                    │ │* TFTP requests to download      │
+│* TFTP request to get iPXE        │ │  the kernel and the initrd      │
+│* HTTP request to the metadata    │ │* set the linux cmdline          │
+│  server to get bootscript details│ │* activate serial port           │
+│* HTTP requests to download       │ │* jump to kernel code            │
+│  kernel and initrd               │ │                                 │
+│* download initrd in memory       │ │                                 │
+│* set the linux cmdline           │ │                                 │
+└──────────────────────────────────┘ └─────────────────────────────────┘
+                  │                                   │
+                  └─────────────────┬─────────────────┘
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│* kernel is booting                                                   │
+│* dhcp request                                                        │
+│* jump to initrd                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│* initrd is starting                                                  │
+│* display scaleway banner                                             │
+│* display kernel/initrd build info                                    │
+│* create busybox symlinks                                             │
+│* mount /dev,/run,/sys,/proc                                          │
+│* display system info                                                 │
+│* configure IPV4 network                                              │
+│* configure IPV6 network                                              │
+│* run scw-metadata to create initial metadata cache                   │
+│* display metadata info                                               │
+│* configure GPIOs (C1 only)                                           │
+│* Enable debug/verbose mode                                           │
+│* drop a shell if INITRD_PRE_SHELL=1                                  │
+│* signal server is "kernel-started"                                   │
+│  HTTP request to the metadata API to signal the kernel is started.   │
+│  Useful for debugging purpose: if the boot fails for any reason,     │
+│  you know it failed before/after the kernel started                  │
+│* quick sync with ntp server                                          │
+│* mount rootfs                                                        │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+          ┌────────────────────┬ boot=XXX ────────┬──────────────┐
+          ▼                    ▼                  ▼              ▼
+      ┌──────┐              ┌────┐        ┌───────────────┐   ┌─────┐
+      │rescue│              │live│        │local (default)│   │ nfs │
+      └──────┘              └────┘        └───────────────┘   └─────┘
+          │                    │                  │              │
+          ▼                    ▼                  ▼              ▼
+┌──────────────────┐┌────────────────────┐┌───────────────┐┌───────────┐
+│                  ││   attach nbd0 if   ││               ││           │
+│                  ││  ${root} is nbd0   ││               ││           │
+│                  ││                    ││               ││           │
+│  mount tmpfs on  ││ format ${root} if  ││               ││           │
+│    ${rootmnt}    ││ first boot (empty  ││               ││           │
+│                  ││   parted) or if    ││attach nbd0 if ││           │
+│                  ││ live_mode=install  ││${root} is nbd0││           │
+│                  ││                    ││               ││ mount nfs │
+│                  ││   mount ${root}    ││               ││           │
+└──────────────────┘└────────────────────┘│ mount ${root} ││           │
+          │                    │          │               ││           │
+          └──────────┬─────────┘          │               ││           │
+                     ▼                    │               ││           │
+┌────────────────────────────────────────┐│               ││           │
+│download ${rescue_image} using HTTP and ││               ││           │
+│        extract it to ${rootmnt}        ││               ││           │
+└────────────────────────────────────────┘└───────────────┘└───────────┘
+                     │                            │              │
+                     └──────────────┬─────────────┴──────────────┘
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│* attach non-rootfs nbd volumes                                       │
+│* display image info (/etc/scw-release)                               │
+│* signal server is "booted"                                           │
+│  HTTP request to the metadata API to signal the server               │
+│  is successfully booted.                                             │
+│  If we don't make this request, the server will be automatically     │
+│  powered off after a few minutes because the boot is                 │
+│  considered failed                                                   │
+│* configure /etc/hostname if empty                                    │
+│* configure /etc/resolv.conf if empty                                 │
+│* create a random root password on first boot                         │
+│  (no root password in /etc/shadow)                                   │
+│* drop a shell if INITRD_POST_SHELL=1                                 │
+│* start a dropbear server if INITRD_DROPBEAR=1                        │
+│* mount /proc,/sys,/run,/dev on rootfs                                │
+│* ensure minimal devices (console,null,zero,ptmx,tty,random,urandom)  │
+│  are mknoded                                                         │
+│* copy the whole initramfs in ${rootfs}/run/initramfs (for shutdown)  │
+│* display bottom footer                                               │
+│* switch_root on /sbin/init                                           │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                  distribution/image is starting...                   │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                             ssh is ready                             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
 ## Example of output
 
 ```python
@@ -121,6 +238,8 @@ Here are the availble *initrd variables*:
 - **INITRD_WAIT_SECONDARY_VOLUMES=1**: Attach secondary *NBD* devices before leaving the initrd (future default option)
 - **SKIP_OPTIONAL_NBD_DEVICES**: Skip *NBD* devices auto-attach if the volume is optional (all the volumes for rescue, only secondary volumes for NBD-based boots)
 - **nfsroot=server:path**: *NFS* mountpoint (ignored for non-*NFS* boot modes)
+- **KEXEC_KERNEL=path**: http or local url of the kernel to kexec in on boot
+- **KEXEC_INITRD=path**: http or local url of the initrd to kexec in on boot
 
 
 ## Boot-modes
@@ -132,14 +251,56 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
-### master (unreleased)
+### 3.12.3 (2016-12-07)
 
-* No entry
+* armv7 add kexec support thanks @Firefishy
+
+### 3.12.2 (unreleased)
+
+* init: mount fix sysfs/proc options ([#171](https://github.com/scaleway/initrd/issues/171))
+
+### 3.12.1 (2016-10-24)
+
+* Add custom parameters to the cmdline when KEXECing with `KEXEC_APPEND=xxx` ([#168](https://github.com/scaleway/initrd/issues/168))
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.12...v3.12.1)
+
+### 3.12 (2016-10-19)
+
+* kexec improvements
+* Generate machine id
+* Fetch kernel modules
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.11.1...3.12)
+
+### 3.11.1 (2016-06-13)
+
+* Fix syntax in /etc/hosts ([#165](https://github.com/scaleway/initrd/pull/165))
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.11...v3.11.1)
+
+### 3.11 (2016-06-10)
+
+* Add hostname to /etc/hosts ([#155](https://github.com/scaleway/initrd/issues/155))
+* Prevent the server to stop every 5 minutes when using `INITRD_PRE_SHELL=1`
+* Initial support of kexec using servers tags ([#91](https://github.com/scaleway/initrd/issues/91))
+* Disconnect NBD devices before kexecing ([#161](https://github.com/scaleway/initrd/issues/161))
+* Improve initial time set-up ([#153](https://github.com/scaleway/initrd/issues/153)) ([@ElNounch](https://github.com/ElNounch))
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.10.1...v3.11)
+
+### 3.10.1 (2016-03-16)
+
+* Add server tags ssh keys if available
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.10...v3.10.1)
 
 ### 3.10 (2016-03-08)
 
 * Allow alternative ip option
 * Fixing attach_nbd_device() captures of @xnbd-client PIDs [#147](https://github.com/scaleway/initrd/pull/147)
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.9...v3.10)
 
 ### 3.9 (2016-03-07)
 
@@ -148,6 +309,8 @@ Here are the availble *initrd variables*:
 * Add a way to enable early VERBOSE mode using bootscript's cmdline
 * Add a flag not to signal the current state to the metadata server
 * Improved logging
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.8...v3.9)
 
 ### 3.8 (2016-02-18)
 
@@ -160,6 +323,8 @@ Here are the availble *initrd variables*:
 * Printing information about NBD devices
 * Printing information about the running image ([#131](https://github.com/scaleway/initrd/issues/131))
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.7...v3.8)
+
 ### 3.7 (2015-12-16)
 
 * Complete multiarch refactor [#124](https://github.com/scaleway/initrd/pull/124)
@@ -168,19 +333,27 @@ Here are the availble *initrd variables*:
 * Bump dependencies to the latest version (taking binaries from `ubuntu:wily` instead of `ubuntu:vivid`)
 * Initial BTRFS support [#123](https://github.com/scaleway/initrd/pull/123) ([@boris-arzur](https://github.com/boris-arzur))
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.6...v3.7)
+
 ### v3.6 (2015-11-24)
 
 * Speedup boot [#108](https://github.com/scaleway/initrd/issues/108)
 * Do not store serial root password in standard user data
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.5...v3.6)
 
 ### v3.5 (2015-11-19)
 
 * Reordered actions so `INITRD_DROPBEAR` and `INITRD_POST_SHELL` are executed after root password configuration
 * scw-update-server-state retries the request when an error 429 occurred [#106](https://github.com/scaleway/initrd/issues/106)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.4.1...v3.5)
+
 ### v3.4.1 (2015-10-06)
 
 * Fix: regression on booting servers with cmdline containing 'boot=local' [#97](https://github.com/scaleway/initrd/issues/97)
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3.4...v3.4.1)
 
 ### v3.4 (2015-10-05)
 
@@ -188,21 +361,29 @@ Here are the availble *initrd variables*:
 * Register `xnbd-client` processes to `/run/sendsigs-omit.d/`
 * Automatically attach NBD devices [#94](https://github.com/scaleway/initrd/issues/94)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.3...v3.4)
+
 ### v3.3 (2015-09-07)
 
 * Do not test `/sbin/init` availability using `test -x` to works against absolute symlinks [#82](https://github.com/scaleway/initrd/issues/82)
 * Added `get_userdata` helper [#80](https://github.com/scaleway/initrd/issues/80)
 * Added a temporary hack for letting getty the time to flush [#76](https://github.com/scaleway/initrd/issues/76)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.2...v3.3)
+
 ### v3.2 (2015-08-28)
 
 * Improved debug,warn,error messages
 * Setting up a random root password on first boot [#46](https://github.com/scaleway/initrd/issues/46)
 
+[full commits list](https://github.com/scaleway/initrd/compare/v3.1...v3.2)
+
 ### v3.1 (2015-08-24)
 
 * Improved debug/info/warn messages
 * Added 'continue-boot' helper
+
+[full commits list](https://github.com/scaleway/initrd/compare/v3...v3.1)
 
 ### v3 (2015-08-18)
 
@@ -211,6 +392,8 @@ Here are the availble *initrd variables*:
 - Added dropbear shell
 - Initrd version is now printed during boot
 - Size reduced
+
+[full commits list](https://github.com/scaleway/initrd/compare/v2...v3)
 
 ### v2
 
