@@ -1,4 +1,4 @@
-FROM scaleway/ubuntu:armhf-wily
+FROM scaleway/ubuntu:armhf-xenial
 
 RUN /usr/local/sbin/scw-builder-enter
 
