@@ -3,7 +3,15 @@ FROM scaleway/ubuntu:amd64-xenial
 RUN /usr/local/sbin/scw-builder-enter
 
 # Install dependencies
-RUN apt-get update          \
+# Note: base-files is upgraded separately because otherwise dpkg prompts to ask
+# the user what to do for /etc/update-motd.d/10-help-text that is removed in
+# the base image.
+RUN apt-get update                        \
+ && apt-get                               \
+    -o Dpkg::Options::='--force-confold'  \
+    -o Dpkg::Options::='--force-confdef'  \
+    install --only-upgrade base-files     \
+ && rm -rf /etc/update-motd.d/*.dpkg-dist \
  && apt-get upgrade -y      \
  && apt-get install -y      \
    curl                     \
