@@ -41,17 +41,17 @@ log_end_msg
 # Mount things needed by this script
 log_begin_msg "Mounting pseudo-filesystems..."
 [ -d /dev ] || run mkdir -m 0755 /dev
-emount -t devtmpfs -o mode=0755 none /dev
+emount -t devtmpfs -o mode=0755 udev /dev
 run mkdir /dev/pts
-emount -t devpts -o noexec,nosuid,gid=5,mode=0620 none /dev/pts
+emount -t devpts -o noexec,nosuid,gid=5,mode=0620 devpts /dev/pts
 
 [ -d /run ] || run mkdir -pm 0755 /run
-emount -t tmpfs -o mode=0755,nodev,nosuid,size=10% tmpfs /run
+emount -t tmpfs -o "mode=0755,nodev,nosuid,size=10%" tmpfs /run
 [ -d /var ] || run mkdir -pm 0755 /var
 run ln -s /run /var/run
 
 [ -d /sys ] || run mkdir /sys
-emount -t sysfs -o nodev,noexec,nosuid sys /sys
+emount -t sysfs -o nodev,noexec,nosuid sysfs /sys
 
 [ -d /proc ] || run mkdir /proc
 emount -t proc -o nodev,noexec,nosuid proc /proc
