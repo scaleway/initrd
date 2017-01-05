@@ -61,7 +61,7 @@ log_end_msg
 echo
 log_begin_msg "Retrieving system info"
 esuccess "Kernel cmdline:    $(cat /proc/cmdline)"
-esuccess "Physycal memory:   $(grep MemTotal /proc/meminfo | awk '{ print $2 " " $3}')"
+esuccess "Physical memory:   $(grep MemTotal /proc/meminfo | awk '{ print $2 " " $3}')"
 esuccess "CPU model:         $(echo -ne $(grep ^model\ name /proc/cpuinfo  | cut -d: -f2 | uniq))"
 esuccess "CPU cores:         $(grep -c ^processor /proc/cpuinfo)"
 log_end_msg
