@@ -7,12 +7,4 @@ mountroot() {
     log_begin_msg "Downloading rescue image: ${rescue_image}"
     run sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
     log_end_msg
-
-    if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
-	log_begin_msg "Attaching nbd devices for easier debugging"
-	attach_nbd_device 0
-	attach_secondary_nbd_devices
-	show_nbd_devices
-	log_end_msg
-    fi
 }
