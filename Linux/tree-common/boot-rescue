@@ -5,6 +5,6 @@ mountroot() {
     log_begin_msg "Mounting rescue filesystem"
     emount -t tmpfs none "${rootmnt}"
     log_begin_msg "Downloading rescue image: ${rescue_image}"
-    run sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
+    run --abort sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
     log_end_msg
 }

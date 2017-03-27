@@ -29,13 +29,6 @@ log_begin_msg() {
 log_end_msg() {
     _log_msg ""
 }
-log_fatal_msg() {
-    _log_msg "Fatal: ${*}\n"
-    _log_file "fatal: ${*}\n"
-    sleep 5
-    # FIXME: drop a shell but reboot automatically if nothing happen on the debug shell
-    reboot
-}
 einfo() {
     _log_msg "\033[1;36m>>> \033[0m${*}\n"
 }
@@ -53,9 +46,18 @@ edebug() {
 	_log_msg "\033[0;90m>>> ${*}\033[0m\n"
     fi
 }
+
 die() {
     eerror "$*"
-    rescueshell
+    read -t 5 -p "Press Enter to open a console or wait 5s to reboot"
+    if [ $? -eq 0 ]; then
+        ewarn "Rescue Shell (Busybox's /bin/sh)"
+        ewarn "To continue, press 'control-D'"
+        ewarn "To reboot, go to https://cloud.scaleway.com/"
+        exec /bin/sh
+    else
+	reboot -f
+    fi
 }
 
 emount() {
@@ -66,25 +68,25 @@ emount() {
 }
 
 run() {
+    abort=0
+    if [ "$1" == "--abort" ]; then
+        abort=1
+        shift
+    fi
+
     _log_file "executing: $@"
     edebug "Executing: $@"
     "$@" >>/initrd.log 2>&1
     ret=$?
     if [[ $ret -eq 0 ]]; then
 	_log_file "Successfully ran '$@'"
+    elif [ "$abort" == "1" ]; then
+	die "'$@' failed"
     else
 	eerror "'$@' failed"
     fi
     return $ret
 }
-
-rescueshell() {
-    ewarn "Rescue Shell (Busybox's /bin/sh)"
-    ewarn "To continue, press 'control-D'"
-    ewarn "To reboot, go to https://cloud.scaleway.com/"
-    exec /bin/sh
-}
-
 
 # Signal to SCW the current server state
 signal_state() {
@@ -96,7 +98,7 @@ signal_state() {
     if [[ "$(get_opt NO_METADATA)" == "1" || "$(get_any NO_SIGNAL_STATE)" == "1" ]]; then
 	return
     fi
-    
+
     log_begin_msg "Signaling the server is ${state} to the control plane"
 
     # FIXME: I don't know why, but the first scw-update-server-state will always fail
@@ -246,11 +248,11 @@ attach_nbd_device() {
 
     # Fetching metadatas
     local export_uri=$(scw-metadata --cached VOLUMES_${device}_EXPORT_URI)
-    [ "$export_uri" = "" ] && log_fatal_msg "Unable to load metadatas..."
+    [ "$export_uri" = "" ] && die "Unable to load metadatas..."
 
     local nbd_host=$(echo $export_uri | sed -n 's#nbd://\(.*\):.*$#\1#p')
     local nbd_port=$(echo $export_uri | sed -n 's#nbd://.*:\(.*\)$#\1#p')
-    [ "$nbd_host" = "" -o "$nbd_port" = "" ] && log_fatal_msg "Parse error of $export_uri"
+    [ "$nbd_host" = "" -o "$nbd_port" = "" ] && die "Parse error of $export_uri"
 
 
     # Checking if device is already attached
@@ -269,9 +271,7 @@ attach_nbd_device() {
 
     # Checking device connection
     local nbd_pid=$($NBD_CLIENT --check /dev/nbd${device} 2>/dev/null)
-    if [ $? -ne 0 ]; then
-        log_fatal_msg "Device connection failed." && return;
-    fi
+    [ $? -ne 0 ] && die "Device connection failed."
 
     run sh -ec "echo -1000 > /proc/${nbd_pid}/oom_score_adj"
     run mkdir -p /run/sendsigs.omit.d

@@ -10,17 +10,17 @@ live_install() {
     case "${filesystem}" in
         btrfs)
             load_btrfs_ko
-            run sh -ec "mkfs.btrfs -f -O ^extref,^skinny-metadata '${root}'" || log_fatal_msg "Cannot format root"
+            run --abort sh -ec "mkfs.btrfs -f -O ^extref,^skinny-metadata '${root}'"
             ;;
         *)
             #default to ext4
-            run sh -ec "mkfs.ext4 -F '${root}'" || log_fatal_msg "Cannot format root"
+            run --abort sh -ec "mkfs.ext4 -F '${root}'"
             ;;
     esac
     log_end_msg
 
     mountrootdev
-    
+
     log_begin_msg "Installing live image (${rescue_image})"
     run sh -ec "wget -qO- '${rescue_image}' | tar -C '${rootmnt}' -x -f -"
     run sync
@@ -63,10 +63,10 @@ mountroot() {
 	    fi
 	    ;;
 	*)
-	    log_fatal_msg "Invalid live_mode: ${live_mode}, choose 'install' or 'auto'"
+	    die "Invalid live_mode: ${live_mode}, choose 'install' or 'auto'"
 	    ;;
     esac
-    
+
     if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
 	attach_secondary_nbd_devices
     fi
