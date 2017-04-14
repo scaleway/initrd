@@ -231,6 +231,11 @@ log_begin_msg "Initializing '${boot}' root file system"
 mountroot
 log_end_msg
 
+# delete dhcp lease file if it exists
+if [ ! -f  ${rootmnt}/var/lib/dhcp/no-initrd-cleanup -a \
+       -f ${rootmnt}/var/lib/dhcp/dhclient.eth0.leases ]; then
+    rm -f ${rootmnt}/var/lib/dhcp/dhclient.eth0.leases
+fi
 
 # Print rootfs information
 (
