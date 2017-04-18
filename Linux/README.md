@@ -251,6 +251,11 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.4 (2017-04-18)
+
+* Update build system to Xenial thanks to @meyskens
+* Bug fixes
+
 ### 3.12.3 (2016-12-07)
 
 * armv7 add kexec support thanks @Firefishy
