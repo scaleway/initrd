@@ -9,7 +9,7 @@ VERBOSE=${INITRD_VERBOSE:-0}
 
 cat <<EOF
 
-Welcome to Scaleway' initrd            http://j.mp/scw-initrd-linux
+Welcome to Scaleway' initrd            https://j.mp/scw-initrd-linux
 
 ███████╗ ██████╗ █████╗ ██╗     ███████╗██╗    ██╗ █████╗ ██╗   ██╗
 ██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██║    ██║██╔══██╗╚██╗ ██╔╝
