@@ -266,7 +266,7 @@ tree-$(TARGET):
 dependencies.tar:	dependencies-$(TARGET).tar
 
 
-dependencies-$(TARGET).tar:	dependencies-$(TARGET)/Dockerfile dependencies-$(TARGET)/tmp/scw-update-server-state
+dependencies-$(TARGET).tar:	dependencies-$(TARGET)/Dockerfile dependencies-$(TARGET)/tmp/scw-update-server-state dependencies-scripts
 	test $(HOST_ARCH) = $(TARGET) || docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
 	docker build -t $(DOCKER_DEPENDENCIES) ./dependencies-$(TARGET)/
@@ -284,6 +284,19 @@ dependencies-$(TARGET)/tmp/scw-update-server-state: ../scw-boot-tools/scw-update
 	mkdir -p ../scw-boot-tools/$(TARGET)/usr/bin
 	mkdir -p $(shell dirname $@)
 	cp ../scw-boot-tools/$(TARGET)-scw-update-server-state $@
+	chmod +x $@
+
+
+dependencies-scripts: dependencies-$(TARGET)/tmp/ldd-rec.pl dependencies-$(TARGET)/tmp/export-assets
+
+
+dependencies-$(TARGET)/tmp/ldd-rec.pl: ../scripts/ldd-rec.pl
+	cp $^ $@
+	chmod +x $@
+
+
+dependencies-$(TARGET)/tmp/export-assets: ../scripts/export-assets
+	cp $^ $@
 	chmod +x $@
 
 
