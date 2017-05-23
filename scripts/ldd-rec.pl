@@ -30,8 +30,14 @@ while (@check_queue) {
             $lib = $1;
             $result{$lib} = 1;
             push @check_queue, $lib;
+	} elsif ($line eq"\tnot a dynamic executable") { # statically linked, interpreter
+	    $line = `file $to_check`;
+	    if ($line =~ / (\/\S+),/) {
+		$result{$1} = 1;
+	    } else {
+		next;
+	    }
         } elsif ($line eq "\tstatically linked" # no library
-                      or $line eq"\tnot a dynamic executable"
 #     or $line =~ /^.*:$/
                  or $line =~ /linux-gate.so.1/) {  # http://www.trilithium.com/johan/2005/08/linux-gate/
             next;
