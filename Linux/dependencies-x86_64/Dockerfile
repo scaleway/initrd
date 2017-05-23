@@ -33,12 +33,6 @@ RUN wget -O /tmp/busybox.deb                                                    
  && rm -f /tmp/busybox.deb
 
 
-# Fetch ldd-rec.pl
-RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl  \
-      -O /usr/local/bin/ldd-rec.pl                                      \
- && chmod +x /usr/local/bin/ldd-rec.pl
-
-
 # Fetch scw-metadata
 ENV IMAGE_TOOLS_REV=2086abd6fcd71fa215ce76cc244af90651c3c6ae
 RUN wget -O /usr/bin/scw-metadata                                                                                           \
@@ -60,7 +54,8 @@ CMD ["cat", "/dependencies.tar"]
 
 # Copy local assets
 COPY ./tmp/scw-update-server-state /usr/bin/scw-update-server-state
-COPY ./export-assets /usr/local/bin/
+COPY ./tmp/ldd-rec.pl /usr/local/bin/
+COPY ./tmp/export-assets /usr/local/bin/
 
 
 # Generate tarball

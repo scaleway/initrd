@@ -16,7 +16,7 @@ for bin in $@; do
 	fi
 
 	echo "$file"
-	    
+
 	tar -uf ${EXPORT} $(echo $file | sed -e 's/^\///')
 	tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
     done
