@@ -75,18 +75,39 @@ export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
 # Configure network
 log_begin_msg "Configuring network"
 
-INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
 
+INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
+IF_COUNT=0
 for INTERFACE in $INTERFACES; do
-    run ifconfig $INTERFACE up
+    run ip link set $INTERFACE up
+    run /usr/lib/klibc/bin/ipconfig -t 10 -c dhcp -d $INTERFACE
+    # ipconfig creates a default route for every interface it configures. We
+    # don't want that so we delete all default routes but the one assigned for
+    # the first interface.
+    if [ $IF_COUNT -gt 0 ]; then
+	run ip route del default dev $INTERFACE
+    fi
+    IF_COUNT=$(( $IF_COUNT + 1 ))
 done
-if [ "$(get_opt ip)" = "dhcp" -o "$(get_opt ip)" = ":::::eth0:" ]; then
-    for INTERFACE in $INTERFACES; do
-        run udhcpc -n -q -i $INTERFACE up
-    done
-fi
+
+
+# Update DNS
 if [ "$(get_opt nameserver)" != "" ]; then
     run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
+else
+    rm -f /etc/resolv.conf
+    for dns in $( get_unique "^IPV4DNS.='\(.*\)'" /var/run/net-eth* ); do
+	if [ "$dns" != "0.0.0.0" ]; then
+	    echo "nameserver $dns" >> /etc/resolv.conf
+	fi
+    done
+    for domain in $( get_unique "^DNSDOMAIN='\(.*\)'" /var/run/net-eth* ); do
+	echo "domain $domain" >> /etc/resolv.conf
+	echo "search $domain" >> /etc/resolv.conf
+    done
+    for domain in $( get_unique "^DOMAINSEARCH='\(.*\)'" /var/run/net-eth* ); do
+	echo "search $domain" >> /etc/resolv.conf
+    done
 fi
 log_end_msg
 
