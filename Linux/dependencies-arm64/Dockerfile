@@ -12,7 +12,6 @@ RUN apt-get update          \
    ntpdate                  \
    parted                   \
    btrfs-tools              \
-   udhcpc                   \
    wget                     \
  && apt-get clean
 

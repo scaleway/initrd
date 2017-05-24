@@ -356,3 +356,10 @@ pgrep() {
     seek="$1"
     ps | grep "$seek" | grep -v "grep" | awk '{print $1}'
 }
+
+# Return all unique values for $what from one or multiple files
+get_unique() {
+    what=$1
+    shift
+    sed -ne "s/$what/\1/p" $@ | sort | uniq
+}
