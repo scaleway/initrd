@@ -251,6 +251,11 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.5 (2017-06-09)
+
+* Use ipconfig instead of udhcpc for network interfaces configuration
+* Bug fixes
+
 ### 3.12.4 (2017-04-18)
 
 * Update build system to Xenial thanks to @meyskens
