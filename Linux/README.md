@@ -251,6 +251,11 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.6 (2017-06-15)
+
+* Add file `/var/run/scaleway` for compatibility with *cloud-init*
+
+
 ### 3.12.5 (2017-06-09)
 
 * Use ipconfig instead of udhcpc for network interfaces configuration
