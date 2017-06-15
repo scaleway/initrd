@@ -321,6 +321,11 @@ else
 fi
 
 
+# Create file /var/run/scaleway to comply with cloud-init
+IDENTITY_FILE=/var/run/scaleway
+[ ! -f "$IDENTITY_FILE" ] && touch $IDENTITY_FILE
+
+
 # Forward network configuration files
 log_begin_msg "Creating default configuration files on rootfs..."
 run mkdir -p "${rootmnt}/etc"
