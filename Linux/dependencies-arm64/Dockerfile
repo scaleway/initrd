@@ -24,14 +24,6 @@ RUN wget -O /usr/bin/scw-metadata                                               
  && chmod +x /usr/bin/scw-metadata
 
 
-# Fetch static xnbd-client
-RUN mkdir -p /usr/sbin                                                                                                 \
- && wget -O /usr/sbin/xnbd-client                                                                                      \
-      https://github.com/multiarch/build-xnbd-client-static/releases/download/v1.0/armv7l-xnbd-client-static-stripped  \
- && chmod +x /usr/sbin/xnbd-client                                                                                     \
- && ln -s xnbd-client /usr/sbin/@xnbd-client
-
-
 # Image metadata
 CMD ["cat", "/dependencies.tar"]
 
