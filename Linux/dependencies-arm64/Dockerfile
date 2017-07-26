@@ -52,13 +52,11 @@ COPY ./tmp/export-assets /usr/local/bin/
 RUN export-assets \
       /bin/busybox \
       /bin/mkfs.btrfs \
-      /lib/arm-linux-gnueabihf/libnss_dns.so.2 \
-      /lib/arm-linux-gnueabihf/libnss_files.so.2 \
-      /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
-      /lib/x86_64-linux-gnu/libc.so.6 \
-      /lib/x86_64-linux-gnu/libnss_dns.so.2 \
-      /lib/x86_64-linux-gnu/libnss_files.so.2 \
-      /lib/x86_64-linux-gnu/libresolv.so.2 \
+      /lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 \
+      /lib/aarch64-linux-gnu/libc.so.6 \
+      /lib/aarch64-linux-gnu/libnss_dns.so.2 \
+      /lib/aarch64-linux-gnu/libnss_files.so.2 \
+      /lib/aarch64-linux-gnu/libresolv.so.2 \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
       /sbin/parted \
