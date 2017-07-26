@@ -54,7 +54,7 @@ die() {
         ewarn "Rescue Shell (Busybox's /bin/sh)"
         ewarn "To continue, press 'control-D'"
         ewarn "To reboot, go to https://cloud.scaleway.com/"
-        exec /bin/sh
+        exec setsid cttyhack /bin/sh
     else
 	reboot -f
     fi
