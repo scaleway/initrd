@@ -14,14 +14,8 @@ RUN apt-get update          \
    parted                   \
    btrfs-tools              \
    wget                     \
+   busybox-static           \
  && apt-get clean
-
-
-# Install busybox-static
-RUN wget -O /tmp/busybox.deb                                                                        \
-      http://ftp.fr.debian.org/debian/pool/main/b/busybox/busybox-static_1.22.0-9+deb8u1_armhf.deb  \
- && dpkg -i /tmp/busybox.deb                                                                        \
- && rm -f /tmp/busybox.deb
 
 
 # Fetch scw-metadata
