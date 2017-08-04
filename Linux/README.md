@@ -251,6 +251,14 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.7 (2017-08-04)
+
+* Bump Busybox version
+* use `cttyhack` for pre/post shells in order to have terminal control
+* Libraries fixes on arm/arm64
+* Swap link to https thanks to @leonelwilliams
+
+
 ### 3.12.6 (2017-06-15)
 
 * Add file `/var/run/scaleway` for compatibility with *cloud-init*
