@@ -251,6 +251,11 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.12.8 (2017-08-16)
+
+* Prevent server gc during live install
+
+
 ### 3.12.7 (2017-08-04)
 
 * Bump Busybox version
