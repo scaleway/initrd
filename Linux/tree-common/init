@@ -327,25 +327,28 @@ IDENTITY_FILE=/var/run/scaleway
 
 
 # Forward network configuration files
-log_begin_msg "Creating default configuration files on rootfs..."
-run mkdir -p "${rootmnt}/etc"
-run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
-[ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
-if [ ! -f ${rootmnt}/etc/hosts.bak ]; then
-    cp ${rootmnt}/etc/hosts ${rootmnt}/etc/hosts.bak
+if [ "$(get_any DONT_FORWARD_NET_CONFIG)" != "1" ]; then
+    log_begin_msg "Creating default configuration files on rootfs..."
+    run mkdir -p "${rootmnt}/etc"
+    run touch ${rootmnt}/etc/hostname ${rootmnt}/etc/resolv.conf
+    [ -s ${rootmnt}/etc/hostname ] || run sh -ec "echo ${HOSTNAME} > ${rootmnt}/etc/hostname"
+    if [ ! -f ${rootmnt}/etc/hosts.bak ]; then
+        cp ${rootmnt}/etc/hosts ${rootmnt}/etc/hosts.bak
 
-    FQDN=$(echo $HOSTNAME | cut -d'.' -f1)
-    TEMPLATE="/etc/hosts.tmpl"
-    cat $TEMPLATE | sed 's/HOSTNAME/'$HOSTNAME'/' | sed 's/FQDN/'$FQDN'/' > ${rootmnt}/etc/hosts
+        FQDN=$(echo $HOSTNAME | cut -d'.' -f1)
+        TEMPLATE="/etc/hosts.tmpl"
+        cat $TEMPLATE | sed 's/HOSTNAME/'$HOSTNAME'/' | sed 's/FQDN/'$FQDN'/' > ${rootmnt}/etc/hosts
+    fi
+
+    grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
+    log_end_msg
 fi
 
-grep $(grep ^nameserver /etc/resolv.conf | head -1 | awk '{print $2}') ${rootmnt}/etc/resolv.conf >/dev/null || run sh -ec "cat /etc/resolv.conf >> ${rootmnt}/etc/resolv.conf"
-log_end_msg
 
-
-# Generate root password if empty or if reset is explicitely required by the user
+# Generate root password if not disabled, when it's empty or if reset is explicitely required by the user
 grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
-if [[ "$?" -eq 0 || "$(get_any RESET_PASSWORD)" == "1" || -f "${rootmnt}/.scw-reset-password-on-next-boot" ]]; then
+root_pw_empty=$?
+if [ "$(get_any DONT_GEN_ROOT_PASSWD)" != "1" ] && ([ "$root_pw_empty" -eq 0 ] || [ "$(get_any RESET_PASSWORD)" == "1" ] || [ -f "${rootmnt}/.scw-reset-password-on-next-boot" ]); then
     log_begin_msg "Changing root password"
     PASSWORD=$(gen_passwd)
     # update /etc/shadow
