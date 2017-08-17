@@ -251,6 +251,11 @@ Here are the availble *initrd variables*:
 
 ## Changelog
 
+### 3.13.0 (2017-08-17)
+
+* Add flags to skip root password generation and network config forwarding
+
+
 ### 3.12.8 (2017-08-16)
 
 * Prevent server gc during live install
