@@ -2,10 +2,13 @@
 
 VERBOSE=${INITRD_VERBOSE:-0}
 
+# Enure we have a decent $PATH
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
 # Loading functions
 . /functions
 
-/bin/busybox sleep .5
+busybox sleep .5
 
 cat <<EOF
 
@@ -26,7 +29,7 @@ echo
 
 # Create all the symlinks to /bin/busybox
 log_begin_msg "Installing busybox"
-/bin/busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
+busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
 /bin/busybox --install -s
 log_end_msg
 

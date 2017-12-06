@@ -239,7 +239,6 @@ detach_nbd_devices() {
 
 
 # Attach NBD device
-NBD_CLIENT=/usr/sbin/@xnbd-client
 attach_nbd_device() {
     local device="$1"  # ie: 0
     local retries=900
@@ -256,21 +255,16 @@ attach_nbd_device() {
 
 
     # Checking if device is already attached
-    run $NBD_CLIENT -c /dev/nbd${device} >/dev/null 2>/dev/null
+    run @xnbd-client -c /dev/nbd${device} >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then
         return
     fi
 
     # Connecting the device
-    PATH="$(dirname $NBD_CLIENT):$PATH" \
-	run $(basename $NBD_CLIENT) \
-		--blocksize 4096 \
-		--retry=$retries \
-		${nbd_host} ${nbd_port} \
-		/dev/nbd${device}
+    run @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
 
     # Checking device connection
-    local nbd_pid=$($NBD_CLIENT --check /dev/nbd${device} 2>/dev/null)
+    local nbd_pid=$(@xnbd-client --check /dev/nbd${device} 2>/dev/null)
     [ $? -ne 0 ] && die "Device connection failed."
 
     run sh -ec "echo -1000 > /proc/${nbd_pid}/oom_score_adj"
