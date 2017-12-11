@@ -277,6 +277,9 @@ attach_nbd_device() {
         run sh -ec "echo deadline > /sys/block/nbd${device}/queue/scheduler"
     fi
 
+    # Refreshing the nbd's partitions
+    partx -u /dev/nbd${device}
+
     log_end_msg
 }
 

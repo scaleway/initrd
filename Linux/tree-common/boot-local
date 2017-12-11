@@ -3,15 +3,64 @@
 
 mountroot() {
     if [ "$root" = "/dev/nbd0" ]; then
-	attach_nbd_device 0
-	mount_nbd 0 "${rootmnt}"
-	if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
-	    attach_secondary_nbd_devices
-	fi
-	show_nbd_devices
-    else
-	log_begin_msg "Mounting local disk: ${root}"
-	emount "${root}" "${rootmnt}"
-	log_end_msg
+        attach_nbd_device 0
+        if [ "$(get_any SKIP_OPTIONAL_NBD_DEVICES)" != "1" ]; then
+            attach_secondary_nbd_devices
+        fi
+        show_nbd_devices
     fi
+	devinfo=$(sfdisk -d $root)
+	if [ $? -eq 0 ]; then
+		# disk has part table
+		bootdev=""
+		devinfo=$(echo "$devinfo" | tr -d ' ')
+		einfo "Found partitions on $root"
+		header=true
+		while read line; do
+			if [ "$line" = "" ]; then
+				header=false
+				continue
+			elif $header; then
+				IFS=':' read key value << EOF
+$line
+EOF
+				if [ "$key" = "label" ]; then
+					if [ "$value" = "gpt" ]; then
+						type="0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+					elif [ "$value" = "mbr" ]; then
+						type="83"
+					else
+						# Unhandled boot partition table type, sorry!
+						die "Unhandled partition label type $value !"
+					fi
+				else
+					continue
+				fi
+			else
+				IFS=':' read part params << EOF
+$line
+EOF
+				IFS=','
+				for param in $params; do
+					IFS='=' read key value << EOF
+$param
+EOF
+					if [ "$key" = "type" ] && [ "$value" = "$type" ]; then
+						einfo "Using Linux partition $part for boot"
+						bootdev=$part
+						break
+					fi
+				done
+			fi
+			[ -n "$bootdev" ] && break
+		done << EOF
+$devinfo
+EOF
+	else
+		# disk has no part table
+		bootdev=$root
+	fi
+    log_begin_msg "Mounting ${bootdev} to /"
+    emount "${bootdev}" "${rootmnt}"
+    log_end_msg
 }
