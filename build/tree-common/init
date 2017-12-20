@@ -1,0 +1,286 @@
+#!/bin/sh
+
+VERBOSE=${INITRD_VERBOSE:-0}
+
+# Ensure we have a decent $PATH
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+# Loading functions
+. /functions
+
+busybox sleep .5
+
+cat <<EOF
+
+Welcome to Scaleway' build system
+
+███████╗ ██████╗ █████╗ ██╗     ███████╗██╗    ██╗ █████╗ ██╗   ██╗
+██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██║    ██║██╔══██╗╚██╗ ██╔╝
+███████╗██║     ███████║██║     █████╗  ██║ █╗ ██║███████║ ╚████╔╝
+╚════██║██║     ██╔══██║██║     ██╔══╝  ██║███╗██║██╔══██║  ╚██╔╝
+███████║╚██████╗██║  ██║███████╗███████╗╚███╔███╔╝██║  ██║   ██║
+╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝
+
+EOF
+
+esuccess "Initrd build: INITRD_BUILD_COMMIT - INITRD_BUILD_DATE"
+esuccess "Kernel version: $(busybox uname -a)"
+echo
+
+
+# Create all the symlinks to /bin/busybox
+log_begin_msg "Installing busybox"
+busybox mkdir -p /bin /sbin /etc /proc /sys /newroot /usr/bin /usr/sbin
+/bin/busybox --install -s
+log_end_msg
+
+
+# Mount things needed by this script
+log_begin_msg "Mounting pseudo-filesystems..."
+[ -d /dev ] || run mkdir -m 0755 /dev
+emount -t devtmpfs -o mode=0755 udev /dev
+run mkdir /dev/pts
+emount -t devpts -o noexec,nosuid,gid=5,mode=0620 devpts /dev/pts
+
+[ -d /run ] || run mkdir -pm 0755 /run
+emount -t tmpfs -o "mode=0755,nodev,nosuid,size=10%" tmpfs /run
+[ -d /var ] || run mkdir -pm 0755 /var
+run ln -s /run /var/run
+
+[ -d /tmp ] || run mkdir -pm 0755 /tmp
+emount -t tmpfs -o "mode=0755,nodev,nosuid,size=50%" tmpfs /tmp
+
+[ -d /sys ] || run mkdir /sys
+emount -t sysfs -o nodev,noexec,nosuid sysfs /sys
+
+[ -d /proc ] || run mkdir /proc
+emount -t proc -o nodev,noexec,nosuid proc /proc
+log_end_msg
+
+
+echo
+log_begin_msg "Retrieving system info"
+esuccess "Kernel cmdline:    $(cat /proc/cmdline)"
+esuccess "Physical memory:   $(grep MemTotal /proc/meminfo | awk '{ print $2 " " $3}')"
+esuccess "CPU model:         $(echo -ne $(grep ^model\ name /proc/cpuinfo  | cut -d: -f2 | uniq))"
+esuccess "CPU cores:         $(grep -c ^processor /proc/cpuinfo)"
+log_end_msg
+echo
+
+
+# Initial /proc/cmdline parsing
+export METADATA_IP=$(get_opt METADATA_IP 169.254.42.42)
+
+
+# Configure network
+log_begin_msg "Configuring network"
+
+
+INTERFACES=$(ifconfig -a | grep -o '^eth[0-9]')
+IF_COUNT=0
+for INTERFACE in $INTERFACES; do
+    run ip link set $INTERFACE up
+    run /usr/lib/klibc/bin/ipconfig -t 10 -c dhcp -d $INTERFACE
+    # ipconfig creates a default route for every interface it configures. We
+    # don't want that so we delete all default routes but the one assigned for
+    # the first interface.
+    if [ $IF_COUNT -gt 0 ]; then
+	run ip route del default dev $INTERFACE
+    fi
+    IF_COUNT=$(( $IF_COUNT + 1 ))
+done
+
+
+# Update DNS
+if [ "$(get_opt nameserver)" != "" ]; then
+    run sh -ec "echo nameserver '$(get_opt nameserver)' > /etc/resolv.conf"
+else
+    rm -f /etc/resolv.conf
+    for dns in $( get_unique "^IPV4DNS.='\(.*\)'" /var/run/net-eth* ); do
+	if [ "$dns" != "0.0.0.0" ]; then
+	    echo "nameserver $dns" >> /etc/resolv.conf
+	fi
+    done
+    for domain in $( get_unique "^DNSDOMAIN='\(.*\)'" /var/run/net-eth* ); do
+	echo "domain $domain" >> /etc/resolv.conf
+	echo "search $domain" >> /etc/resolv.conf
+    done
+    for domain in $( get_unique "^DOMAINSEARCH='\(.*\)'" /var/run/net-eth* ); do
+	echo "search $domain" >> /etc/resolv.conf
+    done
+fi
+log_end_msg
+
+# Configure ipv6
+if [ "$(get_any NO_IPV6)" != "1" ]; then
+	IPV6=$(scw-metadata --cached IPV6)
+
+	if [ "$IPV6" != "" ]; then
+		log_begin_msg "Configuring ipv6"
+
+		IP=$(scw-metadata --cached IPV6_ADDRESS)
+		GW=$(scw-metadata --cached IPV6_GATEWAY)
+		MASK=$(scw-metadata --cached IPV6_NETMASK)
+		run ip -6 addr add dev eth0 $IP/$MASK
+		run ip -6 route add default via $GW
+		log_end_msg
+	fi
+fi
+
+
+signal_state kernel-started
+
+
+# Display metadata infos
+COMMERCIAL_TYPE=unknown
+HOSTNAME=unknown-hostname
+PUBLIC_IP_ADDRESS=$(ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+RUN_ON_SCALEWAY=0
+SERVER_ID=unknown
+if [ "$(get_opt NO_METADATA)" != "1" ]; then
+    COMMERCIAL_TYPE=$(scw-metadata --cached COMMERCIAL_TYPE)
+    HOSTNAME=$(scw-metadata --cached HOSTNAME)
+    PUBLIC_IP_ADDRESS=$(scw-metadata --cached PUBLIC_IP_ADDRESS)
+    RUN_ON_SCALEWAY=1
+    SERVER_ID=$(scw-metadata --cached ID)
+    echo
+    log_begin_msg "Retrieving metadata info"
+    esuccess "Server ID:        ${SERVER_ID}"
+    esuccess "Private IP:       $(scw-metadata --cached PRIVATE_IP)"
+    esuccess "Public IP:        ${PUBLIC_IP_ADDRESS}"
+    esuccess "Hostname:         ${HOSTNAME}"
+    esuccess "Commercial type:  ${COMMERCIAL_TYPE}"
+    esuccess "Platform:         $(scw-metadata --cached LOCATION_PLATFORM_ID)"
+    # FIXME: display full location (depends on the commercial type)
+    esuccess "Organization:     $(scw-metadata --cached ORGANIZATION | sed 's/^\(.\{8\}\).*\(.\{8\}\)$/\1-xxxx-xxxx-xxxx-xxxx\2/')"
+    esuccess "Timezone:         $(scw-metadata --cached TIMEZONE)"
+    esuccess "Server (user) tags:"
+    for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
+	if [ "${idx}" -eq "$(scw-metadata --cached TAGS)" ]; then break; fi
+	esuccess $(printf "  - %s\n" "$(scw-metadata --cached TAGS_${idx})")
+    done
+    log_end_msg
+    echo
+fi
+
+
+# Configure GPIOs
+if [ "${COMMERCIAL_TYPE}" = "C1" ]; then
+    if [ "$(get_any SKIP_GPIO_SETUP)" != "1" ]; then
+	log_begin_msg "Configuring GPIOs"
+	setup_gpios
+	log_end_msg
+    fi
+fi
+
+# Signal to the console that the build is started
+signal_state booted
+
+# Verbose mode
+log_begin_msg "Checking user input for debug/verbose mode"
+if [ "$(get_any INITRD_VERBOSE)" = "1" ]; then
+    VERBOSE=1
+    log_success_msg "Verbose mode enabled"
+fi
+if [ "$(get_any INITRD_DEBUG)" = "1" ]; then
+    log_success_msg "Debug mode enabled"
+    set -x
+    run env
+fi
+log_end_msg
+
+
+# Source build method
+build_method=$(get_any build_method)
+if ! [ -r /build-${build_method} ]; then
+    die "Invalid build method $build_method"
+fi
+. /build-${build_method}
+
+
+# Execute pre-build actions
+pre_build
+
+
+# Drop debug shell
+log_begin_msg "Checking user input for debug shell"
+if [ "$(get_any INITRD_PRE_SHELL)" = "1" ]; then
+    # drop the shell
+    log_success_msg "Dropping a debug shell"
+    log_end_msg
+    echo "**DEBUG SHELL** (requested from the user)"
+    echo "To continue the initrd process, just type C^d"
+    setsid cttyhack /bin/sh
+else
+    log_end_msg
+fi
+
+
+# Adjust time
+if [ "$(get_any NO_NTPDATE)" != "1" ]; then
+    log_begin_msg "Adjusting time (ntp)"
+    # Clock is stepped after 3 NTP probes to each server, each query timeout in 1 second
+    # /etc/ntpsrv was improved with any NTP server(s) provided thru DHCP (see etc/udhcpc/default.script)
+    run ntpdate -b -p 3 -t 1 $(cat /etc/ntpsrv)
+    log_end_msg
+fi
+
+
+# Execute build actions
+build
+
+# Drop debug shell
+log_begin_msg "Checking metadata for debug shell"
+if [ "$(get_any POST_BUILD_SHELL)" = "1" ]; then
+    log_success_msg "Starting a post build shell"
+    log_end_msg
+    echo "**POST BUILD SHELL** (requested from the TAGS metadata of the server)"
+    echo "To continue the build process, just type C^d"
+    setsid cttyhack /bin/sh
+else
+    log_end_msg
+fi
+
+
+# Drop debug shell
+log_begin_msg "Checking metadata for debug sshd (dropbear)"
+if [ "$(get_any POST_BUILD_SSH)" = "1" ]; then
+    log_success_msg "Starting a debug sshd"
+    start_sshd
+    log_end_msg
+
+    ewarn ""
+    ewarn "**POST BUILD SSH** (requested from the TAGS metadata of the server)"
+    ewarn ""
+    ewarn "To continue the initrd process:"
+    ewarn " -- You must run 'continue-boot' with a remote access"
+    ewarn ""
+    if [ "${RUN_ON_SCALEWAY}" = "1" ]; then
+	ewarn "You can connect to your server with 'scw' or 'ssh'"
+	ewarn " -- scw exec ${SERVER_ID}"
+	ewarn " -- ssh root@${PUBLIC_IP_ADDRESS}"
+    else
+	ewarn "You can connect to your server with 'ssh'"
+	ewarn " -- ssh root@${PUBLIC_IP_ADDRESS}"
+    fi
+    ewarn ""
+
+    # FIXME: display common usages (luks, lvm, etc) in a README.txt file
+    run mkfifo /continue
+    run cat /continue
+else
+    log_end_msg
+fi
+
+
+# Ensure sshd is killed if running
+if [ "$(pgrep dropbear)" != "" ]; then
+    run killall dropbear
+fi
+
+
+# Execute post-build actions
+post_build
+
+halt -f
+/bin/sh

@@ -1,0 +1,15 @@
+initrd:
+  image: moul/qemu-user:latest
+  links:
+  - metadata
+  volumes:
+  - ..:/boot
+  #command: /bin/bash -xc '/usr/bin/qemu-system-arm -net nic -net user -M versatilepb -cpu cortex-a9 -m 256 -no-reboot -append "console=ttyAMA0 earlyprink=ttyAMA0 ip=dhcp root=/dev/nbd0 boot=local INITRD_PRE_SHELL=1 METADATA_IP=$METADATA_PORT_80_TCP_ADDR" -kernel /boot/vmlinuz -initrd /boot/initrd.gz -nographic -monitor null'
+  command: /bin/bash
+
+metadata:
+  build: metadata_mock
+  volumes:
+  - metadata_mock:/usr/src/app/
+  ports:
+  - 80
