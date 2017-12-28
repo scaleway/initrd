@@ -152,8 +152,8 @@ has_opt() {
 get_metadata() {
     for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
 	tag=$(scw-metadata --cached TAGS_$idx)
-	if [ $(echo "$tag" | grep "^$1=") ]; then
-	    echo $tag | sed 's/^[^=]*=//' | resolve_hostnames
+	if [ "$(echo "$tag" | grep "^$1=")" ]; then
+	    echo "$tag" | sed 's/^[^=]*=//' | resolve_hostnames
 	    return
 	fi
     done
