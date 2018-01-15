@@ -1,0 +1,60 @@
+einfo "Building from rootfs"
+
+rootfs=/tmp/rootfs.tar
+volume=$(get_any volume "/dev/vda")
+rootfs_url=$(get_any rootfs_url)
+[ -z "$rootfs_url" ] && die "No url to get the rootfs from provided"
+
+pre_build() {
+    einfo "Retrieving rootfs"
+    run --abort wget -O $rootfs $rootfs_url
+}
+
+build() {
+    einfo "Creating volume partitions"
+
+    efi_part_uuid=$(uuidgen)
+    root_part_uuid=$(uuidgen)
+    run --abort sgdisk $volume -Z \
+        -n 15:0:+100M -t 15:ef00 -c 15:efisystem -u 15:$efi_part_uuid \
+        -n 1:0:0 -t 1:8300 -c 1:root -u 1:$root_part_uuid -p
+
+    partx -u $volume
+
+    root_device=$(sfdisk -d $volume | grep -i "$root_part_uuid" | cut -d':' -f1)
+    efi_device=$(sfdisk -d $volume | grep -i "$efi_part_uuid" | cut -d':' -f1)
+
+    einfo "Creating filesystems"
+
+    mkfs.ext4 -L root $root_device
+    mkfs.fat -F 32 $efi_device
+
+    einfo "Mounting partitions"
+
+    root_mountpoint=$(mktemp -d)
+    efi_mountpoint=$root_mountpoint/boot
+    mount $root_device $root_mountpoint
+    mkdir $efi_mountpoint
+    mount $efi_device $efi_mountpoint
+    mkdir -p $efi_mountpoint/EFI/BOOT
+    mkdir $efi_mountpoint/grub
+
+    einfo "Installing rootfs to partitions"
+    /bin/tar -C $root_mountpoint -xf $rootfs
+
+    einfo "Chrooting to bootstrap bootloader"
+    mount -t proc proc $root_mountpoint/proc/
+    mount -t sysfs sys $root_mountpoint/sys/
+    mount -o bind /dev $root_mountpoint/dev/
+    grub_install_path=/$(/usr/bin/find $root_mountpoint -name "grub-install" -printf "%P\n" | head -1)
+    grub_mkconfig_path=/$(/usr/bin/find $root_mountpoint -name "grub-mkconfig" -printf "%P\n" | head -1)
+    chroot $root_mountpoint sh -c "$grub_install_path --target=$(uname -m)-efi --bootloader-id=grub --efi-directory=/boot && $grub_mkconfig_path -o /boot/grub/grub.cfg"
+}
+
+post_build() {
+    devlayout=$(sgdisk -p $volume)
+    if [ $? -eq 0 ]; then
+        einfo "Final volume layout:"
+        echo "$devlayout"
+    fi
+}

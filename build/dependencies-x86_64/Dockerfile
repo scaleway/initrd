@@ -22,9 +22,11 @@ RUN apt-get update                        \
    ntpdate                  \
    parted                   \
    btrfs-tools              \
+   dosfstools               \
    wget                     \
    gdisk                    \
    busybox-static           \
+   findutils                \
  && apt-get clean
 
 
@@ -57,6 +59,7 @@ COPY ./tmp/export-assets /usr/local/bin/
 RUN export-assets \
       /bin/busybox \
       /bin/mkfs.btrfs \
+      /bin/tar \
       /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
       /lib/x86_64-linux-gnu/libc.so.6 \
       /lib/x86_64-linux-gnu/libnss_dns.so.2 \
@@ -65,14 +68,19 @@ RUN export-assets \
       /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
+      /sbin/mkfs.fat \
       /sbin/parted \
       /sbin/sfdisk \
       /sbin/sgdisk \
       /usr/bin/dropbearkey \
+      /usr/bin/find \
       /usr/bin/qemu-img \
       /usr/bin/scw-metadata \
+      /usr/bin/partx \
+      /usr/bin/uuidgen \
       /usr/lib/klibc/bin/ipconfig \
       /usr/sbin/@xnbd-client \
+      /usr/sbin/chroot \
       /usr/sbin/dropbear \
       /usr/sbin/ntpdate \
       /usr/sbin/xnbd-client \
