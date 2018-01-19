@@ -47,9 +47,6 @@ emount -t tmpfs -o "mode=0755,nodev,nosuid,size=10%" tmpfs /run
 [ -d /var ] || run mkdir -pm 0755 /var
 run ln -s /run /var/run
 
-[ -d /tmp ] || run mkdir -pm 0755 /tmp
-emount -t tmpfs -o "mode=0755,nodev,nosuid,size=50%" tmpfs /tmp
-
 [ -d /sys ] || run mkdir /sys
 emount -t sysfs -o nodev,noexec,nosuid sysfs /sys
 
@@ -172,6 +169,22 @@ if [ "${COMMERCIAL_TYPE}" = "C1" ]; then
 	log_end_msg
     fi
 fi
+
+
+# Mount a second volume on /tmp if available, else tmpfs
+if (scw-metadata --cached VOLUMES_0_EXPORT_URI | grep -q '/dev/nbd'); then
+    attach_nbd_device 0
+    attach_secondary_nbd_devices
+fi
+[ -d /tmp ] || run mkdir -pm 0755 /tmp
+volume_path=$(scw-metadata --cached VOLUMES_1_EXPORT_URI | sed 's-^device:/--')
+if [ -n "$volume_path" ]; then
+    mkfs.ext4 $volume_path
+    emount $volume_path /tmp
+else
+    emount -t tmpfs -o "mode=0755,nodev,nosuid,size=50%" tmpfs /tmp
+fi
+
 
 # Signal to the console that the build is started
 signal_state booted
