@@ -295,5 +295,11 @@ fi
 # Execute post-build actions
 post_build
 
+# Wait to be stopped by an external command
+nc -l -p 22
+while true; do
+    sleep 5
+done
+
 halt -f
 /bin/sh
