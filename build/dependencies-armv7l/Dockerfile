@@ -51,12 +51,14 @@ COPY ./tmp/export-assets /usr/local/bin/
 RUN export-assets \
       /bin/busybox \
       /bin/mkfs.btrfs \
+      /bin/sync \
       /bin/tar \
       /lib/arm-linux-gnueabihf/ld-linux-armhf.so.3 \
       /lib/arm-linux-gnueabihf/libc.so.6 \
       /lib/arm-linux-gnueabihf/libnss_dns.so.2 \
       /lib/arm-linux-gnueabihf/libnss_files.so.2 \
       /lib/arm-linux-gnueabihf/libresolv.so.2 \
+      /bin/blkid \
       /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \

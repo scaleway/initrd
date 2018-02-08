@@ -59,12 +59,14 @@ COPY ./tmp/export-assets /usr/local/bin/
 RUN export-assets \
       /bin/busybox \
       /bin/mkfs.btrfs \
+      /bin/sync \
       /bin/tar \
       /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
       /lib/x86_64-linux-gnu/libc.so.6 \
       /lib/x86_64-linux-gnu/libnss_dns.so.2 \
       /lib/x86_64-linux-gnu/libnss_files.so.2 \
       /lib/x86_64-linux-gnu/libresolv.so.2 \
+      /sbin/blkid \
       /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
