@@ -54,7 +54,7 @@ PARTUUID=$efi_part_uuid /boot vfat rw,relatime,errors=remount-ro 0 2
     grub_install_path=$(chroot $root_mountpoint /bin/sh -c "which grub-install")
     grub_mkconfig_path=$(chroot $root_mountpoint /bin/sh -c "which grub-mkconfig")
     if [ -n "$grub_install_path" ] && [ -n "$grub_mkconfig_path" ]; then
-        chroot $root_mountpoint /bin/sh -c "grub-install --target=$(uname -m)-efi --bootloader-id=grub --efi-directory=/boot && grub-mkconfig -o /boot/grub/grub.cfg"
+        chroot $root_mountpoint /bin/sh -c "grub-install --target=$(uname -m)-efi --bootloader-id=grub --removable --efi-directory=/boot && grub-mkconfig -o /boot/grub/grub.cfg"
     else
         eerror "Missing grub-install or grub-mkconfig binaries in image, did you mean to build unpartitioned ?"
     fi
