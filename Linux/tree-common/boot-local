@@ -60,7 +60,7 @@ EOF
 		# disk has no part table
 		bootdev=$root
 	fi
-    log_begin_msg "Mounting ${bootdev} to /"
+    log_begin_msg "Mounting ${bootdev} as root filesystem"
     emount "${bootdev}" "${rootmnt}"
     log_end_msg
 }
