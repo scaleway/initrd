@@ -295,8 +295,10 @@ fi
 # Execute post-build actions
 post_build
 
+
 # Wait to be stopped by an external command
-nc -l -p 22
+listen_port=$(get_any signal_build_done_port 22)
+nc -l -p $listen_port
 while true; do
     sleep 5
 done
