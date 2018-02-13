@@ -6,7 +6,7 @@ VERBOSE=${INITRD_VERBOSE:-0}
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
 # Loading functions
-. /functions
+. /functions.sh
 
 busybox sleep .5
 
@@ -205,10 +205,10 @@ log_end_msg
 
 # Source build method
 build_method=$(get_any build_method)
-if ! [ -r /build-${build_method} ]; then
+if ! [ -r /build-${build_method}.sh ]; then
     die "Invalid build method $build_method"
 fi
-. /build-${build_method}
+. /build-${build_method}.sh
 
 
 # Execute pre-build actions

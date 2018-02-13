@@ -83,7 +83,7 @@ uInitrd-Linux-$(TARGET)-$(TAG): uInitrd-Linux-$(TARGET)
 
 
 travis_check:
-	bash -n tree-common/init tree-common/shutdown tree-common/functions tree-common/boot-*
+	bash -n tree-common/init tree-common/shutdown tree-common/functions.sh tree-common/boot-*
 
 
 travis_build:
