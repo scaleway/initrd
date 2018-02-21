@@ -59,6 +59,7 @@ RUN export-assets \
       /sbin/sfdisk \
       /sbin/sgdisk \
       /usr/bin/dropbearkey \
+      /usr/bin/file \
       /usr/bin/find \
       /usr/bin/qemu-img \
       /usr/bin/scw-metadata \
