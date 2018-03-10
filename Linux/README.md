@@ -247,7 +247,7 @@ Here are the availble *initrd variables*:
 - **LOCAL**: attach NBD devices, boot on /dev/nbd0
 - **RESCUE**: download and unarchive rootfs using http (non-persistent)
 - **NFS**: boot on a NFS rootfs
-- **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
+- **LIVE**: mix between **LOCAL** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
 
 ## Changelog
 
