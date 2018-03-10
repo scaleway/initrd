@@ -225,7 +225,7 @@ Using the servers tags, we can change the behaviour of the initrd without changi
 
 Here are the availble *initrd variables*:
 
-- **boot={nbd|rescue|nfs|live}**: change the [boot mode](#Boot-modes)
+- **boot={local|rescue|nfs|live}**: change the [boot mode](#boot-modes)
 - **INITRD_DEBUG=1**: enable initrd debug (apply a global `set -x`)
 - **INITRD_VERBOSE=1**: enable initrd verbose
 - **INITRD_PRE_SHELL=1**: drop a shell just after starting the initrd
@@ -244,7 +244,7 @@ Here are the availble *initrd variables*:
 
 ## Boot-modes
 
-- **NBD**: attach NBD devices, boot on /dev/nbd0
+- **LOCAL**: attach NBD devices, boot on /dev/nbd0
 - **RESCUE**: download and unarchive rootfs using http (non-persistent)
 - **NFS**: boot on a NFS rootfs
 - **LIVE**: mix between **NBD** and **RESCUE**, download a rootfs using http and write it to /dev/nbd0
