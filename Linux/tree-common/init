@@ -324,9 +324,13 @@ else
 fi
 
 
-# Create file /var/run/scaleway to comply with cloud-init
-IDENTITY_FILE=/var/run/scaleway
-[ ! -f "$IDENTITY_FILE" ] && touch $IDENTITY_FILE
+# Create directory /var/run/scaleway
+# This allows passing flags and parameters
+# It also signals cloud-init that it is run on Scaleway
+SCALEWAY_RUN_DIR=/var/run/scaleway
+[ -d "$SCALEWAY_RUN_DIR" ] || mkdir -p $SCALEWAY_RUN_DIR
+# This flag file signals that the node was started through a remote boot
+touch $SCALEWAY_RUN_DIR/remote-boot
 
 
 # Forward network configuration files
