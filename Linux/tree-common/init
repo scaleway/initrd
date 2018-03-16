@@ -451,10 +451,14 @@ if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ]; then
     log_end_msg
 fi
 
-if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ]; then
-    log_begin_msg "Generating machine-id"
-    chroot /newroot /usr/local/sbin/scw-gen-machine-id || chroot /newroot /usr/local/sbin/oc-gen-machine-id || true
-    log_end_msg
+if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ] && [ -d ${rootmnt}/var/lib/dbus ]; then
+    if [ "$(cat ${rootmnt}/etc/machine-id 2>/dev/null)" = "$(cat ${rootmnt}/var/lib/dbus/machine-id 2>/dev/null)" ]; then
+        einfo "/etc/machine-id is already set, skipping"
+    else
+        log_begin_msg "Setting machine-id from server uuid"
+        scw-metadata --cached ID | tr -d '-' > ${rootmnt}/var/lib/dbus/machine-id
+        log_end_msg
+    fi
 fi
 
 # Check if $init exists and is executable
