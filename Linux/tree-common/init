@@ -462,9 +462,9 @@ if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ] && [ -d ${rootmnt}/var/lib/dbus ]
 fi
 
 # Check if $init exists and is executable
-if [[ ! -x "${rootmnt}/${init}" ]] ; then
+if ! chroot ${rootmnt} /bin/bash -lc "test -x \$(realpath ${init})"; then
     ewarn "/sbin/init may be broken"
-    ewarn "make sure /sbin/init is an executable and not an absolute symlink"
+    ewarn "make sure /sbin/init is an executable"
 fi
 
 # Trying to switch to linux
