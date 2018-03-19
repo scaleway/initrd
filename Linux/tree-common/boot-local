@@ -12,6 +12,7 @@ mountroot() {
 	devinfo=$(sfdisk -d $root)
 	if [ $? -eq 0 ]; then
 		# disk has part table
+		is_new_type_image=0
 		bootdev=""
 		devinfo=$(echo "$devinfo" | tr -d ' ')
 		einfo "Found partitions on $root"

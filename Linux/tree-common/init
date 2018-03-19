@@ -250,6 +250,11 @@ case "${boot}" in
 esac
 
 
+# This is an ugly hack to know if we're booting a new image where networking setup isn't disabled
+# We check if the image is partitioned. If it is, there's a very high certainty that it's one of our
+# new images. And then we can use that knowledge later, for example to discard our initrd networking
+# setup and let the image do its own (which would probably fail otherwise)
+is_new_type_image=1
 # Mountroot
 log_begin_msg "Initializing '${boot}' root file system"
 mountroot
@@ -459,6 +464,14 @@ if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ] && [ -d ${rootmnt}/var/lib/dbus ]
         scw-metadata --cached ID | tr -d '-' > ${rootmnt}/var/lib/dbus/machine-id
         log_end_msg
     fi
+fi
+
+# Tear down networking, to not interfere with the image's own networking startup
+if [ $is_new_type_image -eq 0 ] && [ "$(get_any KEEP_INITRD_NETWORKING)" != "1" ]; then
+    log_begin_msg "Bringing network down before switching root"
+    ip link set $INTERFACE down
+    ip addr flush dev $INTERFACE
+    log_end_msg
 fi
 
 # Check if $init exists and is executable
