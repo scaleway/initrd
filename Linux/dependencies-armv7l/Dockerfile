@@ -56,6 +56,7 @@ RUN export-assets \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
       /sbin/parted \
+      /sbin/sfdisk \
       /usr/bin/dropbearkey \
       /usr/bin/scw-metadata \
       /usr/lib/klibc/bin/ipconfig \
