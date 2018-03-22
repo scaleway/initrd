@@ -360,7 +360,7 @@ fi
 # Generate root password if not disabled, when it's empty or if reset is explicitely required by the user
 grep -q '^root:\*\?:' "${rootmnt}/etc/shadow" &>/dev/null
 root_pw_empty=$?
-if [ $is_new_type_image -ne 0 ] && [ "$(get_any DONT_GEN_ROOT_PASSWD)" != "1" ] && ([ "$root_pw_empty" -eq 0 ] || [ "$(get_any RESET_PASSWORD)" == "1" ] || [ -f "${rootmnt}/.scw-reset-password-on-next-boot" ]); then
+if [ $is_new_type_image -ne 0 ] && [ "$(get_any DONT_GEN_ROOT_PASSWD)" != "1" ] && ([ "$root_pw_empty" -eq 0 ] || [ "$(get_any RESET_PASSWORD)" = "1" ] || [ -f "${rootmnt}/.scw-reset-password-on-next-boot" ]); then
     log_begin_msg "Changing root password"
     PASSWORD=$(gen_passwd)
     # update /etc/shadow
