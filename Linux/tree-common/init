@@ -52,6 +52,8 @@ emount -t devpts -o noexec,nosuid,gid=5,mode=0620 devpts /dev/pts
 emount -t tmpfs -o "mode=0755,nodev,nosuid,size=10%" tmpfs /run
 [ -d /var ] || run mkdir -pm 0755 /var
 run ln -s /run /var/run
+[ -d /tmp ] || run mkdir -pm 0755 /tmp
+emount -t tmpfs -o "mode=0755,size=500M" tmpfs /tmp
 
 [ -d /sys ] || run mkdir /sys
 emount -t sysfs -o nodev,noexec,nosuid sysfs /sys
@@ -450,9 +452,15 @@ log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
 log_end_msg
 
-if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ]; then
+if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ] && ! [ -d "${rootmnt}/lib/modules/$(uname -r)" ]; then
     log_begin_msg "Fetching kernel modules"
-    chroot /newroot /usr/local/sbin/scw-sync-kernel-modules || chroot /newroot /usr/local/sbin/oc-sync-kernel-modules || true
+    if [ $is_new_type_image -eq 0 ]; then
+        tmp_dir=$(mktemp -d)
+        wget -O - http://mirror.scaleway.com/kernel/$(uname -m)/$(uname -r)/modules.tar | tar -C $tmp_dir -x
+        mv $tmp_dir/modules/$(uname -r) ${rootmnt}/lib/modules/
+    else
+        chroot /newroot /usr/local/sbin/scw-sync-kernel-modules || chroot /newroot /usr/local/sbin/oc-sync-kernel-modules || true
+    fi
     log_end_msg
 fi
 
