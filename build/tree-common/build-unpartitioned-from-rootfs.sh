@@ -1,7 +1,6 @@
 einfo "Building from rootfs"
 
 rootfs=/tmp/rootfs.tar
-volume=$(get_any volume "/dev/vda")
 rootfs_url=$(get_any rootfs_url)
 [ -z "$rootfs_url" ] && die "No url to get the rootfs from provided"
 

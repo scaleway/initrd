@@ -1,7 +1,6 @@
 einfo "Building from qcow2 image"
 
 qcow2_disk_img=/tmp/disk.qcow2
-volume=$(get_any volume "/dev/vda")
 disk_img_url=$(get_any disk_img_url)
 [ -z "$disk_img_url" ] && die "No url to get the disk image provided"
 
