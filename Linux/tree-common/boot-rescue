@@ -13,7 +13,7 @@ mountroot() {
 	for volume in $(scw-metadata --cached VOLUMES); do
 	    uri=$(scw-metadata --cached VOLUMES_${volume}_EXPORT_URI)
 	    if [ "${uri:0:3}" == "nbd" ]; then
-		attach_nbd_device $volume
+		attach_nbd_device $volume 60
 	    fi
 	done
 	log_end_msg

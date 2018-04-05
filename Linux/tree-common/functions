@@ -241,6 +241,7 @@ detach_nbd_devices() {
 # Attach NBD device
 attach_nbd_device() {
     local device="$1"  # ie: 0
+    local timeout="${2:-0}" # 0 when not used
     local retries=900
 
     log_begin_msg "Attaching nbd${device}"
@@ -261,7 +262,14 @@ attach_nbd_device() {
     fi
 
     # Connecting the device
-    run @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
+    if [ $timeout -ne 0 ]; then
+      log_begin_msg "Attaching device with a $timeout seconds timeout"
+      log_end_msg
+      run timeout -t $timeout @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
+    else
+      run @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
+    fi
+
 
     # Checking device connection
     local nbd_pid=$(@xnbd-client --check /dev/nbd${device} 2>/dev/null)
