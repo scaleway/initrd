@@ -53,13 +53,11 @@ PARTUUID=$efi_part_uuid /boot/efi vfat rw,relatime,errors=remount-ro 0 2
     mount -t proc proc $root_mountpoint/proc/
     mount -t sysfs sys $root_mountpoint/sys/
     mount -o bind /dev $root_mountpoint/dev/
-    grub_install_path=$(chroot $root_mountpoint /bin/sh -c "which grub-install")
-    grub_mkconfig_path=$(chroot $root_mountpoint /bin/sh -c "which grub-mkconfig")
-    if [ -n "$grub_install_path" ] && [ -n "$grub_mkconfig_path" ]; then
-        chroot $root_mountpoint /bin/sh -c "grub-install --target=$(uname -m)-efi --bootloader-id=grub --removable --recheck --efi-directory=/boot/efi"
-        chroot $root_mountpoint /bin/sh -c "grub-mkconfig -o /boot/grub/grub.cfg"
+    bootloader_install_path=$(chroot $root_mountpoint /bin/sh -c 'export PATH=$PATH:/usr/local/sbin/:/usr/local/bin; which scw-install-bootloader')
+    if [ -x "$root_mountpoint/$bootloader_install_path" ]; then
+        run --abort chroot $root_mountpoint $bootloader_install_path "root:$root_device:$root_part_uuid:$root_fs_uuid" "efi:$efi_device:$efi_part_uuid:$efi_fs_uuid"
     else
-        eerror "Missing grub-install or grub-mkconfig binaries in image, did you mean to build unpartitioned ?"
+        eerror "Missing booloader install script 'scw-install-bootloader', did you mean to build unpartitioned ?"
     fi
     sync
 }
