@@ -69,14 +69,14 @@ emount() {
 
 run() {
     abort=0
-    if [ "$1" == "--abort" ]; then
+    if [ "$1" = "--abort" ]; then
         abort=1
         shift
     fi
 
     _log_file "executing: $@"
     edebug "Executing: $@"
-    "$@" >>/initrd.log 2>&1
+    "$@" 2>&1 | tee /initrd.log
     ret=$?
     if [[ $ret -eq 0 ]]; then
 	_log_file "Successfully ran '$@'"
