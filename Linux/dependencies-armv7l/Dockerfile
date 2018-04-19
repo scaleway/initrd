@@ -59,6 +59,7 @@ RUN export-assets \
       /sbin/sfdisk \
       /usr/bin/dropbearkey \
       /usr/bin/scw-metadata \
+      /usr/bin/partx \
       /usr/lib/klibc/bin/ipconfig \
       /usr/sbin/@xnbd-client \
       /usr/sbin/dropbear \
