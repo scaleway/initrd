@@ -475,7 +475,7 @@ if [ "$(get_any DONT_GEN_MACHINE_ID)" != "1" ] && [ -d ${rootmnt}/var/lib/dbus ]
 fi
 
 # Tear down networking, to not interfere with the image's own networking startup
-if [ $is_new_type_image -eq 0 ] && [ "$(get_any KEEP_INITRD_NETWORKING)" != "1" ]; then
+if [ $is_new_type_image -eq 0 ] && [ "$(get_any KEEP_INITRD_NETWORKING)" != "1" ] && ! (scw-metadata --cached VOLUMES_0_EXPORT_URI | grep -q 'nbd'); then
     log_begin_msg "Bringing network down before switching root"
     ip link set $INTERFACE down
     ip addr flush dev $INTERFACE
