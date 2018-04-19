@@ -262,6 +262,12 @@ log_begin_msg "Initializing '${boot}' root file system"
 mountroot
 log_end_msg
 
+# Another hack we need at least temporarily, is to add a "nofail" option on fstab's /boot/efi entry
+# since mounting this partition seems to be an issue on nbd.
+if [ $is_new_type_image = 0 ] && (scw-metadata --cached VOLUMES_0_EXPORT_URI | grep -q 'nbd'); then
+    sed -i '\#/boot/efi# s/rw/rw,nofail/' ${rootmnt}/etc/fstab
+fi
+
 # delete dhcp lease file if it exists
 if [ ! -f  ${rootmnt}/var/lib/dhcp/no-initrd-cleanup -a \
        -f ${rootmnt}/var/lib/dhcp/dhclient.eth0.leases ]; then
