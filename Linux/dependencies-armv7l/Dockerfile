@@ -52,6 +52,7 @@ RUN export-assets \
       /lib/arm-linux-gnueabihf/libnss_dns.so.2 \
       /lib/arm-linux-gnueabihf/libnss_files.so.2 \
       /lib/arm-linux-gnueabihf/libresolv.so.2 \
+      /sbin/blkid \
       /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \

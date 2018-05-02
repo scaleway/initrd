@@ -43,6 +43,7 @@ RUN export-assets \
       /lib/aarch64-linux-gnu/libnss_dns.so.2 \
       /lib/aarch64-linux-gnu/libnss_files.so.2 \
       /lib/aarch64-linux-gnu/libresolv.so.2 \
+      /sbin/blkid \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
       /sbin/parted \

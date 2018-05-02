@@ -9,58 +9,40 @@ mountroot() {
         fi
         show_nbd_devices
     fi
-	devinfo=$(sfdisk -d $root)
-	if [ $? -eq 0 ]; then
-		# disk has part table
-		is_new_type_image=0
-		bootdev=""
-		devinfo=$(echo "$devinfo" | tr -d ' ')
-		einfo "Found partitions on $root"
-		header=true
-		while read line; do
-			if [ "$line" = "" ]; then
-				header=false
-				continue
-			elif $header; then
-				IFS=':' read key value << EOF
-$line
-EOF
-				if [ "$key" = "label" ]; then
-					if [ "$value" = "gpt" ]; then
-						type="0FC63DAF-8483-4772-8E79-3D69D8477DE4"
-					elif [ "$value" = "mbr" ]; then
-						type="83"
-					else
-						# Unhandled boot partition table type, sorry!
-						die "Unhandled partition label type $value !"
-					fi
-				else
-					continue
-				fi
-			else
-				IFS=':' read part params << EOF
-$line
-EOF
-				IFS=','
-				for param in $params; do
-					IFS='=' read key value << EOF
-$param
-EOF
-					if [ "$key" = "type" ] && [ "$value" = "$type" ]; then
-						einfo "Using Linux partition $part for boot"
-						bootdev=$part
-						break
-					fi
-				done
-			fi
-			[ -n "$bootdev" ] && break
-		done << EOF
-$devinfo
-EOF
-	else
-		# disk has no part table
-		bootdev=$root
-	fi
+    devinfo=$(partx -gro "SCHEME,NR,NAME,TYPE,UUID" $root 2>/dev/null)
+    if [ -n "$devinfo" ]; then
+        # disk has part table
+        einfo "Found partitions on $root"
+        # This is used (heuristically) to flag it as being "new"
+        is_new_type_image=0
+        # Decide which partition is root
+        partition_table_type=$(echo "$devinfo" | head -1 | cut -d' ' -f1)
+        partition_type=""
+        case $partition_table_type in
+            "gpt")
+                partition_type="0fc63daf-8483-4772-8e79-3d69d8477de4"
+                ;;
+            "dos")
+                partition_type="0x83"
+                ;;
+            *)
+                die "Unhandled partition table type $partition_table_type"
+                ;;
+        esac
+        devinfo=$(echo "$devinfo" | cut -d' ' -f2- | sort)
+        # Try finding a partition named "root"
+        root_partition_uuid=$(echo "$devinfo" | cut -d' ' -f2- | grep -x "root .*" | head -1 | cut -d' ' -f3)
+        # If that doesn't work, use the first Linux filesystem partition
+        if [ -z "$root_partition_uuid" ]; then
+            root_partition_uuid=$(echo "$devinfo" | cut -d' ' -f3 | grep -x "$partition_type .*" | head -1 | cut -d' ' -f2)
+        fi
+        # If that didn't work either, give up
+        [ -z "$root_partition_uuid" ] && die "No root partition found"
+        bootdev=$(blkid -t PARTUUID="$root_partition_uuid" | cut -d':' -f1)
+    else
+        # disk has no part table
+        bootdev=$root
+    fi
     log_begin_msg "Mounting ${bootdev} as root filesystem"
     emount "${bootdev}" "${rootmnt}"
     log_end_msg
