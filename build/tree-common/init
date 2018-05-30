@@ -299,9 +299,8 @@ post_build
 # Wait to be stopped by an external command
 listen_port=$(get_any signal_build_done_port 22)
 einfo "Listening on port $listen_port to signal build done."
-nc -l -p $listen_port
 while true; do
-    sleep 5
+    nc -ll -p $listen_port -e echo '{"status": "0", "message": "done"}'
 done
 
 halt -f
