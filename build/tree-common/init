@@ -164,27 +164,48 @@ fi
 # Configure GPIOs
 if [ "${COMMERCIAL_TYPE}" = "C1" ]; then
     if [ "$(get_any SKIP_GPIO_SETUP)" != "1" ]; then
-	log_begin_msg "Configuring GPIOs"
-	setup_gpios
-	log_end_msg
+        log_begin_msg "Configuring GPIOs"
+        setup_gpios
+        log_end_msg
     fi
 fi
 
 
-# Mount a second volume on /tmp if available, else tmpfs
+# Mount a second volume on /lib/modules and /tmp if available, else tmpfs
 if (scw-metadata --cached VOLUMES_0_EXPORT_URI | grep -q '/dev/nbd'); then
     attach_nbd_device 0
     attach_secondary_nbd_devices
 fi
 [ -d /tmp ] || run mkdir -pm 0755 /tmp
 volume_path=$(scw-metadata --cached VOLUMES_1_EXPORT_URI | sed 's-^device:/--')
+mkdir -p /lib/modules
 if [ -n "$volume_path" ]; then
-    mkfs.ext4 $volume_path
-    emount $volume_path /tmp
+    modules_part_uuid=$(uuidgen)
+    tmp_part_uuid=$(uuidgen)
+    sgdisk $volume_path -Z \
+           -n 1:0:+2G -t 1:8300 -c 1:modules -u 1:$modules_part_uuid \
+           -N 2 -t 2:8300 -c 2:tmp -u 2:$tmp_part_uuid
+    partx -u $volume_path
+    modules_device=$(sfdisk -d $volume_path | grep -i "$modules_part_uuid" | cut -d':' -f1)
+    tmp_device=$(sfdisk -d $volume_path | grep -i "$tmp_part_uuid" | cut -d':' -f1)
+    mkfs.ext4 -L modules $modules_device
+    mkfs.ext4 -L tmp $tmp_device
+    emount $modules_device /lib/modules
+    emount $tmp_device /tmp
 else
-    emount -t tmpfs -o "mode=0755,nodev,nosuid,size=50%" tmpfs /tmp
+    emount -t tmpfs -o "mode=0755,nodev,nosuid,size=30%" tmpfs /tmp
+    emount -t tmpfs -o "mode=0755,nodev,nosuid,size=20%" tmpfs /lib/modules
 fi
 
+# Download kernel modules to /lib/modules
+KARCH=$(uname -m)
+KVERSION=$(uname -r)
+TMP_DIR=$(mktemp -d)
+cd $TMP_DIR && run --abort wget http://mirror.scaleway.com/kernel/$KARCH/$KVERSION/modules.tar
+run --abort tar -f $TMP_DIR/modules.tar -C $TMP_DIR -x
+mv $TMP_DIR/modules/$KVERSION /lib/modules
+depmod -a
+rm -r $TMP_DIR
 
 # Signal to the console that the build is started
 signal_state booted
