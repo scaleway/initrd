@@ -1,5 +1,6 @@
 einfo "Building from rootfs"
 
+root_mountpoint=$(mktemp -d)
 rootfs=/tmp/rootfs.tar
 volume=$(get_any volume "/dev/vda")
 rootfs_url=$(get_any rootfs_url)
@@ -33,7 +34,6 @@ build() {
 
     einfo "Mounting partitions"
 
-    root_mountpoint=$(mktemp -d)
     efi_mountpoint=$root_mountpoint/boot/efi
     mount $root_device $root_mountpoint
     mkdir -p $efi_mountpoint
@@ -63,6 +63,11 @@ PARTUUID=$efi_part_uuid /boot/efi vfat rw,relatime,errors=remount-ro,nofail 0 2
 }
 
 post_build() {
+    einfo "Unmounting image partitions"
+    mountpoints=$(awk -v pattern="^$root_mountpoint" '$2 ~ pattern { print split($2, a, "/")-1 " " $2 }' /proc/mounts | sort -n -r | cut -d' ' -f2)
+    for mountpoint in $mountpoints; do
+        umount $mountpoint
+    done
     devlayout=$(sgdisk -p $volume)
     if [ $? -eq 0 ]; then
         einfo "Final volume layout:"
