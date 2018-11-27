@@ -34,7 +34,7 @@ mountroot() {
         root_partition_uuid=$(echo "$devinfo" | cut -d' ' -f2- | grep -x "root .*" | head -1 | cut -d' ' -f3)
         # If that doesn't work, use the first Linux filesystem partition
         if [ -z "$root_partition_uuid" ]; then
-            root_partition_uuid=$(echo "$devinfo" | cut -d' ' -f3 | grep -x "$partition_type .*" | head -1 | cut -d' ' -f2)
+            root_partition_uuid=$(echo "$devinfo" | cut -d' ' -f3- | grep -x "$partition_type .*" | head -1 | cut -d' ' -f2)
         fi
         # If that didn't work either, give up
         [ -z "$root_partition_uuid" ] && die "No root partition found"
