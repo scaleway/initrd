@@ -129,7 +129,7 @@ signal_state() {
 ## Helpers
 
 resolve_hostnames() {
-    sed "s/metadata.local/${METADATA_IP}/g"
+    sed "s/metadata\.local/${METADATA_IP}/g"
 }
 
 
