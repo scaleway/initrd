@@ -8,6 +8,7 @@ Ramdisk image used to boot the Scaleway servers.
 - [./Linux](https://github.com/scaleway/initrd/tree/master/Linux): scripts to build the Initrd for Linux on Scaleway servers
 - [./Openbsd](https://github.com/scaleway/initrd/tree/master/Openbsd): scripts to build the Initrd for OpenBSD/Bitrig on Scaleway servers
 - [./scw-boot-tools](https://github.com/scaleway/initrd/tree/master/scw-boot-tools): sources of utilities used in initrds
+- [./test](test/): tests used to validate a bootscript
 
 ## Licensing
 
