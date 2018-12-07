@@ -265,9 +265,9 @@ attach_nbd_device() {
     if [ $timeout -ne 0 ]; then
       log_begin_msg "Attaching device with a $timeout seconds timeout"
       log_end_msg
-      run timeout -t $timeout @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
+      run timeout -t $timeout @xnbd-client --blocksize 512 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
     else
-      run @xnbd-client --blocksize 4096 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
+      run @xnbd-client --blocksize 512 --retry=$retries ${nbd_host} ${nbd_port} /dev/nbd${device}
     fi
 
 
