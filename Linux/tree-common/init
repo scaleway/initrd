@@ -296,9 +296,10 @@ if [ "$(get_any is_in_kexec no)" = "yes" ]; then
     esuccess "Running in a kexec"
     export NO_SIGNAL_STATE=1
 else
-    if [ "$(get_any KEXEC_KERNEL 'default')" != "default" -a "$(get_any KEXEC_INITRD 'default')" != "default" ]; then
+    if [ "$(get_any KEXEC_KERNEL 'default')" != "default" ]; then
 	KEXEC_KERNEL="$(get_any KEXEC_KERNEL default)"
-	KEXEC_INITRD="$(get_any KEXEC_INITRD default)"
+	# do not use default initrd
+	KEXEC_INITRD="$(get_any KEXEC_INITRD)"
 	KEXEC_APPEND="$(get_any KEXEC_APPEND '')"
 	esuccess "kexec: kernel=${KEXEC_KERNEL} initrd=${KEXEC_INITRD} append='${KEXEC_APPEND}'"
 
@@ -313,22 +314,26 @@ else
 		wget ${KEXEC_KERNEL} -O /boot/kernel
 	    fi
 	fi
-	if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
-	    cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
-	else
-	    wget ${KEXEC_INITRD} -O /boot/initrd
+	# if initrd was given
+	if [ -n "${KEXEC_INITRD}" ]; then
+		if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
+			cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
+		else
+			wget ${KEXEC_INITRD} -O /boot/initrd
+		fi
 	fi
 
 	# run kexec
 	if [ -f /boot/kernel ]; then
-	    if [ -f /boot/initrd ]; then
 		# detach nbd devices
 		detach_nbd_devices
-
-		# kexec
-		kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes ${KEXEC_APPEND}" -f
+		if [ -f /boot/initrd ]; then
+			# kexec
+			kexec -l /boot/kernel --initrd=/boot/initrd --append="$(cat /proc/cmdline) is_in_kexec=yes ${KEXEC_APPEND}" -f
 	    else
-		ewarn "kexec: initrd not found"
+			# do not include initrd in kexec
+			# kexec
+			kexec -l /boot/kernel --append="$(cat /proc/cmdline) is_in_kexec=yes ${KEXEC_APPEND}" -f
 	    fi
 	else
 	    ewarn "kexec: kernel not found"
