@@ -7,7 +7,7 @@ disk_img_url=$(get_any disk_img_url)
 
 pre_build() {
     einfo "Retrieving disk image"
-    run --abort wget -O $qcow2_disk_img $disk_img_url
+    run --abort curl -fksSL -o $qcow2_disk_img "$disk_img_url"
 }
 
 build() {

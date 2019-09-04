@@ -31,8 +31,8 @@ while (@check_queue) {
             $result{$lib} = 1;
             push @check_queue, $lib;
 	} elsif ($line eq"\tnot a dynamic executable") { # statically linked, interpreter
-	    $line = `file $to_check`;
-	    if ($line =~ / (\/\S+),/) {
+	    $line = `readelf -l $to_check | grep 'Requesting'`;
+	    if ($line =~ / (\/\S+)]/) {
 		$result{$1} = 1;
 	    } else {
 		next;

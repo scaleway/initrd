@@ -15,6 +15,7 @@ RUN apt-get update                        \
  && apt-get upgrade -y      \
  && apt-get install -y      \
    curl                     \
+   binutils                 \
    qemu                     \
    dropbear                 \
    kexec-tools              \
@@ -74,6 +75,7 @@ RUN export-assets \
       /sbin/parted \
       /sbin/sfdisk \
       /sbin/sgdisk \
+      /usr/bin/curl \
       /usr/bin/dropbearkey \
       /usr/bin/file \
       /usr/bin/find \
