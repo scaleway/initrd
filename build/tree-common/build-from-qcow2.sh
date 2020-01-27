@@ -39,7 +39,8 @@ EOF
                             max_part_start=$value
                             part_to_extend=$part
                         fi
-                        break
+                    elif [ "$key" = "uuid" -a "$part" = "$part_to_extend" ]; then
+                        part_to_extend_uuid="$value"
                     fi
                 done << EOF
 $params
@@ -50,8 +51,7 @@ $devinfo
 EOF
         einfo "Extending last partition $part_to_extend to end of volume"
         part_number=$(echo "$part_to_extend" | sed "s-${volume}--")
-        run --abort sgdisk -d $part_number $volume
-        run --abort sgdisk -N $part_number $volume
+        run --abort sgdisk -d $part_number -N $part_number -u $part_number:$part_to_extend_uuid $volume
     else
         einfo "No partition table detected, volume will be raw"
     fi
