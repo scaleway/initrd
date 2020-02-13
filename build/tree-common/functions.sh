@@ -151,11 +151,11 @@ has_opt() {
 
 get_metadata() {
     for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
-	tag=$(scw-metadata --cached TAGS_$idx)
-	if [ $(echo "$tag" | grep "^$1=") ]; then
-	    echo $tag | sed 's/^[^=]*=//' | resolve_hostnames
-	    return
-	fi
+        tag=$(scw-metadata --cached TAGS_$idx)
+        if [ $(echo "$tag" | grep "^$1=") ]; then
+            echo $tag | sed 's/^[^=]*=//' | resolve_hostnames
+            return
+        fi
     done
 }
 
@@ -166,9 +166,9 @@ get_userdata() {
 
 has_metadata() {
     (
-	for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
-	    scw-metadata --cached TAGS_$idx
-	done
+        for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
+            scw-metadata --cached TAGS_$idx
+        done
     ) | grep "^$1\$" >/dev/null
 }
 
@@ -177,14 +177,14 @@ get_any() {
     default=${2:-""}
 
     if [ "$(get_opt NO_METADATA)" != "1" ]; then
-	ret=$(get_metadata $key)
-	if [ -n "$ret" ]; then
-	    echo "$ret"
-	else
-	    get_opt "$key" "$default"
-	fi
+        ret=$(get_metadata $key)
+        if [ -n "$ret" ]; then
+            echo "$ret"
+        else
+            get_opt "$key" "$default"
+        fi
     else
-	get_opt "$key" "$default"
+        get_opt "$key" "$default"
     fi
 }
 
