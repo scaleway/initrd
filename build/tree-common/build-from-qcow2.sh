@@ -29,6 +29,7 @@ build() {
                 IFS=':' read part params << EOF
 $line
 EOF
+                OLD_IFS=$IFS
                 IFS=','
                 for param in $params; do
                     IFS='=' read key value << EOF
@@ -45,6 +46,7 @@ EOF
                 done << EOF
 $params
 EOF
+                IFS=$OLD_IFS
             fi
         done << EOF
 $devinfo
