@@ -161,7 +161,7 @@ get_metadata() {
 
 get_userdata() {
     key=$1
-    wget -qO- "http://169.254.42.42/user_data/${key}"
+    curl -fsSL "http://169.254.42.42/user_data/${key}"
 }
 
 has_metadata() {
@@ -192,7 +192,7 @@ get_any() {
 insmod_ko() {
     mod_path=$1
     log_begin_msg "Loading ${mod_path} kernel module"
-    run wget -q -O mod.ko http://169.254.42.24/kernel/$(uname -r)/kernel/${mod_path}
+    run curl -fsSL -o mod.ko http://169.254.42.24/kernel/$(uname -r)/kernel/${mod_path}
     run insmod $(pwd)/mod.ko
     if [ $? -eq 0 ]; then
         log_success_msg "successfully loaded"

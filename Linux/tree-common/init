@@ -310,13 +310,13 @@ else
 	    if [ -f "${rootmnt}/${KEXEC_KERNEL}" ]; then
 		cp "${rootmnt}/${KEXEC_KERNEL}" /boot/kernel
 	    else
-		wget ${KEXEC_KERNEL} -O /boot/kernel
+		curl -fsSL ${KEXEC_KERNEL} -o /boot/kernel
 	    fi
 	fi
 	if [ -f "${rootmnt}/${KEXEC_INITRD}" ]; then
 	    cp "${rootmnt}/${KEXEC_INITRD}" /boot/initrd
 	else
-	    wget ${KEXEC_INITRD} -O /boot/initrd
+	    curl -fsSL ${KEXEC_INITRD} -o /boot/initrd
 	fi
 
 	# run kexec
@@ -437,22 +437,6 @@ fi
 # FIXME: if host keys don't exist in /newroot (first boot), we can copy the generated ones
 
 
-# Prepare mount pseudo filesystem moving
-run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
-emount -o move /proc ${rootmnt}/proc
-emount -o move /sys ${rootmnt}/sys
-emount -o move /run ${rootmnt}/run
-emount -o move /dev ${rootmnt}/dev
-[ -c ${rootmnt}/dev/console ] || run mknod -m 622 ${rootmnt}/dev/console c 5 1
-[ -c ${rootmnt}/dev/null ]    || run mknod -m 666 ${rootmnt}/dev/null    c 1 3
-[ -c ${rootmnt}/dev/zero ]    || run mknod -m 666 ${rootmnt}/dev/zero    c 1 5
-[ -c ${rootmnt}/dev/ptmx ]    || run mknod -m 666 ${rootmnt}/dev/ptmx    c 5 2
-[ -c ${rootmnt}/dev/tty ]     || run mknod -m 666 ${rootmnt}/dev/tty     c 5 0
-[ -c ${rootmnt}/dev/random ]  || run mknod -m 444 ${rootmnt}/dev/random  c 1 8
-[ -c ${rootmnt}/dev/urandom ] || run mknod -m 444 ${rootmnt}/dev/urandom c 1 9
-# chown -v root:tty /dev/{console,ptmx,tty}
-
-
 # Move initramfs copy to /run/initramfs for shutdown
 log_begin_msg "Moving initramfs backup to /run/initramfs for shutdown"
 run mv /initramfs ${rootmnt}/run/initramfs
@@ -460,13 +444,9 @@ log_end_msg
 
 if [ "$(get_any DONT_FETCH_KERNEL_MODULES)" != "1" ] && ! [ -d "${rootmnt}/lib/modules/$(uname -r)" ]; then
     log_begin_msg "Fetching kernel modules"
-    if [ $is_new_type_image -eq 0 ]; then
-        tmp_dir=$(mktemp -d)
-        wget -O - http://mirror.scaleway.com/kernel/$(uname -m)/$(uname -r)/modules.tar | tar -C $tmp_dir -x
-        mv $tmp_dir/modules/$(uname -r) ${rootmnt}/lib/modules/
-    else
-        chroot /newroot /usr/local/sbin/scw-sync-kernel-modules || chroot /newroot /usr/local/sbin/oc-sync-kernel-modules || true
-    fi
+    tmp_dir=$(mktemp -d)
+    curl -fsSL http://mirror.scaleway.com/kernel/$(uname -m)/$(uname -r)/modules.tar | tar -C $tmp_dir -x
+    mv $tmp_dir/modules/$(uname -r) ${rootmnt}/lib/modules/
     log_end_msg
 fi
 
@@ -487,6 +467,21 @@ if [ $is_new_type_image -eq 0 ] && [ "$(get_any KEEP_INITRD_NETWORKING)" != "1" 
     ip addr flush dev $INTERFACE
     log_end_msg
 fi
+
+# Prepare mount pseudo filesystem moving
+run mkdir -p ${rootmnt}/run ${rootmnt}/sys ${rootmnt}/dev ${rootmnt}/proc
+emount -o move /proc ${rootmnt}/proc
+emount -o move /sys ${rootmnt}/sys
+emount -o move /run ${rootmnt}/run
+emount -o move /dev ${rootmnt}/dev
+[ -c ${rootmnt}/dev/console ] || run mknod -m 622 ${rootmnt}/dev/console c 5 1
+[ -c ${rootmnt}/dev/null ]    || run mknod -m 666 ${rootmnt}/dev/null    c 1 3
+[ -c ${rootmnt}/dev/zero ]    || run mknod -m 666 ${rootmnt}/dev/zero    c 1 5
+[ -c ${rootmnt}/dev/ptmx ]    || run mknod -m 666 ${rootmnt}/dev/ptmx    c 5 2
+[ -c ${rootmnt}/dev/tty ]     || run mknod -m 666 ${rootmnt}/dev/tty     c 5 0
+[ -c ${rootmnt}/dev/random ]  || run mknod -m 444 ${rootmnt}/dev/random  c 1 8
+[ -c ${rootmnt}/dev/urandom ] || run mknod -m 444 ${rootmnt}/dev/urandom c 1 9
+# chown -v root:tty /dev/{console,ptmx,tty}
 
 # Check if $init exists and is executable
 if ! chroot ${rootmnt} /bin/bash -lc "test -x \$(realpath ${init})"; then

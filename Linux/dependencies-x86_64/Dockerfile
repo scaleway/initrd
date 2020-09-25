@@ -54,6 +54,7 @@ COPY ./tmp/export-assets /usr/local/bin/
 
 # Generate tarball
 RUN export-assets \
+      /etc/ssl/certs/ca-certificates.crt \
       /bin/busybox \
       /bin/mkfs.btrfs \
       /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
@@ -67,6 +68,7 @@ RUN export-assets \
       /sbin/mkfs.ext4 \
       /sbin/parted \
       /sbin/sfdisk \
+      /usr/bin/curl \
       /usr/bin/dropbearkey \
       /usr/bin/scw-metadata \
       /usr/bin/partx \
